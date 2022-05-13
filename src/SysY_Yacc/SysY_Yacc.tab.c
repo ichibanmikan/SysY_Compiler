@@ -78,7 +78,7 @@ extern int lines;
 extern char *yytext;
 extern int pos_end;
 extern int pos_start;
-
+extern void yyrestart  (FILE * input_file );
 
 // Global syntax tree
 syntax_tree *gt;
@@ -2426,16 +2426,7 @@ void yyerror(const char *s) {
     fprintf(stderr, "error at line %d column %d: %s\n", lines, pos_start, s);
 }
 
-syntax_tree *parse(const char *input_path) {
-    // if (input_path != NULL) {
-    //     if (!(yyin = fopen(input_path, "r"))) {
-    //         fprintf(stderr, "[ERR] Open input file %s failed.\n", input_path);
-    //         exit(1);
-    //     }
-    // } else {
-    //     yyin = stdin;
-    // }
-
+syntax_tree *parse() {
     lines = pos_start = pos_end = 1;
     gt = new_syntax_tree();
     yyrestart(yyin);
