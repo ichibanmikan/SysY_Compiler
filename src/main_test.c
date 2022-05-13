@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
         input_path = argv[1];
     }//把input_path赋值为命令行传入的参数
     if (input_path != NULL) {
-        if (!(yyin = fopen(input_path, "r+"))) {
+        if (!(yyin = fopen(input_path, "r"))) {
             fprintf(stderr, "[ERR] Open input file %s failed.\n", input_path);
             exit(1);
         } //这里有BUG 大家在执行的时候可以注意点这里
