@@ -10,6 +10,7 @@ extern char *yytext;
 extern int pos_end;
 extern int pos_start;
 
+
 // Global syntax tree
 syntax_tree *gt;
 
@@ -78,6 +79,9 @@ params : param_list {
         |VOID {
             $$ = node("params" ,1, $1);
         }
+        | {
+          $$ = node("param", 0);
+        }
 param_list : param_list COMMA param {
                 $$ = node("param_list", 3, $1, $2, $3);
             }
@@ -119,6 +123,12 @@ statement : expression_stmt {
             }
             |return_stmt {
                 $$ = node("statement", 1, $1);
+            }
+            | BREAK SEMICOLON {
+              $$ = node("statement", 2, $1, $2);
+            }
+            | CONTINUE SEMICOLON {
+              $$ = node("statement", 2, $1, $2);
             }
 expression_stmt : expression SEMICOLON {
                     $$ = node("expression_stmt", 2, $1, $2);
@@ -290,14 +300,14 @@ void yyerror(const char *s) {
 }
 
 syntax_tree *parse(const char *input_path) {
-    if (input_path != NULL) {
-        if (!(yyin = fopen(input_path, "r"))) {
-            fprintf(stderr, "[ERR] Open input file %s failed.\n", input_path);
-            exit(1);
-        }
-    } else {
-        yyin = stdin;
-    }
+    // if (input_path != NULL) {
+    //     if (!(yyin = fopen(input_path, "r"))) {
+    //         fprintf(stderr, "[ERR] Open input file %s failed.\n", input_path);
+    //         exit(1);
+    //     }
+    // } else {
+    //     yyin = stdin;
+    // }
 
     lines = pos_start = pos_end = 1;
     gt = new_syntax_tree();
