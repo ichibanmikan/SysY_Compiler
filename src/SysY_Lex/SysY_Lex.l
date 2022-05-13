@@ -49,15 +49,15 @@ StopTime stoptime
 =   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return ASSIGN;}
 ;   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return SEMICOLON;}
 ,   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return COMMA;}
-\(  {printf("%d\n", 444); pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LPARENTHESE;}
-\)  {printf("%d\n", 555); pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return RPARENTHESE;}
-\{  {printf("%d\n", 666); pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LBRACE;}
+\(  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LPARENTHESE;}
+\)  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return RPARENTHESE;}
+\{  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LBRACE;}
 \}  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return RBRACE;}
 \[  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LBRACKET;}
 \]  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return RBRACKET;}
 {Else}    {pos_start = pos_end; pos_end += 4; yylval.node = new_syntax_tree_node(yytext); return ELSE;}
 {If}  {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return IF;}
-{Int} {printf("%d\n", 222); pos_start = pos_end; pos_end += 3; yylval.node = new_syntax_tree_node(yytext); return INT;}
+{Int} {pos_start = pos_end; pos_end += 3; yylval.node = new_syntax_tree_node(yytext); return INT;}
 {Float}   {pos_start = pos_end; pos_end += 5; yylval.node = new_syntax_tree_node(yytext); return FLOAT;}
 {Return}  {pos_start = pos_end; pos_end += 6; yylval.node = new_syntax_tree_node(yytext);  return RETURN;}
 {Void}    {pos_start = pos_end; pos_end += 4; yylval.node = new_syntax_tree_node(yytext); return VOID;}
@@ -78,11 +78,11 @@ StopTime stoptime
 {Putf} {pos_start = pos_end; pos_end += 4; yylval.node = new_syntax_tree_node(yytext); return PUTF;}
 {StartTime} {pos_start = pos_end; pos_end += 9; yylval.node = new_syntax_tree_node(yytext); return STARTTIME;}
 {StopTime} {pos_start = pos_end; pos_end += 8; yylval.node = new_syntax_tree_node(yytext); return STOPTIME;}
-[_a-zA-Z]+[_0-9a-zA-Z]*   {printf("%d\n", 333); pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return IDENTIFIER;}
+[_a-zA-Z]+[_0-9a-zA-Z]*   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return IDENTIFIER;}
 [0-9]+  {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return INTEGER;}
 ([0-9]*\.[0-9]+|[0-9]+\.)   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return FLOATPOINT;}
 \[\]    {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return ARRAY;}
-\n  {printf("%d\n", 777); lines++; pos_start = 1; pos_end = 1;}
+\n  {lines++; pos_start = 1; pos_end = 1;}
 [ \t]   {pos_start = pos_end; pos_end += 1;}
 \/\/\/*.* {return COMMENTONELINE;}
 \".*\" {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}
