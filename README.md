@@ -130,3 +130,7 @@ https://blog.csdn.net/while10/article/details/108746417
 然后大家可以创建自己的分支 后面就可以进行提交之类的了
 
 **记得把out目录下的文件加入到.gitignore**: https://blog.csdn.net/toopoo/article/details/88660806
+
+## 现在进度
+
+已经可以生成语法分析树了！但是目前我们的CFG还存在很大问题，包括了语法覆盖不全和移进规约冲突。这可能是我们的第一个议题，有时间我们可以一起商量一下。
