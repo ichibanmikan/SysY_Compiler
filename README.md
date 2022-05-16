@@ -8,7 +8,7 @@
 
 ```
 .
-├── CMakeLists.txt //在 项目架构 一栏中会提到Cmake的使用方法
+├── CMakeLists.txt //在 项目架构 链接方式一栏中会提到Cmake的使用方法
 ├── CMakePresets.json //CMake自动生成的
 ├── README.md // 本文件
 ├── include //include头文件地址 我们尽量保证.h文件用以声明 .c/.cpp文件用以实现/定义
@@ -48,6 +48,38 @@
 
 ### 编译/执行方法
 
+#### 编译器版本
+
+这是大赛官网给的C/C++编译器版本要求，大赛还明确要求不能使用gcc LLVM等第三方工具。也就是说我们必须跟gcc g++说拜拜了
+
+<img src="https://s2.loli.net/2022/05/16/zKoQ8piPRhjfXM5.png">
+
+不过clang clang++和gcc/g++区别不很大，可以放心用
+
+我的Linux发行版本是Ubuntu20.04 64位
+
+使用以下命令
+
+```shell
+sudo apt-get install clang
+```
+
+下载得到的版本是
+
+```shell
+clang version 10.0.0-4ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+
+clang version 10.0.0-4ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+```
+
+所以我们要编译本项目要先下好clang-10
+
 #### 编译方法
 
 使用下面的命令编译本文件
@@ -64,7 +96,7 @@ mkdir build
 
 cd build
 cmake ../../  #这里是用cmake构建make文件
-make  #这里是编译指令 使用这条指令之后就会在lib文件夹下面生成库文件(这里是静态链接库，原因会在后面 项目架构 一栏中提一嘴)
+make  #这里是编译指令 使用这条指令之后就会在lib文件夹下面生成库文件(这里是静态链接库，原因会在后面 链接方式 一栏中提一嘴)
 
 #这个时候就会在../../目录下面生成一个可执行文件 再去执行它就好了
 ```
@@ -131,6 +163,50 @@ https://blog.csdn.net/while10/article/details/108746417
 
 **记得把out目录下的文件加入到.gitignore**: https://blog.csdn.net/toopoo/article/details/88660806
 
+### 链接方式(make/CMake)
+
+我忘了在哪个文件里看到的了，反正测评机的编译方式就是遍历根目录下的所有.c .cc .cpp文件，然后编译每一个文件再全部静态链接起来, 之后遍历寻找.h .hpp等文件，全部作为头文件引入
+
+类似于指令
+
+```shell
+gcc -i a.h b.h c.h…… -L 1.c 2.c 3.c
+```
+
+所以这给我们架构项目省了不少事
+
+**这里可以去看看CSAPP第七章 链接那个部分，我觉得这里写的挺好的**
+
+我们的Cmake就是这么做的
+
+每一个模块(拿词法分析的SysY_Lex模块举例子)
+
+它的CMakeLists.txt只有四行
+
+```makefile
+cmake_minimum_required (VERSION 3.8) #指定最小的CMake版本 大家版本对不上的自行修改
+
+aux_source_directory(. DIR_LIB_SRCS) #将指定目录下的所有源文件(.c .cpp)全都记录下来，记录到变量 DIR_LIB_SRCS 中
+								
+add_library(SysY_Lex ${DIR_LIB_SRCS}) #编译变量DIR_LIB_SRCS中所有源文件,增加到模块SysY_Lex中使SysY_Lex可以作为一个库
+									  #如果上面不用aux_source_directory，这里也可以改成
+									  #add_library(SysY_Lex lex.yy.c}
+
+target_include_directories(SysY_Lex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+#CMAKE_CURRENT_SOURCE_DIR 是保留字(就可以把它看成关键字) 他表示当前项目的根地址。因为我们编译的时候cmake指令处理的是最外层的cmake文件，所以这个文件就是最外层的目录
+#这个指令指的是将当前模块作为一个库链接起来，外层的cmake就会把所有模块(SysY_Lex SysY_Yacc之类的)全都链接起来
+```
+
+有了CMake管理工具，我们分模块进行协同开发的时候就方便多了
+
+大家开发自己的模块的时候就可以把上面的四句话复制过去，**需要改第三行 第四行中的模块名。**
+
+CMake是很常见的工具，网上相关教程特别多，我一般都是用到啥就去搜啥。**另外，我觉得CMake太好用辣！！！**
+
+
+
 ## 现在进度
 
-已经可以生成语法分析树了！但是目前我们的CFG还存在很大问题，包括了语法覆盖不全和移进规约冲突。这可能是我们的第一个议题，有时间我们可以一起商量一下。
+- 已经可以生成语法分析树了！但是目前我们的CFG还存在很大问题，包括了语法覆盖不全和移进规约冲突
+- SysY_Yacc.y 64-69行增加了const的语法分析部分。但是好像仍然无法识别const语句
+- 怎样从语法分析树到抽象语法树
