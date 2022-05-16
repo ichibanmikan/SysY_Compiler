@@ -61,6 +61,12 @@ var_declaration : type_specifier IDENTIFIER SEMICOLON {
                 |type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
                     $$ = node("var_declaration", 6, $1, $2, $3, $4, $5, $6);
                 }
+                |CONST type_specifier IDENTIFIER SEMICOLON{
+                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
+                }
+                |CONST type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
+                    $$ = node("var_declaration", 7, $1, $2, $3, $4, $5, $6, $7);
+                }
 type_specifier : INT {
                     $$ = node("type_specifier", 1, $1);
                 }
