@@ -84,8 +84,8 @@ StopTime stoptime
 \[\]    {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return ARRAY;}
 \n  {lines++; pos_start = 1; pos_end = 1;}
 [ \t]   {pos_start = pos_end; pos_end += 1;}
-\/\/\/*.* {return COMMENTONELINE;}
-\".*\" {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}
+\/\/\/*.* { yylval.node = new_syntax_tree_node(yytext);}
+\"(\\.|[^"\\])*\" {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}
 
 \/\*([^\*]|(\*)*[^\*/])*(\*)*\*\/   {
     pos_start = pos_end;
@@ -172,8 +172,9 @@ int count_num_enter(char *string) {
     int ret = 0;
     int index = 0;
     while(string[index] != '\0') {
-        if(string[index] == '\n')
-            ret++;
+        if(string[index] == '\n'){
+          ret++;
+        }
         index++;
     }
     yylval.node = new_syntax_tree_node(yytext); return ret;

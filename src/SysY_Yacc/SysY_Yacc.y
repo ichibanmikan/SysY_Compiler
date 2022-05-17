@@ -31,7 +31,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
 %type <node> type_specifier relop addop mulop
-%type <node> declaration_list declaration var_declaration fun_declaration local_declarations
+%type <node> declaration_list declaration var_declaration fun_declaration local_declarations local_declartion_assignment
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
 %type <node> expression simple_expression var additive_expression term factor integer float call calllib
 %type <node> params param_list param args arg_list
@@ -109,6 +109,7 @@ local_declarations : local_declarations var_declaration {
                     | {
                         $$ = node("local_declarations", 0);
                     }
+
 statement_list : statement_list statement {
                     $$ = node("statement_list", 2, $1, $2);
                 }
@@ -131,6 +132,9 @@ statement : expression_stmt {
                 $$ = node("statement", 1, $1);
             }
             |local_declarations{
+                $$ = node("statement", 1, $1);
+            }
+            |local_declartion_assignment{
                 $$ = node("statement", 1, $1);
             }
             |BREAK SEMICOLON {
@@ -160,6 +164,12 @@ return_stmt : RETURN SEMICOLON {
             |RETURN expression SEMICOLON {
                 $$ = node("return_stmt", 3, $1, $2, $3);
             }
+local_declartion_assignment : CONST type_specifier expression SEMICOLON{
+                              $$ = node("local_declartion_assignment", 3, $1, $2, $3);
+                            }
+                            |type_specifier expression SEMICOLON{
+                              $$ = node("local_declartion_assignment", 2, $1, $2);
+                            }
 expression : var ASSIGN expression {
                 $$ = node("expression", 3, $1, $2, $3);
             }
@@ -277,11 +287,8 @@ calllib : GETINT LPARENTHESE RPARENTHESE {
     | PUTFARRAY LPARENTHESE args RPARENTHESE{
         $$ = node("putin", 4, $1, $2, $3, $4);
     }
-    | PUTF LPARENTHESE CONTROLSTRING args RPARENTHESE{
+    | PUTF LPARENTHESE CONTROLSTRING COMMA args RPARENTHESE{
         $$ = node("putin", 5, $1, $2, $3, $4, $5);
-    }
-    | PUTF LPARENTHESE args RPARENTHESE{
-        $$ = node("putin", 4, $1, $2, $3, $4);
     }
     | STARTTIME LPARENTHESE RPARENTHESE{
         $$ = node("getfloat", 3, $1, $2, $3);
