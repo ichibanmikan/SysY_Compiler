@@ -1,8 +1,37 @@
+int a;
+int b;
+
+int run(int b) {
+  b=a;
+}
+
 int main(){
   float f;
-  f=2.0;
+  f=3.0;
+  const int b;
+  b=0;
+  /*int a =0;*/
+  /*/*/ /**/ /*helfxLayout="row wrap"*/
   while(f>0){
     f=f-0.1;
   }
+  a=50;
+  int a=b=c=0;
+  int hello=0;
+  const float ff=53.6;
+  int a=0;
+  const int miao_wangwang;
+  miao_wangwang=0;
+  int a;
+  a=0;
+  int ch=getch();
+  ch=getch();
+  int gfi = getfarray(a[0]);
+  putf("%dabc%cdef%fghi", t, a, hello);
   return 0;
+  //nenenenene
+  // aduiduiduidui;""asd
+  ////// 你好你好呐呐呐
+  /****hello****/
 }
+
