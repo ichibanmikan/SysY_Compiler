@@ -55,17 +55,17 @@ declaration : var_declaration {
             |fun_declaration {
                 $$ = node("declaration", 1, $1);
             }
-var_declaration : type_specifier IDENTIFIER SEMICOLON {
+var_declaration : CONST type_specifier IDENTIFIER SEMICOLON{
+                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
+                }
+                | CONST type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
+                    $$ = node("var_declaration", 7, $1, $2, $3, $4, $5, $6, $7);
+                }
+                |type_specifier IDENTIFIER SEMICOLON {
                     $$ = node("var_declaration", 3, $1, $2, $3);
                 }
                 |type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
                     $$ = node("var_declaration", 6, $1, $2, $3, $4, $5, $6);
-                }
-                |CONST type_specifier IDENTIFIER SEMICOLON{
-                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
-                }
-                |CONST type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
-                    $$ = node("var_declaration", 7, $1, $2, $3, $4, $5, $6, $7);
                 }
 type_specifier : INT {
                     $$ = node("type_specifier", 1, $1);
@@ -100,8 +100,8 @@ param : type_specifier IDENTIFIER {
     |type_specifier IDENTIFIER ARRAY {
         $$ = node("param", 3, $1, $2, $3);
     }
-compound_stmt : LBRACE local_declarations statement_list RBRACE {
-                    $$ = node("compound_stmt", 4, $1, $2, $3, $4);
+compound_stmt : LBRACE statement_list RBRACE {
+                    $$ = node("compound_stmt", 3, $1, $2, $3);
                 }
 local_declarations : local_declarations var_declaration {
                         $$ = node("local_declarations", 2, $1, $2);
@@ -130,10 +130,13 @@ statement : expression_stmt {
             |return_stmt {
                 $$ = node("statement", 1, $1);
             }
-            | BREAK SEMICOLON {
+            |local_declarations{
+                $$ = node("statement", 1, $1);
+            }
+            |BREAK SEMICOLON {
               $$ = node("statement", 2, $1, $2);
             }
-            | CONTINUE SEMICOLON {
+            |CONTINUE SEMICOLON {
               $$ = node("statement", 2, $1, $2);
             }
 expression_stmt : expression SEMICOLON {
