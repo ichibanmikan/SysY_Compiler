@@ -71,11 +71,6 @@ clang version 10.0.0-4ubuntu1
 Target: x86_64-pc-linux-gnu
 Thread model: posix
 InstalledDir: /usr/bin
-
-clang version 10.0.0-4ubuntu1
-Target: x86_64-pc-linux-gnu
-Thread model: posix
-InstalledDir: /usr/bin
 ```
 
 所以我们要编译本项目要先下好clang-10
