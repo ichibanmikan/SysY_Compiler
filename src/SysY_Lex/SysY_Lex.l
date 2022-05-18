@@ -40,6 +40,7 @@ StopTime stoptime
 \-  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return SUB;}
 \*  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return MUL;}
 \/  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return DIV;}
+% {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return MOD;}
 \<  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LT;}
 \<= {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return LTE;}
 \>  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return GT;}
@@ -47,6 +48,9 @@ StopTime stoptime
 ==  {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return EQ;}
 !=  {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return NEQ;}
 =   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return ASSIGN;}
+\|\| {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return OR;}
+&& {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return AND;}
+! {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return NOT;}
 ;   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return SEMICOLON;}
 ,   {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return COMMA;}
 \(  {pos_start = pos_end; pos_end += 1; yylval.node = new_syntax_tree_node(yytext); return LPARENTHESE;}

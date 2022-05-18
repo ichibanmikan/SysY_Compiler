@@ -28,12 +28,12 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 
 
 %start program
-%token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
+%token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
-%type <node> type_specifier relop addop mulop
+%type <node> type_specifier relop addop mulop logiclop
 %type <node> declaration_list declaration var_declaration fun_declaration local_declarations local_declartion_assignment
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
-%type <node> expression simple_expression var additive_expression term factor integer float call calllib
+%type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
 %type <node> params param_list param args arg_list
 
 %%
@@ -155,7 +155,16 @@ selection_stmt : IF LPARENTHESE expression RPARENTHESE statement {
                 |IF LPARENTHESE expression RPARENTHESE statement ELSE statement {
                     $$ = node("selection_stmt", 7, $1, $2, $3, $4, $5, $6, $7);
                 }
+                |IF LPARENTHESE logic_expression RPARENTHESE statement {
+                    $$ = node("selection_stmt", 5, $1, $2, $3, $4, $5);
+                }
+                |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
+                    $$ = node("selection_stmt", 7, $1, $2, $3, $4, $5, $6, $7);
+                }
 iteration_stmt : WHILE LPARENTHESE expression RPARENTHESE statement {
+                    $$ = node("iteration_stmt", 5, $1, $2, $3, $4, $5);
+                }
+                |WHILE LPARENTHESE logic_expression RPARENTHESE statement {
                     $$ = node("iteration_stmt", 5, $1, $2, $3, $4, $5);
                 }
 return_stmt : RETURN SEMICOLON {
@@ -182,6 +191,18 @@ var : IDENTIFIER {
     |IDENTIFIER LBRACKET expression RBRACKET {
         $$ = node("var", 4, $1, $2, $3, $4);
     }
+logic_expression : additive_expression logiclop additive_expression{
+                   $$ = node("logic_expression", 3, $1, $2, $3);
+                 }
+                 | NOT additive_expression{
+                   $$ = node("logic_expression", 2, $1, $2);
+                 }
+logiclop : AND{
+            $$ = node("logiclop", 1, $1);
+          }
+          |OR{
+            $$ = node("logiclop", 1, $1);
+          }
 simple_expression : additive_expression relop additive_expression {
                         $$ = node("simple_expression", 3, $1, $2, $3);
                     }
@@ -228,6 +249,9 @@ mulop : MUL {
             $$ = node("mulop", 1, $1);
         }
         |DIV {
+            $$ = node("mulop", 1, $1);
+        }
+        |MOD {
             $$ = node("mulop", 1, $1);
         }
 factor : LPARENTHESE expression RPARENTHESE {
