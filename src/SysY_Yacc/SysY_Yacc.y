@@ -290,25 +290,25 @@ calllib : GETINT LPARENTHESE RPARENTHESE {
     | GETFLOAT LPARENTHESE RPARENTHESE {
         $$ = node("getfloat", 3, $1, $2, $3);
     }
-    | GETARRAY LPARENTHESE args RPARENTHESE {
+    | GETARRAY LPARENTHESE expression RPARENTHESE {
         $$ = node("getarray", 4, $1, $2, $3, $4);
     }
-    | GETFARRAY LPARENTHESE args RPARENTHESE {
+    | GETFARRAY LPARENTHESE expression RPARENTHESE {
         $$ = node("getfarray", 4, $1, $2, $3, $4);
     }
-    | PUTINT LPARENTHESE INT RPARENTHESE {
+    | PUTINT LPARENTHESE expression RPARENTHESE {
         $$ = node("putin", 4, $1, $2, $3, $4);
     }
-    | PUTCH LPARENTHESE args RPARENTHESE{
+    | PUTCH LPARENTHESE expression RPARENTHESE{
         $$ = node("putch", 4, $1, $2, $3, $4);
     }
-    | PUTFLOAT LPARENTHESE FLOAT RPARENTHESE{
+    | PUTFLOAT LPARENTHESE expression RPARENTHESE{
         $$ = node("putfloat", 4, $1, $2, $3, $4);
     }
-    | PUTARRAY LPARENTHESE INT args RPARENTHESE{
+    | PUTARRAY LPARENTHESE expression expression RPARENTHESE{
         $$ = node("putin", 5, $1, $2, $3, $4, $5);
     }
-    | PUTFARRAY LPARENTHESE args RPARENTHESE{
+    | PUTFARRAY LPARENTHESE expression expression RPARENTHESE{
         $$ = node("putin", 4, $1, $2, $3, $4);
     }
     | PUTF LPARENTHESE CONTROLSTRING COMMA args RPARENTHESE{
