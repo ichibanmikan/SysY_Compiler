@@ -83,7 +83,25 @@ StopTime stoptime
 {StartTime} {pos_start = pos_end; pos_end += 9; yylval.node = new_syntax_tree_node(yytext); return STARTTIME;}
 {StopTime} {pos_start = pos_end; pos_end += 8; yylval.node = new_syntax_tree_node(yytext); return STOPTIME;}
 [_a-zA-Z]+[_0-9a-zA-Z]*   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return IDENTIFIER;}
-[0-9]+  {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return INTEGER;}
+0[0-7]* {
+  pos_start = pos_end; pos_end += strlen(yytext);
+  char* str=(char *)malloc(sizeof(char*)*20);
+  setNewChar(str, yytext);
+  yylval.node = new_syntax_tree_node(InttoString(OcttoDec(str)));
+  return INTEGER;
+}
+[1-9][0-9]*  {
+  pos_start = pos_end; pos_end += strlen(yytext);
+  yylval.node = new_syntax_tree_node(yytext);
+  return INTEGER;
+}
+0(x|X)[0-9a-fA-F]+ {
+  pos_start = pos_end; pos_end += strlen(yytext);
+  char* str=(char *)malloc(sizeof(char*)*20);
+  setNewChar(str, yytext);
+  yylval.node = new_syntax_tree_node(InttoString(HextoDec(str)));
+  return INTEGER;
+}
 ([0-9]*\.[0-9]+|[0-9]+\.)   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return FLOATPOINT;}
 \[\]    {pos_start = pos_end; pos_end += 2; yylval.node = new_syntax_tree_node(yytext); return ARRAY;}
 \n  {lines++; pos_start = 1; pos_end = 1;}
@@ -184,17 +202,94 @@ int count_num_enter(char *string) {
     yylval.node = new_syntax_tree_node(yytext); return ret;
 }
 
+int HextoDec(char *str){
+	int sum = 0;
+	int index = 1;
+	if(*str=='-'||*str=='+'){
+		if(*str=='-'){
+			index = -1;
+		}
+		str++;
+	}
+
+	if((*str=='0') && (*(str+1)=='x'|| *(str+1)=='X')){
+		str+=2;
+	} else {
+		return INT_MAX;
+	}
+
+	while(isxdigit(*str)) {
+		if(isdigit(*str)) {
+			sum = sum*16 + (*str-'0');
+		} else if(islower(*str)) {
+			sum = sum*16 + (*str-'a'+10);
+		} else {
+			sum = sum*16 + (*str-'A'+10);
+		}
+		str++;
+	}
+	if(*str == '\0'){
+    return sum * index;
+  }
+	return INT_MAX;
+}
+
+int OcttoDec(char* text){
+  int index=1;
+  if(*text=='-'||*text=='+'){
+    if(*text=='-'){
+      index=-1;
+    }
+    text++;
+  }
+  while(*text=='0'){
+    text++;
+  }
+  if(*text=='\0'){
+    return 0;
+  }
+  int sum=0;
+  while(*text!='\0'){
+    sum=(sum*8+(*text-'0'));
+    text++;
+  }
+  return index*sum;
+}
 
 
+const char* InttoString(int num){
+  char *str;
+	int i = 0;
+	if(num<0){
+		num = -num;
+		str[0] = '-';
+    i++;
+	}
+	do {
+		str[i] = num%10+48;
+		num /= 10;
+    i++;
+	} while(num);
+	str[i] = '\0';
+	int j = 0;
+	if(str[0]=='-'){
+		j = 1;
+		i++;
+	}
+	for(;j<i/2;j++){
+		str[j] = str[j] + str[i-1-j];
+		str[i-1-j] = str[j] - str[i-1-j];
+		str[j] = str[j] - str[i-1-j];
+	}
+  const char* constStr=str;
+	return constStr;
+}
 
 
-
-
-
-
-
-
-
-
-
-
+void setNewChar(char* ch, char* p){
+  int i=0;
+  while(p[i]!='\0'){
+    ch[i]=p[i];
+    i++;
+  }
+}
