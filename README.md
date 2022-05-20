@@ -216,7 +216,7 @@ C的整数处理部分在这里 http://www.open-std.org/jtc1/sc22/wg14/www/docs/
 (\-|\+)?0(x|X)[0-9a-fA-F]+   #十六进制
 ```
 
-然后下面这几个函数完成了从对应进制转到十进制
+然后下面这几个函数完成了从对应进制转到十进制 (0放到了8进制里面，反正不管怎么转它都是0)
 
 ```c
 int HextoDec(char *str)    //16进制字符串转为10进制数
@@ -225,7 +225,11 @@ const char* InttoString(int num)  //把10进制数转为字符串常量
 void setNewChar(char* ch, char* p) //深拷贝字符
 ```
 
-**负数的处理好难......因为负数减号难以区分**
+对于整数的符号问题
+
+<img src="https://s2.loli.net/2022/05/20/lUFdyE367Te1Pit.png">
+
+负数保留了符号，正数直接把加号去了当正数
 
 
 
