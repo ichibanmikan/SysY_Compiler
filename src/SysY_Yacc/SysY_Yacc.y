@@ -34,7 +34,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %type <node> declaration_list declaration var_declaration fun_declaration local_declarations local_declartion_assignment
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
 %type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
-%type <node> params param_list param args arg_list
+%type <node> params param_list param args arg_list array_size
 
 %%
 /* TODO: Your rules here. */
@@ -58,14 +58,14 @@ declaration : var_declaration {
 var_declaration : CONST type_specifier IDENTIFIER SEMICOLON{
                     $$ = node("var_declaration", 4, $1, $2, $3, $4);
                 }
-                | CONST type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
-                    $$ = node("var_declaration", 7, $1, $2, $3, $4, $5, $6, $7);
+                |CONST type_specifier IDENTIFIER array_size SEMICOLON{
+                    $$ = node("var_declaration", 5, $1, $2, $3, $4, $5);
                 }
                 |type_specifier IDENTIFIER SEMICOLON {
                     $$ = node("var_declaration", 3, $1, $2, $3);
                 }
-                |type_specifier IDENTIFIER LBRACKET INTEGER RBRACKET SEMICOLON {
-                    $$ = node("var_declaration", 6, $1, $2, $3, $4, $5, $6);
+                |type_specifier IDENTIFIER array_size SEMICOLON{
+                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
                 }
 type_specifier : INT {
                     $$ = node("type_specifier", 1, $1);
@@ -76,6 +76,12 @@ type_specifier : INT {
                 |VOID {
                     $$ = node("type_specifier", 1, $1);
                 }
+array_size : array_size LBRACKET additive_expression RBRACKET{
+              $$ = node("array_size", 4, $1, $2, $3, $4);
+           }
+           | LBRACKET additive_expression RBRACKET{
+              $$ = node("array_size", 3, $1, $2, $3);
+           }
 fun_declaration : type_specifier IDENTIFIER LPARENTHESE params RPARENTHESE compound_stmt {
                     $$ = node("fun_declaration", 6, $1, $2, $3, $4, $5, $6);
                 }
@@ -179,6 +185,12 @@ local_declartion_assignment : CONST type_specifier expression SEMICOLON{
                             |type_specifier expression SEMICOLON{
                               $$ = node("local_declartion_assignment", 2, $1, $2);
                             }
+                            |CONST type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
+                              $$ = node("local_declartion_assignment", 9, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+                            }
+                            |type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
+                              $$ = node("local_declartion_assignment", 8, $1, $2, $3, $4, $5, $6, $7, $8);
+                            }
 expression : var ASSIGN expression {
                 $$ = node("expression", 3, $1, $2, $3);
             }
@@ -275,8 +287,20 @@ factor : LPARENTHESE expression RPARENTHESE {
 integer : INTEGER {
             $$ = node("integer", 1, $1);
         }
+        | ADD INTEGER{
+            $$ = node("integer", 1, $2);
+        }
+        | SUB INTEGER{
+            $$ = node("integer", 2, $1, $2);
+        }
 float : FLOATPOINT {
             $$ = node("float", 1, $1);
+        }
+        | ADD FLOATPOINT{
+            $$ = node("float", 1, $2);
+        }
+        | SUB FLOATPOINT{
+            $$ = node("float", 2, $1, $2);
         }
 call : IDENTIFIER LPARENTHESE args RPARENTHESE {
         $$ = node("call", 4, $1, $2, $3, $4);
