@@ -31,7 +31,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
 %type <node> type_specifier relop addop mulop logiclop
-%type <node> declaration_list declaration var_declaration fun_declaration local_declarations local_declartion_assignment
+%type <node> declaration_list declaration var_declaration fun_declaration local_declartion_assignment declartion_assignment_expression
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
 %type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
 %type <node> params param_list param args arg_list array_size
@@ -109,12 +109,6 @@ param : type_specifier IDENTIFIER {
 compound_stmt : LBRACE statement_list RBRACE {
                     $$ = node("compound_stmt", 3, $1, $2, $3);
                 }
-local_declarations : local_declarations var_declaration {
-                        $$ = node("local_declarations", 2, $1, $2);
-                    }
-                    | {
-                        $$ = node("local_declarations", 0);
-                    }
 
 statement_list : statement_list statement {
                     $$ = node("statement_list", 2, $1, $2);
@@ -137,7 +131,7 @@ statement : expression_stmt {
             |return_stmt {
                 $$ = node("statement", 1, $1);
             }
-            |local_declarations{
+            |var_declaration{
                 $$ = node("statement", 1, $1);
             }
             |local_declartion_assignment{
@@ -179,10 +173,10 @@ return_stmt : RETURN SEMICOLON {
             |RETURN expression SEMICOLON {
                 $$ = node("return_stmt", 3, $1, $2, $3);
             }
-local_declartion_assignment : CONST type_specifier expression SEMICOLON{
+local_declartion_assignment : CONST type_specifier declartion_assignment_expression SEMICOLON{
                               $$ = node("local_declartion_assignment", 3, $1, $2, $3);
                             }
-                            |type_specifier expression SEMICOLON{
+                            |type_specifier declartion_assignment_expression SEMICOLON{
                               $$ = node("local_declartion_assignment", 2, $1, $2);
                             }
                             |CONST type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
@@ -191,6 +185,9 @@ local_declartion_assignment : CONST type_specifier expression SEMICOLON{
                             |type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
                               $$ = node("local_declartion_assignment", 8, $1, $2, $3, $4, $5, $6, $7, $8);
                             }
+declartion_assignment_expression : var ASSIGN expression {
+                                    $$ = node("declartion_assignment_expression", 3, $1, $2, $3);
+                                  }
 expression : var ASSIGN expression {
                 $$ = node("expression", 3, $1, $2, $3);
             }
@@ -200,8 +197,8 @@ expression : var ASSIGN expression {
 var : IDENTIFIER {
         $$ = node("var", 1, $1);
     }
-    |IDENTIFIER LBRACKET expression RBRACKET {
-        $$ = node("var", 4, $1, $2, $3, $4);
+    |IDENTIFIER array_size {
+        $$ = node("var", 2, $1, $2);
     }
 logic_expression : additive_expression logiclop additive_expression{
                    $$ = node("logic_expression", 3, $1, $2, $3);
