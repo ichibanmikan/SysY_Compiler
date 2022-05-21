@@ -11,7 +11,7 @@
 ├── CMakeLists.txt //在 项目架构 链接方式一栏中会提到Cmake的使用方法
 ├── CMakePresets.json //CMake自动生成的
 ├── README.md // 本文件
-├── include //include头文件地址 我们尽量保证.h文件用以声明 .c/.cpp文件用以实现/定义
+├── include //include头文件地址 我们尽量保证.h文件用以声明/定义 .c/.cpp文件用以实现
 │   ├── createTree.h
 │   └── includeLex.h
 ├── out //out是输出文件的目录，下面的内容中会提到out目录具体怎么使用，这个目录不放到git里
@@ -248,6 +248,5 @@ HextoDec(b);
 
 ## 现在进度
 
-- 已经可以生成语法分析树了！但是目前我们的CFG还存在很大问题，包括了语法覆盖不全和移进规约冲突
-- SysY_Yacc.y 64-69行增加了const的语法分析部分。但是好像仍然无法识别const语句
+- 非运算的运算优先性
 - 怎样从语法分析树到抽象语法树
