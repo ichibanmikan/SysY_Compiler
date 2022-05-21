@@ -5,16 +5,19 @@
 
 syntax_tree_node * new_syntax_tree_node(const char * name){
 	syntax_tree_node * new_node = (syntax_tree_node *)malloc(sizeof(syntax_tree_node));
-	if (name)
-		strncpy(new_node->name, name, SYNTAX_TREE_NODE_NAME_MAX);
-	else
-		new_node->name[0] = '\0';
+	if (name){
+    strncpy(new_node->name, name, SYNTAX_TREE_NODE_NAME_MAX);
+  } else {
+    new_node->name[0] = '\0';
+  }
 	new_node->children_num = 0;
 	return new_node;
 }
 
 int syntax_tree_add_child(syntax_tree_node * parent, syntax_tree_node * child){
-	if (!parent || !child)	return -1;
+	if (!parent || !child){
+    return -1;
+  }
 	parent->children[parent->children_num++] = child;
 	return parent->children_num;
 }
@@ -22,7 +25,7 @@ int syntax_tree_add_child(syntax_tree_node * parent, syntax_tree_node * child){
 void del_syntax_tree_node(syntax_tree_node * node, int recursive){
 	if (!node){
 		return ;
-	}	
+	}
 	int i;
 	if (recursive) {
 		for (i = 0; i < node->children_num; i++) {
@@ -47,7 +50,9 @@ void del_syntax_tree(syntax_tree * tree){
 }
 
 void print_syntax_tree_node(FILE * fout, syntax_tree_node * node, int level){
-	if (!node)	return;
+	if (!node) {
+    return;
+  }
 	int i;
 	for (i = 0; i < level; i++) {
 		fprintf(fout, "|  ");
@@ -62,7 +67,6 @@ void print_syntax_tree(FILE * fout, syntax_tree * tree){
 	if (!fout){
 		return;
 	}
-	
 	print_syntax_tree_node(fout, tree->root, 0);
 }
 
