@@ -21,13 +21,13 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
     syntax_tree_node* node;
 }
 
-
+%left NOT
 %start program
 %token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
 %type <node> type_specifier relop addop mulop logiclop
 %type <node> declaration_list declaration var_declaration fun_declaration local_declartion_assignment declartion_assignment_expression
-%type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
+%type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt idenfier_list idenfier_array_list
 %type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
 %type <node> params param_list param args arg_list array_size brace_size
 
@@ -52,17 +52,31 @@ declaration : var_declaration {
             |fun_declaration {
                 $$ = node("declaration", 1, $1);
             }
-var_declaration : CONST type_specifier IDENTIFIER SEMICOLON{
+idenfier_list : idenfier_list COMMA IDENTIFIER{
+                $$ = node("idenfier_list", 3, $1, $2, $3);
+              }
+              | IDENTIFIER{
+                $$ = node("idenfier_list", 1);
+              }
+
+idenfier_array_list : idenfier_array_list COMMA IDENTIFIER array_size{
+                      $$ = node("idenfier_array_list", 4, $1, $2, $3, $4);
+                    }
+                    | IDENTIFIER array_size{
+                      $$ = node("idenfier_array_list", 2, $1, $2);
+                    }
+
+var_declaration : CONST type_specifier idenfier_list SEMICOLON{
                     $$ = node("var_declaration", 4, $1, $2, $3, $4);
                 }
-                |CONST type_specifier IDENTIFIER array_size SEMICOLON{
-                    $$ = node("var_declaration", 5, $1, $2, $3, $4, $5);
+                |CONST type_specifier idenfier_array_list SEMICOLON{
+                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
                 }
-                |type_specifier IDENTIFIER SEMICOLON {
+                |type_specifier idenfier_list SEMICOLON {
                     $$ = node("var_declaration", 3, $1, $2, $3);
                 }
-                |type_specifier IDENTIFIER array_size SEMICOLON{
-                    $$ = node("var_declaration", 4, $1, $2, $3, $4);
+                |type_specifier idenfier_array_list SEMICOLON{
+                    $$ = node("var_declaration", 3, $1, $2, $3);
                 }
 type_specifier : INT {
                     $$ = node("type_specifier", 1, $1);
@@ -210,7 +224,7 @@ var : IDENTIFIER {
 logic_expression : additive_expression logiclop additive_expression{
                    $$ = node("logic_expression", 3, $1, $2, $3);
                  }
-                 | NOT additive_expression{
+                 | NOT simple_expression{
                    $$ = node("logic_expression", 2, $1, $2);
                  }
 logiclop : AND{
