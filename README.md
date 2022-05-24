@@ -12,29 +12,29 @@
 ├── CMakePresets.json //CMake自动生成的
 ├── README.md // 本文件
 ├── include //include头文件地址 我们尽量保证.h文件用以声明/定义 .c/.cpp文件用以实现
-│   ├── createTree.h
-│   └── includeLex.h
+│   ├── createTree.h
+│   └── includeLex.h
 ├── out //out是输出文件的目录，下面的内容中会提到out目录具体怎么使用，这个目录不放到git里
-│   ├── Test //二进制可执行文件
-│   ├── build //构建目录 也就是CMake文件和make文件输出的地址，编译信息存在这里
-│   └── lib //库文件输出的目录
-│       ├── libSysY_Lex.a
-│       └── libSysY_Yacc.a 
+│   ├── Test //二进制可执行文件
+│   ├── build //构建目录 也就是CMake文件和make文件输出的地址，编译信息存在这里
+│   └── lib //库文件输出的目录
+│       ├── libSysY_Lex.a
+│       └── libSysY_Yacc.a 
 ├── src //源文件目录
-│   ├── CMakeLists.txt 
-│   ├── SysY_Lex //词法分析模块目录 在 Bison和Lex 一栏中会提到词法分析和语法分析怎样拼接到一起
-│   │   ├── CMakeLists.txt
-│   │   ├── SysY_Lex.h
-│   │   ├── SysY_Lex.l
-│   │   └── lex.yy.c
-│   ├── SysY_Yacc //语法分析所在模块
-│   │   ├── CMakeLists.txt
-│   │   ├── CreateTree.c
-│   │   ├── SysY_Yacc.h
-│   │   ├── SysY_Yacc.tab.c
-│   │   ├── SysY_Yacc.tab.h
-│   │   └── SysY_Yacc.y
-│   └── main_test.c //main函数 现阶段main函数主要用来测试
+│   ├── CMakeLists.txt 
+│   ├── SysY_Lex //词法分析模块目录 在 Bison和Lex 一栏中会提到词法分析和语法分析怎样拼接到一起
+│   │   ├── CMakeLists.txt
+│   │   ├── SysY_Lex.h
+│   │   ├── SysY_Lex.l
+│   │   └── lex.yy.c
+│   ├── SysY_Yacc //语法分析所在模块
+│   │   ├── CMakeLists.txt
+│   │   ├── CreateTree.c
+│   │   ├── SysY_Yacc.h
+│   │   ├── SysY_Yacc.tab.c
+│   │   ├── SysY_Yacc.tab.h
+│   │   └── SysY_Yacc.y
+│   └── main_test.c //main函数 现阶段main函数主要用来测试
 └── test //测试文件和输出结果所在目录
     ├── test1.sy
     ├── test1_out1
@@ -145,6 +145,36 @@ argv[n]：指向执行程序名后的第n个字符串 ，表示传入的第n个�
 https://blog.csdn.net/z_ryan/article/details/80979432
 
 
+#### 测试脚本
+请在主目录或`out`,`test`下运行脚本。  
+使用方法：  
+```SHELL
+python3 test.py
+```
+默认执行`./out/`下的唯一可执行文件，测试`test`下以`.sy`结尾的所有测试文件。  
+脚本参数如下：
+```SHELL
+usage: test.py [-h] [-e OUTFILE] [-s SYFILES] [-y] [-p]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e OUTFILE, --outfile OUTFILE
+                        The Executable for testing (default: ./out/)
+  -s SYFILES, --syfiles SYFILES
+                        Test cases for testing (default: ./test/)
+  -y, --onlysy          Consider only test files ending in sy (default：True)
+  -p, --print_stdout    Print standard output (default：False)
+```
+脚本会自动判断参数是文件名还是路径名，使用相对`./`的路径。  
+e.g.
+```bash
+#./out/
+python3 ../test/test.py
+#./test/
+python3 test.py -s ./test/functional/
+#./
+python3 ./test/test.py -s ./test/performance
+```
 
 ## 一些注意事项
 
@@ -182,10 +212,10 @@ gcc -i a.h b.h c.h…… -L 1.c 2.c 3.c
 cmake_minimum_required (VERSION 3.8) #指定最小的CMake版本 大家版本对不上的自行修改
 
 aux_source_directory(. DIR_LIB_SRCS) #将指定目录下的所有源文件(.c .cpp)全都记录下来，记录到变量 DIR_LIB_SRCS 中
-								
+                                
 add_library(SysY_Lex ${DIR_LIB_SRCS}) #编译变量DIR_LIB_SRCS中所有源文件,增加到模块SysY_Lex中使SysY_Lex可以作为一个库
-									  #如果上面不用aux_source_directory，这里也可以改成
-									  #add_library(SysY_Lex lex.yy.c}
+                                      #如果上面不用aux_source_directory，这里也可以改成
+                                      #add_library(SysY_Lex lex.yy.c}
 
 target_include_directories(SysY_Lex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 #CMAKE_CURRENT_SOURCE_DIR 是保留字(就可以把它看成关键字) 他表示当前项目的根地址。因为我们编译的时候cmake指令处理的是最外层的cmake文件，所以这个文件就是最外层的目录
