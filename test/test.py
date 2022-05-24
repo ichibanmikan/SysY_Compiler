@@ -43,6 +43,13 @@ def get_args():
 
 def parse_exe(exepath):
 	exename = ''
+	try:
+		assert(os.path.exists(exepath))
+	except AssertionError as aeeor:
+		print(error%'[Error]',end=' ')
+		print('Executable file does not exist.', aeeor, aeeor.__str__())
+		print('You may need to change the path to the relative path under workplace...')
+		exit()
 	if(os.path.isdir(exepath)):
 		filelists = os.listdir(exepath)
 		exenum = 0
@@ -71,6 +78,13 @@ def parse_exe(exepath):
 
 def test_files(testfile,onlysy):
 	testcases = []
+	try:
+		assert(os.path.exists(testfile))
+	except AssertionError as aeeor:
+		print(error%'[Error]',end=' ')
+		print('Tesecases file does not exist.', aeeor, aeeor.__str__())
+		print('You may need to change the path to the relative path under workplace...')
+		exit()
 	if(os.path.isdir(testfile)):
 		syfilelists = os.listdir(testfile)
 		for syfile in syfilelists:
