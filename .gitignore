@@ -2,6 +2,7 @@ figs
 out
 .vs
 .vscode
+!test/test.py
 test
 test/test2_out
 test/test1_out1
