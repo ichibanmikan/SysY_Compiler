@@ -1,23 +1,18 @@
 %{
 #include "SysY_Yacc.h"
 
-// external functions from lex
 extern int yylex();
 extern FILE* yyin;
-// external variables from lexical_analyzer module
 extern int lines;
 extern char *yytext;
 extern int pos_end;
 extern int pos_start;
 extern void yyrestart  (FILE * input_file );
 
-// Global syntax tree
 syntax_tree *gt;
 
-// Error reporting
 void yyerror(const char *s);
 
-// Helper functions written for you with love
 syntax_tree_node *node(const char *node_name, int children_num, ...);
 %}
 
@@ -34,10 +29,9 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %type <node> declaration_list declaration var_declaration fun_declaration local_declartion_assignment declartion_assignment_expression
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt
 %type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
-%type <node> params param_list param args arg_list array_size
+%type <node> params param_list param args arg_list array_size brace_size
 
 %%
-/* TODO: Your rules here. */
 
 program : declaration_list {
             $$ = node("program", 1, $1);
@@ -50,6 +44,9 @@ declaration_list : declaration_list declaration {
                      $$ = node("declaration_list", 1, $1);
                  }
 declaration : var_declaration {
+                $$ = node("declaration", 1, $1);
+            }
+            |local_declartion_assignment{
                 $$ = node("declaration", 1, $1);
             }
             |fun_declaration {
@@ -102,10 +99,10 @@ param_list : param_list COMMA param {
             }
 param : type_specifier IDENTIFIER {
             $$ = node("param", 2, $1, $2);
-        }
-    |type_specifier IDENTIFIER ARRAY {
-        $$ = node("param", 3, $1, $2, $3);
-    }
+      }
+      |type_specifier IDENTIFIER ARRAY {
+          $$ = node("param", 3, $1, $2, $3);
+      }
 compound_stmt : LBRACE statement_list RBRACE {
                     $$ = node("compound_stmt", 3, $1, $2, $3);
                 }
@@ -179,12 +176,22 @@ local_declartion_assignment : CONST type_specifier declartion_assignment_express
                             |type_specifier declartion_assignment_expression SEMICOLON{
                               $$ = node("local_declartion_assignment", 2, $1, $2);
                             }
-                            |CONST type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
-                              $$ = node("local_declartion_assignment", 9, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+                            |CONST type_specifier IDENTIFIER array_size ASSIGN brace_size SEMICOLON{
+                              $$ = node("local_declartion_assignment", 7, $1, $2, $3, $4, $5, $6, $7);
                             }
-                            |type_specifier IDENTIFIER array_size ASSIGN LBRACE arg_list RBRACE SEMICOLON{
-                              $$ = node("local_declartion_assignment", 8, $1, $2, $3, $4, $5, $6, $7, $8);
+                            |type_specifier IDENTIFIER array_size ASSIGN brace_size SEMICOLON{
+                              $$ = node("local_declartion_assignment", 6, $1, $2, $3, $4, $5, $6);
                             }
+brace_size : LBRACE brace_size COMMA brace_size RBRACE{
+              $$ = node("brace_size", 3, $1, $2, $3);
+           }
+           | LBRACE arg_list RBRACE{
+              $$ = node("brace_size", 3, $1, $2, $3);
+           }
+           | arg_list{
+              $$ = node("brace_size", 1, $1);
+           }
+
 declartion_assignment_expression : var ASSIGN expression {
                                     $$ = node("declartion_assignment_expression", 3, $1, $2, $3);
                                   }
