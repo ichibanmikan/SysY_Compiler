@@ -27,12 +27,12 @@ def get_args():
 						'--onlysy',
 						default=True,
 						action='store_false',
-						help='Consider only test files ending in sy')
+						help='Consider only test files ending in sy (default：True)')
 	parser.add_argument('-p',
 						'--print_stdout',
 						default=False,
 						action='store_true',
-						help='Print standard output')
+						help='Print standard output (default：False)')
 
 
 	args = parser.parse_args() 
@@ -71,7 +71,7 @@ def test_files(testfile,onlysy):
 	if(os.path.isdir(testfile)):
 		syfilelists = os.listdir(testfile)
 		for syfile in syfilelists:
-			if(onlysy and (not '.sy' in syfile)):
+			if(onlysy and (not syfile.endswith('.sy'))):
 				continue
 			testcases.append(testfile+syfile)
 	else:
