@@ -146,6 +146,7 @@ https://blog.csdn.net/z_ryan/article/details/80979432
 
 
 #### 测试脚本
+请在主目录或`out`,`test`下运行脚本。  
 使用方法：  
 ```SHELL
 python3 test.py
@@ -164,7 +165,16 @@ optional arguments:
   -y, --onlysy          Consider only test files ending in sy (default：True)
   -p, --print_stdout    Print standard output (default：False)
 ```
-脚本会自动判断参数是文件名还是路径名。  
+脚本会自动判断参数是文件名还是路径名，使用相对`./`的路径。  
+e.g.
+```bash
+#./out/
+python3 ../test/test.py
+#./test/
+python3 test.py -s ./test/functional/
+#./
+python3 ./test/test.py -s ./test/performance
+```
 
 ## 一些注意事项
 

@@ -3,6 +3,9 @@ import os
 import sys
 import subprocess
 assert ('linux' in sys.platform)
+currpath = os.getcwd()
+if(('out' in currpath) or ('test' in currpath)):
+	os.chdir('../')
 outfile = './out/'
 syfiles = './test/'
 
@@ -71,9 +74,11 @@ def test_files(testfile,onlysy):
 	if(os.path.isdir(testfile)):
 		syfilelists = os.listdir(testfile)
 		for syfile in syfilelists:
+			if(os.path.isdir(testfile+'/'+syfile)):
+				continue
 			if(onlysy and (not syfile.endswith('.sy'))):
 				continue
-			testcases.append(testfile+syfile)
+			testcases.append(testfile+'/'+syfile)
 	else:
 		testcases.append(testfile)
 	try:
@@ -96,6 +101,8 @@ def main():
 	args = get_args()
 	exe_path = parse_exe(args.outfile)
 	testcases = test_files(args.syfiles,args.onlysy)
+	passnum = 0
+	failnum = 0
 	for testcase in testcases:
 		print(info%'[Info]',end=' ')
 		print('Running test cases:',testcase)
@@ -104,10 +111,14 @@ def main():
 			print(error%'[Error]',end=' ')
 			print('testcase:'+testcase)
 			print(stderr.decode('utf-8'))
+			failnum += 1
 		else:
 			print('>'+testcase+' pass...')
+			passnum += 1
 		if(args.print_stdout):
 			print(stdout.decode('utf-8'))
+	print(info%'[Info]',end=' ')
+	print('pass:',passnum,'fail:',failnum)
 
 
 if __name__ == "__main__":
