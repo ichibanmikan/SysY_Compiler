@@ -8,7 +8,7 @@ if(('out' in currpath) or ('test' in currpath)):
 	os.chdir('../')
 outfile = './out/'
 syfiles = './test/'
-
+logfile = './test/log.txt'
 error = '\033[1;31;40m%s\033[0m'
 info = '\033[1;32;40m%s\033[0m'
 warning = '\033[1;34;40m%s\033[0m'
@@ -36,6 +36,16 @@ def get_args():
 						default=False,
 						action='store_true',
 						help='Print standard output (default：False)')
+	parser.add_argument('-l',
+						'--error_log',
+						default=False,
+						action='store_true',
+						help=' (default：False)')
+	parser.add_argument('-f',
+						'--logfile',
+						default=logfile,
+						type=str,
+						help='The Executable for testing (default: '+ logfile + ')')
 
 
 	args = parser.parse_args() 
@@ -117,6 +127,9 @@ def main():
 	testcases = test_files(args.syfiles,args.onlysy)
 	passnum = 0
 	failnum = 0
+	log = ''
+	if(args.error_log):
+		log = open(args.logfile, mode='w', encoding='utf-8')
 	for testcase in testcases:
 		print(info%'[Info]',end=' ')
 		print('Running test cases:',testcase)
@@ -125,6 +138,8 @@ def main():
 			print(error%'[Error]',end=' ')
 			print('testcase:'+testcase)
 			print(stderr.decode('utf-8'))
+			log.write(testcase+':\t')
+			log.write(stderr.decode('utf-8'))
 			failnum += 1
 		else:
 			print('>'+testcase+' pass...')
