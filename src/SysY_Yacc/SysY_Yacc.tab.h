@@ -49,19 +49,19 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    ADD = 258,
-    SUB = 259,
-    MUL = 260,
-    DIV = 261,
-    LT = 262,
-    LTE = 263,
-    GT = 264,
-    GTE = 265,
-    EQ = 266,
-    NEQ = 267,
-    AND = 268,
-    OR = 269,
-    NOT = 270,
+    NOT = 258,
+    ADD = 259,
+    SUB = 260,
+    MUL = 261,
+    DIV = 262,
+    LT = 263,
+    LTE = 264,
+    GT = 265,
+    GTE = 266,
+    EQ = 267,
+    NEQ = 268,
+    AND = 269,
+    OR = 270,
     MOD = 271,
     ASSIGN = 272,
     SEMICOLON = 273,
@@ -113,7 +113,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "SysY_Yacc.y"
+#line 20 "SysY_Yacc.y"
 
     syntax_tree_node* node;
 
