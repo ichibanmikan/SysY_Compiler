@@ -4,8 +4,3 @@ out
 .vscode
 !test/test.py
 test
-test/test2_out
-test/test1_out1
-test/test1_out2
-test/functional
-test/performance
