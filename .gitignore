@@ -1,6 +1,8 @@
+figs
 out
 .vs
 .vscode
 test/test2_out
 test/test1_out1
 test/test1_out2
+test/functional
