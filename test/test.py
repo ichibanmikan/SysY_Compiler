@@ -30,15 +30,15 @@ def get_args():
 						'--onlysy',
 						default=True,
 						action='store_false',
-						help='Consider only test files ending in sy (default：True)')
+						help='Consider only test files ending in sy (default: True)')
 	parser.add_argument('-p',
 						'--print_stdout',
 						default=False,
 						action='store_true',
-						help='Print standard output (default：False)')
+						help='Print standard output (default: False)')
 
 
-	args = parser.parse_args() 
+	args = parser.parse_args()
 	return args
 
 def parse_exe(exepath):
@@ -111,7 +111,7 @@ def run_single(exe_path,testcase):
 	stdout, stderr = p.communicate()
 	return stdout, stderr
 
-def main():		
+def main():
 	args = get_args()
 	exe_path = parse_exe(args.outfile)
 	testcases = test_files(args.syfiles,args.onlysy)
