@@ -25,11 +25,11 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %start program
 %token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
-%type <node> type_specifier relop addop mulop logiclop
-%type <node> declaration_list declaration var_declaration fun_declaration declartion_assignment declartion_assignment_expression
-%type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt idenfier_list idenfier_array_list
-%type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
-%type <node> params param_list param args arg_list array_size init_val_size init_val_size_size declartion_assignment_size
+%type <node> type_specifier relop addop mulop
+%type <node> declaration_list declaration var_declaration fun_declaration const_declartion_assignment declartion_assignment_expression logic_or_expression logic_and_expression equal_expression relop_expression
+%type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt idenfier_list
+%type <node> expression additive_expression logic_expression var term factor call calllib unary_ops_size unary_ops
+%type <node> params param_list param args arg_list array_size init_val_size init_val_size_size declartion_assignment_size idenfier_size
 
 %%
 
@@ -46,32 +46,35 @@ declaration_list : declaration_list declaration {
 declaration : var_declaration {
                 $$ = node("declaration", 1, $1);
             }
-            |declartion_assignment{
+            |const_declartion_assignment{
                 $$ = node("declaration", 1, $1);
             }
             |fun_declaration {
                 $$ = node("declaration", 1, $1);
             }
-idenfier_list : idenfier_list COMMA IDENTIFIER{
+idenfier_size : idenfier_size COMMA idenfier_list{
+                $$ = node("idenfier_size", 3, $1, $2, $3);
+              }
+              | idenfier_list{
+                $$ = node("idenfier_size", 1);
+              }
+idenfier_list : IDENTIFIER{
+                $$ = node("idenfier_list", 1, $1);
+              }
+              | IDENTIFIER ASSIGN init_val_size{
                 $$ = node("idenfier_list", 3, $1, $2, $3);
               }
-              | IDENTIFIER{
-                $$ = node("idenfier_list", 1);
+              | IDENTIFIER array_size{
+                $$ = node("idenfier_list", 2, $1, $2);
+              }
+              | IDENTIFIER array_size ASSIGN init_val_size{
+                $$ = node("idenfier_list", 4, $1, $2, $3, $4);
               }
 
-idenfier_array_list : idenfier_array_list COMMA IDENTIFIER array_size{
-                      $$ = node("idenfier_array_list", 4, $1, $2, $3, $4);
-                    }
-                    | IDENTIFIER array_size{
-                      $$ = node("idenfier_array_list", 2, $1, $2);
-                    }
+var_declaration :type_specifier idenfier_size SEMICOLON {
+                    $$ = node("var_declaration", 3, $1, $2, $3);
+                }
 
-var_declaration :type_specifier idenfier_list SEMICOLON {
-                    $$ = node("var_declaration", 3, $1, $2, $3);
-                }
-                |type_specifier idenfier_array_list SEMICOLON{
-                    $$ = node("var_declaration", 3, $1, $2, $3);
-                }
 type_specifier : INT {
                     $$ = node("type_specifier", 1, $1);
                 }
@@ -139,7 +142,7 @@ statement : expression_stmt {
             |var_declaration{
                 $$ = node("statement", 1, $1);
             }
-            |declartion_assignment{
+            |const_declartion_assignment{
                 $$ = node("statement", 1, $1);
             }
             |BREAK SEMICOLON {
@@ -154,22 +157,13 @@ expression_stmt : expression SEMICOLON {
                 |SEMICOLON {
                     $$ = node("expression_stmt", 1, $1);
                 }
-selection_stmt : IF LPARENTHESE expression RPARENTHESE statement {
-                    $$ = node("selection_stmt", 5, $1, $2, $3, $4, $5);
-                }
-                |IF LPARENTHESE expression RPARENTHESE statement ELSE statement {
-                    $$ = node("selection_stmt", 7, $1, $2, $3, $4, $5, $6, $7);
-                }
-                |IF LPARENTHESE logic_expression RPARENTHESE statement {
+selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
                     $$ = node("selection_stmt", 5, $1, $2, $3, $4, $5);
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
                     $$ = node("selection_stmt", 7, $1, $2, $3, $4, $5, $6, $7);
                 }
-iteration_stmt : WHILE LPARENTHESE expression RPARENTHESE statement {
-                    $$ = node("iteration_stmt", 5, $1, $2, $3, $4, $5);
-                }
-                |WHILE LPARENTHESE logic_expression RPARENTHESE statement {
+iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
                     $$ = node("iteration_stmt", 5, $1, $2, $3, $4, $5);
                 }
 return_stmt : RETURN SEMICOLON {
@@ -178,11 +172,8 @@ return_stmt : RETURN SEMICOLON {
             |RETURN expression SEMICOLON {
                 $$ = node("return_stmt", 3, $1, $2, $3);
             }
-declartion_assignment : CONST type_specifier declartion_assignment_size SEMICOLON{
-                              $$ = node("declartion_assignment", 3, $1, $2, $3);
-                            }
-                            |type_specifier declartion_assignment_size SEMICOLON{
-                              $$ = node("declartion_assignment", 2, $1, $2);
+const_declartion_assignment : CONST type_specifier declartion_assignment_size SEMICOLON{
+                              $$ = node("const_declartion_assignment", 3, $1, $2, $3);
                             }
 
 init_val_size : expression{
@@ -216,7 +207,7 @@ declartion_assignment_expression : var ASSIGN init_val_size {
 expression : var ASSIGN expression {
                 $$ = node("expression", 3, $1, $2, $3);
             }
-            |simple_expression {
+            |additive_expression {
                 $$ = node("expression", 1, $1);
             }
 var : IDENTIFIER {
@@ -225,24 +216,42 @@ var : IDENTIFIER {
     |IDENTIFIER array_size {
         $$ = node("var", 2, $1, $2);
     }
-logic_expression : additive_expression logiclop additive_expression{
-                   $$ = node("logic_expression", 3, $1, $2, $3);
-                 }
-                 | NOT simple_expression{
-                   $$ = node("logic_expression", 2, $1, $2);
-                 }
-logiclop : AND{
-            $$ = node("logiclop", 1, $1);
-          }
-          |OR{
-            $$ = node("logiclop", 1, $1);
-          }
-simple_expression : additive_expression relop additive_expression {
-                        $$ = node("simple_expression", 3, $1, $2, $3);
+
+logic_expression : logic_or_expression{
+                    $$ = node("logic_expression", 1, $1);
+                  }
+
+logic_or_expression : logic_and_expression{
+                      $$ = node("logic_or_expression", 1, $1);
                     }
-                    |additive_expression {
-                        $$ = node("simple_expression", 1, $1);
+                    |logic_or_expression OR logic_and_expression{
+                      $$ = node("logic_or_expression", 3, $1, $2, $3);
                     }
+
+logic_and_expression : equal_expression{
+                        $$ = node("logic_and_expression", 1, $1);
+                      }
+                      | logic_and_expression AND equal_expression{
+                        $$ = node("logic_and_expression", 3, $1, $2, $3);
+                      }
+
+equal_expression : relop_expression{
+            $$ = node("equal_expression", 1, $1);
+          }
+          | equal_expression EQ relop_expression{
+            $$ = node("equal_expression", 3, $1, $2, $3);
+          }
+          | equal_expression NEQ relop_expression{
+            $$ = node("equal_expression", 3, $1, $2, $3);
+          }
+
+relop_expression : additive_expression{
+            $$ = node("additive_expression", 1, $1);
+          }
+          |relop_expression relop additive_expression{
+            $$ = node("additive_expression", 3, $1, $2, $3);
+          }
+
 relop : LTE {
             $$ = node("relop", 1, $1);
         }
@@ -255,12 +264,7 @@ relop : LTE {
         |GTE {
             $$ = node("relop", 1, $1);
         }
-        |EQ {
-            $$ = node("relop", 1, $1);
-        }
-        |NEQ {
-            $$ = node("relop", 1, $1);
-        }
+
 additive_expression : additive_expression addop term {
                         $$ = node("additive_expression", 3, $1, $2, $3);
                     }
@@ -278,6 +282,9 @@ term : term mulop factor {
         }
         |factor {
             $$ = node("term", 1, $1);
+        }
+        |unary_ops_size factor{
+            $$ = node("term", 2, $1, $2);
         }
 mulop : MUL {
             $$ = node("mulop", 1, $1);
@@ -297,33 +304,32 @@ factor : LPARENTHESE expression RPARENTHESE {
         |call {
             $$ = node("factor", 1, $1);
         }
-        |integer {
+        |INTEGER {
             $$ = node("factor", 1, $1);
         }
-        |float {
+        |FLOATPOINT {
             $$ = node("factor", 1, $1);
         }
         |calllib {
             $$ = node("calllib", 1, $1);
         }
-integer : INTEGER {
-            $$ = node("integer", 1, $1);
-        }
-        | ADD INTEGER{
-            $$ = node("integer", 1, $2);
-        }
-        | SUB INTEGER{
-            $$ = node("integer", 2, $1, $2);
-        }
-float : FLOATPOINT {
-            $$ = node("float", 1, $1);
-        }
-        | ADD FLOATPOINT{
-            $$ = node("float", 1, $2);
-        }
-        | SUB FLOATPOINT{
-            $$ = node("float", 2, $1, $2);
-        }
+
+unary_ops_size : unary_ops_size unary_ops{
+                  $$ = node("unary_ops_size", 2, $1, $2);
+                }
+                |unary_ops{
+                  $$ = node("unary_ops_size", 1, $1);
+                }
+
+unary_ops : ADD{}
+          |SUB{
+            $$ = node("unary_ops", 1, $1);
+          }
+          |NOT{
+            $$ = node("unary_ops", 1, $1);
+          }
+
+
 call : IDENTIFIER LPARENTHESE args RPARENTHESE {
         $$ = node("call", 4, $1, $2, $3, $4);
      }
