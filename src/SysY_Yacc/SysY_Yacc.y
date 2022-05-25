@@ -29,7 +29,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %type <node> declaration_list declaration var_declaration fun_declaration local_declartion_assignment declartion_assignment_expression
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt idenfier_list idenfier_array_list
 %type <node> expression simple_expression logic_expression var additive_expression term factor integer float call calllib
-%type <node> params param_list param args arg_list array_size brace_size
+%type <node> params param_list param args arg_list array_size init_val_size init_val_size_size
 
 %%
 
@@ -190,21 +190,29 @@ local_declartion_assignment : CONST type_specifier declartion_assignment_express
                             |type_specifier declartion_assignment_expression SEMICOLON{
                               $$ = node("local_declartion_assignment", 2, $1, $2);
                             }
-                            |CONST type_specifier IDENTIFIER array_size ASSIGN brace_size SEMICOLON{
+                            |CONST type_specifier IDENTIFIER array_size ASSIGN init_val_size SEMICOLON{
                               $$ = node("local_declartion_assignment", 7, $1, $2, $3, $4, $5, $6, $7);
                             }
-                            |type_specifier IDENTIFIER array_size ASSIGN brace_size SEMICOLON{
+                            |type_specifier IDENTIFIER array_size ASSIGN init_val_size SEMICOLON{
                               $$ = node("local_declartion_assignment", 6, $1, $2, $3, $4, $5, $6);
                             }
-brace_size : LBRACE brace_size COMMA brace_size RBRACE{
-              $$ = node("brace_size", 3, $1, $2, $3);
-           }
-           | LBRACE arg_list RBRACE{
-              $$ = node("brace_size", 3, $1, $2, $3);
-           }
-           | arg_list{
-              $$ = node("brace_size", 1, $1);
-           }
+
+init_val_size : expression{
+                $$ = node("init_val_size", 1, $1);
+              }
+              |LBRACE RBRACE{
+                $$ = node("init_val_size", 2, $1, $2);
+              }
+              |LBRACE init_val_size_size RBRACE{
+                $$ = node("init_val_size", 3, $1, $2, $3);
+              }
+
+init_val_size_size : init_val_size_size COMMA init_val_size{
+                      $$ = node("array_init_val_size_size", 3, $1, $2, $3);
+                  }
+                  |init_val_size{
+                    $$ = node("init_val_size_size", 1, $1);
+                  }
 
 declartion_assignment_expression : var ASSIGN expression {
                                     $$ = node("declartion_assignment_expression", 3, $1, $2, $3);
