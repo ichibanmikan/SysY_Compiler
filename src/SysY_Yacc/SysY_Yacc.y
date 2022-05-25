@@ -28,7 +28,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %type <node> type_specifier relop addop mulop
 %type <node> declaration_list declaration var_declaration fun_declaration const_declartion_assignment declartion_assignment_expression logic_or_expression logic_and_expression equal_expression relop_expression
 %type <node> compound_stmt statement_list statement expression_stmt iteration_stmt selection_stmt return_stmt idenfier_list
-%type <node> expression additive_expression logic_expression var term factor call calllib unary_ops_size unary_ops
+%type <node> expression additive_expression logic_expression var term factor call calllib unary_ops_size unary_ops array_cell
 %type <node> params param_list param args arg_list array_size init_val_size init_val_size_size declartion_assignment_size idenfier_size
 
 %%
@@ -84,12 +84,20 @@ type_specifier : INT {
                 |VOID {
                     $$ = node("type_specifier", 1, $1);
                 }
-array_size : array_size LBRACKET additive_expression RBRACKET{
-              $$ = node("array_size", 4, $1, $2, $3, $4);
+array_size : array_size array_cell{
+              $$ = node("array_size", 2, $1, $2);
            }
-           | LBRACKET additive_expression RBRACKET{
-              $$ = node("array_size", 3, $1, $2, $3);
+           | array_cell{
+              $$ = node("array_size", 1, $1);
            }
+
+array_cell : LBRACKET additive_expression RBRACKET{
+            $$ = node("array_cell", 3, $1, $2, $3);
+          }
+          | LBRACKET RBRACKET{
+            $$ = node("array_cell", 2, $1, $2);
+          }
+
 fun_declaration : type_specifier IDENTIFIER LPARENTHESE params RPARENTHESE compound_stmt {
                     $$ = node("fun_declaration", 6, $1, $2, $3, $4, $5, $6);
                 }
@@ -111,8 +119,11 @@ param_list : param_list COMMA param {
 param : type_specifier IDENTIFIER {
             $$ = node("param", 2, $1, $2);
       }
-      |type_specifier IDENTIFIER ARRAY {
-          $$ = node("param", 3, $1, $2, $3);
+      |type_specifier IDENTIFIER array_size {
+        $$ = node("param", 3, $1, $2, $3);
+      }
+      |type_specifier IDENTIFIER ARRAY{
+        $$ = node("param", 3, $1, $2, $3);
       }
 compound_stmt : LBRACE statement_list RBRACE {
                     $$ = node("compound_stmt", 3, $1, $2, $3);
@@ -357,10 +368,10 @@ calllib : GETINT LPARENTHESE RPARENTHESE {
     | PUTFLOAT LPARENTHESE expression RPARENTHESE{
         $$ = node("putfloat", 4, $1, $2, $3, $4);
     }
-    | PUTARRAY LPARENTHESE expression expression RPARENTHESE{
+    | PUTARRAY LPARENTHESE expression COMMA expression RPARENTHESE{
         $$ = node("putin", 5, $1, $2, $3, $4, $5);
     }
-    | PUTFARRAY LPARENTHESE expression expression RPARENTHESE{
+    | PUTFARRAY LPARENTHESE expression COMMA expression RPARENTHESE{
         $$ = node("putin", 4, $1, $2, $3, $4);
     }
     | PUTF LPARENTHESE CONTROLSTRING COMMA args RPARENTHESE{
