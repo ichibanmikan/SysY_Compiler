@@ -288,6 +288,9 @@ addop : ADD {
 term : term mulop factor {
             $$ = node("term", 3, $1, $2, $3);
         }
+        |term mulop unary_ops_size factor{
+          $$ = node("term", 4, $1, $2, $3, $4);
+        }
         |factor {
             $$ = node("term", 1, $1);
         }
