@@ -82,30 +82,29 @@ extern int yydebug;
     IDENTIFIER = 288,
     INTEGER = 289,
     FLOATPOINT = 290,
-    ARRAY = 291,
-    LETTER = 292,
-    EOL = 293,
-    COMMENT = 294,
-    BLANK = 295,
-    ERROR = 296,
-    CONTINUE = 297,
-    BREAK = 298,
-    CONST = 299,
-    COMMENTONELINE = 300,
-    GETINT = 301,
-    GETCH = 302,
-    GETFLOAT = 303,
-    GETARRAY = 304,
-    GETFARRAY = 305,
-    PUTINT = 306,
-    PUTCH = 307,
-    PUTFLOAT = 308,
-    PUTARRAY = 309,
-    PUTFARRAY = 310,
-    PUTF = 311,
-    STARTTIME = 312,
-    STOPTIME = 313,
-    CONTROLSTRING = 314
+    LETTER = 291,
+    EOL = 292,
+    COMMENT = 293,
+    BLANK = 294,
+    ERROR = 295,
+    CONTINUE = 296,
+    BREAK = 297,
+    CONST = 298,
+    COMMENTONELINE = 299,
+    GETINT = 300,
+    GETCH = 301,
+    GETFLOAT = 302,
+    GETARRAY = 303,
+    GETFARRAY = 304,
+    PUTINT = 305,
+    PUTCH = 306,
+    PUTFLOAT = 307,
+    PUTARRAY = 308,
+    PUTFARRAY = 309,
+    PUTF = 310,
+    STARTTIME = 311,
+    STOPTIME = 312,
+    CONTROLSTRING = 313
   };
 #endif
 
@@ -117,7 +116,7 @@ union YYSTYPE
 
     syntax_tree_node* node;
 
-#line 121 "SysY_Yacc.tab.h"
+#line 120 "SysY_Yacc.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

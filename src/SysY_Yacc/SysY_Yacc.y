@@ -23,7 +23,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 
 %left NOT
 %start program
-%token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT ARRAY LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
+%token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
 %type <node> type_specifier relop addop mulop
 %type <node> declaration_list declaration var_declaration fun_declaration const_declartion_assignment declartion_assignment_expression logic_or_expression logic_and_expression equal_expression relop_expression
@@ -120,9 +120,6 @@ param : type_specifier IDENTIFIER {
             $$ = node("param", 2, $1, $2);
       }
       |type_specifier IDENTIFIER array_size {
-        $$ = node("param", 3, $1, $2, $3);
-      }
-      |type_specifier IDENTIFIER ARRAY{
         $$ = node("param", 3, $1, $2, $3);
       }
 compound_stmt : LBRACE statement_list RBRACE {
