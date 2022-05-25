@@ -2,5 +2,5 @@ figs
 out
 .vs
 .vscode
-!test/test.py
 test
+!test/test.py
