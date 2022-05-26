@@ -102,7 +102,21 @@ StopTime stoptime
   yylval.node = new_syntax_tree_node(InttoString(HextoDec(str)));
   return INTEGER;
 }
-([0-9]*\.[0-9]+|[0-9]+\.)   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return FLOATPOINT;}
+
+(([0-9]*\.[0-9]+|[0-9]+\.|[0-9]+)((e|E)[-+]?([0-9]+))?)   {
+  pos_start = pos_end;
+  pos_end += strlen(yytext);
+  yylval.node = new_syntax_tree_node(yytext);
+  return FLOATPOINT;
+}
+
+0(x|X)((([0-9a-fA-F]*\.[0-9a-fA-F]+|[0-9a-fA-F]+\.)(P|p)[-+]?([0-9]+))|(([0-9a-fA-F]+)((P|p)[-+]?([0-9]+))?)) {
+  pos_start = pos_end;
+  pos_end += strlen(yytext);
+  yylval.node = new_syntax_tree_node(yytext);
+  return FLOATPOINT;
+}
+
 \n  {lines++; pos_start = 1; pos_end = 1;}
 [ \t]   {pos_start = pos_end; pos_end += 1;}
 \/\/\/*.* { yylval.node = new_syntax_tree_node(yytext);}

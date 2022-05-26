@@ -56,7 +56,7 @@ idenfier_size : idenfier_size COMMA idenfier_list{
                 $$ = node("idenfier_size", 3, $1, $2, $3);
               }
               | idenfier_list{
-                $$ = node("idenfier_size", 1);
+                $$ = node("idenfier_size", 1, $1);
               }
 idenfier_list : IDENTIFIER{
                 $$ = node("idenfier_list", 1, $1);

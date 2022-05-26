@@ -1642,7 +1642,7 @@ yyreduce:
   case 9:
 #line 58 "SysY_Yacc.y"
                              {
-                (yyval.node) = node("idenfier_size", 1);
+                (yyval.node) = node("idenfier_size", 1, (yyvsp[0].node));
               }
 #line 1648 "SysY_Yacc.tab.c"
     break;
