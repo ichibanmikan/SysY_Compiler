@@ -40,7 +40,7 @@ def get_args():
 						'--error_log',
 						default=False,
 						action='store_true',
-						help=' (default：False)')
+						help='Print error log (default：False)')
 	parser.add_argument('-f',
 						'--logfile',
 						default=logfile,

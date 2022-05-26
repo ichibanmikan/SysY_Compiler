@@ -164,17 +164,21 @@ optional arguments:
                         Test cases for testing (default: ./test/)
   -y, --onlysy          Consider only test files ending in sy (default：True)
   -p, --print_stdout    Print standard output (default：False)
+  -l, --error_log       Print error log (default：False)
 ```
 脚本会自动判断参数是文件名还是路径名，使用相对`./`的路径。  
 e.g.
+
 ```bash
 #./out/
 python3 ../test/test.py
 #./test/
-python3 test.py -s ./test/functional/
+python3 test.py -s ./test/functional/ -l
 #./
-python3 ./test/test.py -s ./test/performance
+python3 ./test/test.py -s ./test/performance -l
 ```
+
+目前是**强制-l**，目的是将有错误的文件打印到error.log中
 
 ## 一些注意事项
 
