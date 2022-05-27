@@ -4,10 +4,11 @@
 #include <stdio.h>
 
 #define SYNTAX_TREE_NODE_NAME_MAX 30
+#define SYNTAX_TREE_NODE_CHILDREN_NUM_MAX 100005
 
 typedef struct __syntax_tree_node_ {
 	struct __syntax_tree_node_* parent;
-	struct __syntax_tree_node_* children[10];
+	struct __syntax_tree_node_* children[SYNTAX_TREE_NODE_CHILDREN_NUM_MAX];
 	int children_num;
 	char name[SYNTAX_TREE_NODE_NAME_MAX];
 } syntax_tree_node ;

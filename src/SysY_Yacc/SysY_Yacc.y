@@ -38,363 +38,407 @@ program : declaration_list {
             gt->root = $$;
         }
 declaration_list : declaration_list declaration {
-                    $$ = node("declaration_list", 2, $1, $2);
+                    $$ = $1;
+                    syntax_tree_add_child($$, $2);
                  }
                  | declaration {
-                     $$ = node("declaration_list", 1, $1);
+                     $$ = new_syntax_tree_node("declarations");
+                     syntax_tree_add_child($$, $1);
                  }
 declaration : var_declaration {
-                $$ = node("declaration", 1, $1);
+                $$ = $1;
             }
             |const_declartion_assignment{
-                $$ = node("declaration", 1, $1);
+                $$ = $1;
             }
             |fun_declaration {
-                $$ = node("declaration", 1, $1);
+                $$ = $1;
             }
 idenfier_size : idenfier_size COMMA idenfier_list{
-                $$ = node("idenfier_size", 3, $1, $2, $3);
+                $$ = $1;
+                syntax_tree_add_child($$, $3);
               }
               | idenfier_list{
-                $$ = node("idenfier_size", 1, $1);
+                $$ = new_syntax_tree_node("idenfiers");
+                syntax_tree_add_child($$, $1);
               }
 idenfier_list : IDENTIFIER{
-                $$ = node("idenfier_list", 1, $1);
+                $$ = $1;
               }
               | IDENTIFIER ASSIGN init_val_size{
-                $$ = node("idenfier_list", 3, $1, $2, $3);
+                $$ = $2;
+                syntax_tree_add_child($$, $1);
+                syntax_tree_add_child($$, $3);
               }
               | IDENTIFIER array_size{
-                $$ = node("idenfier_list", 2, $1, $2);
+                $$ = $1;
+                syntax_tree_add_child($$, $2);
               }
               | IDENTIFIER array_size ASSIGN init_val_size{
-                $$ = node("idenfier_list", 4, $1, $2, $3, $4);
+                $$ = $3;
+                syntax_tree_add_child($1, $2);
+                syntax_tree_add_child($$, $1);
+                syntax_tree_add_child($$, $4);
               }
 
 var_declaration :type_specifier idenfier_size SEMICOLON {
-                    $$ = node("var_declaration", 3, $1, $2, $3);
+                    $$ = node("var_declaration", 2, $1, $2);
                 }
 
 type_specifier : INT {
-                    $$ = node("type_specifier", 1, $1);
+                    $$ = $1;
                 }
                 |FLOAT {
-                    $$ = node("type_specifier", 1, $1);
+                    $$ = $1;
                 }
                 |VOID {
-                    $$ = node("type_specifier", 1, $1);
+                    $$ = $1;
                 }
 array_size : array_size array_cell{
-              $$ = node("array_size", 2, $1, $2);
+              $$ = $1;
+              syntax_tree_add_child($$, $2);
            }
            | array_cell{
-              $$ = node("array_size", 1, $1);
+                $$ = new_syntax_tree_node("array_size");
+                syntax_tree_add_child($$, $1);
            }
 
 array_cell : LBRACKET additive_expression RBRACKET{
-            $$ = node("array_cell", 3, $1, $2, $3);
+            $$ = $2;
           }
           | LBRACKET RBRACKET{
-            $$ = node("array_cell", 2, $1, $2);
+            $$ = node("void", 0);
           }
 
 fun_declaration : type_specifier IDENTIFIER LPARENTHESE params RPARENTHESE compound_stmt {
-                    $$ = node("fun_declaration", 6, $1, $2, $3, $4, $5, $6);
+                    $$ = node("func_declaration", 4, $1, $2, $4, $6);
                 }
 params : param_list {
-            $$ = node("params", 1, $1);
+            $$ = $1;
         }
         |VOID {
-            $$ = node("params" ,1, $1);
+            $$ = new_syntax_tree_node("void");
         }
         | {
-          $$ = node("param", 0);
+          $$ = new_syntax_tree_node("void");
         }
 param_list : param_list COMMA param {
-                $$ = node("param_list", 3, $1, $2, $3);
+                $$ = $3;
+                syntax_tree_add_child($$, $1);
             }
             |param {
-                $$ = node("param_list", 1, $1);
+                $$ = new_syntax_tree_node("params");
+                syntax_tree_add_child($$, $1);
             }
 param : type_specifier IDENTIFIER {
-            $$ = node("param", 2, $1, $2);
+        $$ = node("param", 2, $1, $2);
       }
       |type_specifier IDENTIFIER array_size {
-        $$ = node("param", 3, $1, $2, $3);
+        $$ = node("param_array", 3, $1, $2, $3);
       }
 compound_stmt : LBRACE statement_list RBRACE {
-                    $$ = node("compound_stmt", 3, $1, $2, $3);
+                    $$ = $2;
                 }
 
 statement_list : statement_list statement {
-                    $$ = node("statement_list", 2, $1, $2);
+                    $$ = $1;
+                    syntax_tree_add_child($$, $2);
                 }
                 | {
-                    $$ = node("statement_list", 0);
+                    $$ = new_syntax_tree_node("stmts");
                 }
 statement : expression_stmt {
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |compound_stmt {
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |selection_stmt {
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |iteration_stmt {
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |return_stmt {
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |var_declaration{
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |const_declartion_assignment{
-                $$ = node("statement", 1, $1);
+                $$ = $1;
             }
             |BREAK SEMICOLON {
-              $$ = node("statement", 2, $1, $2);
+              $$ = $1;
             }
             |CONTINUE SEMICOLON {
-              $$ = node("statement", 2, $1, $2);
+              $$ = $1;
             }
 expression_stmt : expression SEMICOLON {
-                    $$ = node("expression_stmt", 2, $1, $2);
+                    $$ = $1;
                 }
                 |SEMICOLON {
-                    $$ = node("expression_stmt", 1, $1);
+
                 }
 selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("selection_stmt", 5, $1, $2, $3, $4, $5);
+                    $$ = node("if_stmt", 2, $3, $5);
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
-                    $$ = node("selection_stmt", 7, $1, $2, $3, $4, $5, $6, $7);
+                    $$ = node("if_else_stmt", 3, $3, $5, $7);
                 }
 iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("iteration_stmt", 5, $1, $2, $3, $4, $5);
+                    $$ = node("while_stmt", 2, $3, $5);
                 }
 return_stmt : RETURN SEMICOLON {
-                $$ = node("return_stmt", 2, $1, $2);
+                $$ = node("return_stmt", 0);
             }
             |RETURN expression SEMICOLON {
-                $$ = node("return_stmt", 3, $1, $2, $3);
+                $$ = node("return_stmt", 1, $2);
             }
 const_declartion_assignment : CONST type_specifier declartion_assignment_size SEMICOLON{
-                              $$ = node("const_declartion_assignment", 3, $1, $2, $3);
+                              $$ = node("const_declartion_assignment", 2, $2, $3);
                             }
 
 init_val_size : expression{
-                $$ = node("init_val_size", 1, $1);
+                $$ = $1;
               }
               |LBRACE RBRACE{
-                $$ = node("init_val_size", 2, $1, $2);
+                $$ = new_syntax_tree_node("unknow_size");
               }
               |LBRACE init_val_size_size RBRACE{
-                $$ = node("init_val_size", 3, $1, $2, $3);
+                $$ = $2;
               }
 
 init_val_size_size : init_val_size_size COMMA init_val_size{
-                      $$ = node("array_init_val_size_size", 3, $1, $2, $3);
+                      $$ = $1;
+                      syntax_tree_add_child($$, $3);
                   }
                   |init_val_size{
-                    $$ = node("init_val_size_size", 1, $1);
+                      $$ = new_syntax_tree_node("init_vals");
+                      syntax_tree_add_child($$, $1);
                   }
 
 declartion_assignment_size : declartion_assignment_size COMMA declartion_assignment_expression{
-                            $$ = node("declartion_assignment_size", 3, $1, $2, $3);
+                            $$ = $1;
+                            syntax_tree_add_child($$, $3);
                           }
                           |declartion_assignment_expression{
-                            $$ = node("declartion_assignment_size", 1, $1);
+                            $$ = new_syntax_tree_node("declartion_assignments");
+                            syntax_tree_add_child($$, $1);
                           }
 
 declartion_assignment_expression : var ASSIGN init_val_size {
-                                    $$ = node("declartion_assignment_expression", 3, $1, $2, $3);
+                                    $$ = $2;
+                                    syntax_tree_add_child($$, $1);
+                                    syntax_tree_add_child($$, $3);
                                   }
 
 expression : var ASSIGN expression {
-                $$ = node("expression", 3, $1, $2, $3);
+                $$ = $2;
+                syntax_tree_add_child($$, $1);
+                syntax_tree_add_child($$, $3);
             }
             |additive_expression {
-                $$ = node("expression", 1, $1);
+                $$ = $1;
             }
 var : IDENTIFIER {
-        $$ = node("var", 1, $1);
+        $$ = $1;
     }
     |IDENTIFIER array_size {
-        $$ = node("var", 2, $1, $2);
+        $$ = $1;
+        syntax_tree_add_child($$, $2);
     }
 
 logic_expression : logic_or_expression{
-                    $$ = node("logic_expression", 1, $1);
+                    $$ = $1;
                   }
 
 logic_or_expression : logic_and_expression{
-                      $$ = node("logic_or_expression", 1, $1);
+                      $$ = $1;
                     }
                     |logic_or_expression OR logic_and_expression{
-                      $$ = node("logic_or_expression", 3, $1, $2, $3);
+                      $$ = $2;
+                      syntax_tree_add_child($$, $1);
+                      syntax_tree_add_child($$, $3);
                     }
 
 logic_and_expression : equal_expression{
-                        $$ = node("logic_and_expression", 1, $1);
+                        $$ = $1;
                       }
                       | logic_and_expression AND equal_expression{
-                        $$ = node("logic_and_expression", 3, $1, $2, $3);
+                        $$ = $2;
+                        syntax_tree_add_child($$, $1);
+                        syntax_tree_add_child($$, $3);
                       }
 
 equal_expression : relop_expression{
-            $$ = node("equal_expression", 1, $1);
+            $$ = $1;
           }
           | equal_expression EQ relop_expression{
-            $$ = node("equal_expression", 3, $1, $2, $3);
+            $$ = $2;
+            syntax_tree_add_child($$, $1);
+            syntax_tree_add_child($$, $3);
           }
           | equal_expression NEQ relop_expression{
-            $$ = node("equal_expression", 3, $1, $2, $3);
+            $$ = $2;
+            syntax_tree_add_child($$, $1);
+            syntax_tree_add_child($$, $3);
           }
 
 relop_expression : additive_expression{
-            $$ = node("additive_expression", 1, $1);
+            $$ = $1;
           }
           |relop_expression relop additive_expression{
-            $$ = node("additive_expression", 3, $1, $2, $3);
+            $$ = $2;
+            syntax_tree_add_child($$, $1);
+            syntax_tree_add_child($$, $3);
           }
 
 relop : LTE {
-            $$ = node("relop", 1, $1);
+            $$ = $1;
         }
         |LT {
-            $$ = node("relop", 1, $1);
+            $$ = $1;
         }
         |GT {
-            $$ = node("relop", 1, $1);
+            $$ = $1;
         }
         |GTE {
-            $$ = node("relop", 1, $1);
+            $$ = $1;
         }
 
 additive_expression : additive_expression addop term {
-                        $$ = node("additive_expression", 3, $1, $2, $3);
+                        $$ = $2;
+                        syntax_tree_add_child($$, $1);
+                        syntax_tree_add_child($$, $3);
                     }
                     |term {
-                        $$ = node("additive_expression", 1, $1);
+                        $$ = $1;
                     }
 addop : ADD {
-            $$ = node("addop", 1, $1);
+            $$ = $1;
         }
         |SUB {
-            $$ = node("addop", 1, $1);
+            $$ = $1;
         }
 term : term mulop factor {
-            $$ = node("term", 3, $1, $2, $3);
+            $$ = $2;
+            syntax_tree_add_child($$, $1);
+            syntax_tree_add_child($$, $3);
         }
         |term mulop unary_ops_size factor{
-          $$ = node("term", 4, $1, $2, $3, $4);
+          $$ = $2;
+          syntax_tree_add_child($$, $1);
+          syntax_tree_add_child($$, node("unary_ops_factor", 2, $3, $4));
         }
         |factor {
-            $$ = node("term", 1, $1);
+            $$ = $1;
         }
         |unary_ops_size factor{
-            $$ = node("term", 2, $1, $2);
+            $$ = node("unary_ops_factor", 2, $1, $2);
         }
 mulop : MUL {
-            $$ = node("mulop", 1, $1);
+            $$ = $1;
         }
         |DIV {
-            $$ = node("mulop", 1, $1);
+            $$ = $1;
         }
         |MOD {
-            $$ = node("mulop", 1, $1);
+            $$ = $1;
         }
 factor : LPARENTHESE expression RPARENTHESE {
-            $$ = node("factor", 3, $1, $2, $3);
+            $$ = $2;
         }
         |var {
-            $$ = node("factor", 1, $1);
+            $$ = $1;
         }
         |call {
-            $$ = node("factor", 1, $1);
+            $$ = $1;
         }
         |INTEGER {
-            $$ = node("factor", 1, $1);
+            $$ = $1;
         }
         |FLOATPOINT {
-            $$ = node("factor", 1, $1);
+            $$ = $1;
         }
         |calllib {
-            $$ = node("calllib", 1, $1);
+            $$ = $1;
         }
 
 unary_ops_size : unary_ops_size unary_ops{
-                  $$ = node("unary_ops_size", 2, $1, $2);
+                  $$ = $2;
+                  syntax_tree_add_child($$, $1);
                 }
                 |unary_ops{
-                  $$ = node("unary_ops_size", 1, $1);
+                  $$ = $1;
                 }
 
-unary_ops : ADD{}
+unary_ops :ADD{
+            $$ = $1;
+          }
           |SUB{
-            $$ = node("unary_ops", 1, $1);
+            $$ = $1;
           }
           |NOT{
-            $$ = node("unary_ops", 1, $1);
+            $$ = $1;
           }
 
-
 call : IDENTIFIER LPARENTHESE args RPARENTHESE {
-        $$ = node("call", 4, $1, $2, $3, $4);
+        $$ = $1;
+        syntax_tree_add_child($$, $3);
      }
 calllib : GETINT LPARENTHESE RPARENTHESE {
-        $$ = node("getint", 3, $1, $2, $3);
+        $$ = node("getint", 0);
     }
     | GETCH LPARENTHESE RPARENTHESE {
-        $$ = node("getch", 3, $1, $2, $3);
+        $$ = node("getch", 0);
     }
     | GETFLOAT LPARENTHESE RPARENTHESE {
-        $$ = node("getfloat", 3, $1, $2, $3);
+        $$ = node("getfloat", 0);
     }
     | GETARRAY LPARENTHESE expression RPARENTHESE {
-        $$ = node("getarray", 4, $1, $2, $3, $4);
+        $$ = node("getarray", 1, $3);
     }
     | GETFARRAY LPARENTHESE expression RPARENTHESE {
-        $$ = node("getfarray", 4, $1, $2, $3, $4);
+        $$ = node("getfarray", 1, $3);
     }
     | PUTINT LPARENTHESE expression RPARENTHESE {
-        $$ = node("putin", 4, $1, $2, $3, $4);
+        $$ = node("putint", 1, $3);
     }
     | PUTCH LPARENTHESE expression RPARENTHESE{
-        $$ = node("putch", 4, $1, $2, $3, $4);
+        $$ = node("putch", 1, $3);
     }
     | PUTFLOAT LPARENTHESE expression RPARENTHESE{
-        $$ = node("putfloat", 4, $1, $2, $3, $4);
+        $$ = node("putfloat", 1, $3);
     }
     | PUTARRAY LPARENTHESE expression COMMA expression RPARENTHESE{
-        $$ = node("putin", 5, $1, $2, $3, $4, $5);
+        $$ = node("putarray", 2, $3, $5);
     }
     | PUTFARRAY LPARENTHESE expression COMMA expression RPARENTHESE{
-        $$ = node("putin", 4, $1, $2, $3, $4);
+        $$ = node("putfarray", 2, $3, $5);
     }
     | PUTF LPARENTHESE CONTROLSTRING COMMA args RPARENTHESE{
-        $$ = node("putin", 5, $1, $2, $3, $4, $5);
+        $$ = node("putf", 2, $3, $5);
     }
     | STARTTIME LPARENTHESE RPARENTHESE{
-        $$ = node("getfloat", 3, $1, $2, $3);
+        $$ = node("starttime", 0);
     }
     | STOPTIME LPARENTHESE RPARENTHESE{
-        $$ = node("getfloat", 3, $1, $2, $3);
+        $$ = node("stoptime", 0);
     }
 
 args : arg_list {
         $$ = node("args", 1, $1);
     }
     | {
-        $$ = node("args", 0);
+        $$ = new_syntax_tree_node("epsilon");
     }
 arg_list : arg_list COMMA expression {
-            $$ = node("arg_list", 3, $1, $2, $3);
+            $$ = $3;
+            syntax_tree_add_child($$, $1);
         }
         |expression {
-            $$ = node("arg_list", 1, $1);
+            $$ = $1;
         }
 %%
 
