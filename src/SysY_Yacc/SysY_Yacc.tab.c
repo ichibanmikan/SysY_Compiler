@@ -1750,7 +1750,7 @@ yyreduce:
   case 21:
 #line 109 "SysY_Yacc.y"
                              {
-            (yyval.node) = node("void", 0);
+            (yyval.node) = new_syntax_tree_node("void");
           }
 #line 1756 "SysY_Yacc.tab.c"
     break;
@@ -1790,8 +1790,8 @@ yyreduce:
   case 26:
 #line 125 "SysY_Yacc.y"
                                     {
-                (yyval.node) = (yyvsp[0].node);
-                syntax_tree_add_child((yyval.node), (yyvsp[-2].node));
+                (yyval.node) = (yyvsp[-2].node);
+                syntax_tree_add_child((yyval.node), (yyvsp[0].node));
             }
 #line 1797 "SysY_Yacc.tab.c"
     break;

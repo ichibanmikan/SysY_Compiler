@@ -107,7 +107,7 @@ array_cell : LBRACKET additive_expression RBRACKET{
             $$ = $2;
           }
           | LBRACKET RBRACKET{
-            $$ = node("void", 0);
+            $$ = new_syntax_tree_node("void");
           }
 
 fun_declaration : type_specifier IDENTIFIER LPARENTHESE params RPARENTHESE compound_stmt {
@@ -123,8 +123,8 @@ params : param_list {
           $$ = new_syntax_tree_node("void");
         }
 param_list : param_list COMMA param {
-                $$ = $3;
-                syntax_tree_add_child($$, $1);
+                $$ = $1;
+                syntax_tree_add_child($$, $3);
             }
             |param {
                 $$ = new_syntax_tree_node("params");
