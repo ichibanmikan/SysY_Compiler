@@ -34,8 +34,6 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %%
 
 program : declaration_list {
-            $$ = node("program", 1, $1);
-            gt->root = $$;
         }
 declaration_list : declaration_list declaration {
                     $$ = $1;
@@ -43,6 +41,7 @@ declaration_list : declaration_list declaration {
                  }
                  | declaration {
                      $$ = new_syntax_tree_node("declarations");
+                     gt->root = $$;
                      syntax_tree_add_child($$, $1);
                  }
 declaration : var_declaration {
