@@ -2,21 +2,24 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../include/includeLex.h"
-#include "../include/createTree.h"
 
-struct Token_Node;
+extern "C"{
+  #include "../include/createTree.h"
+}
+
+// struct Token_Node;
 
 // extern是全局的意思 以extern int a为例，就是说这个变量a是全局变量并且在其他地方被声明过了
 extern FILE* yyin; //声明yyin yyin就是yacc的输入方式 它默认是从文件读入的所以我们声明为*FILE类型
 extern FILE* yyout; //同上
-extern int yyparse (void); //yyparse函数是yyac的执行驱动函数，这个函数完成了语法分析的操作
-// 我突然发现这里好像是有问题的，我印象中我只声明了一次yyparse 也就是在SysY_Yacc.y里的parse()函数中没有声明 我回头会看一下的
-//这里有可能对应下面的BUG
 
-extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
+extern "C"{
+  extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
+}
+
+syntax_tree *tree = NULL; //语法分析树的根节点 抽象的代指这棵树
 
 int main(int argc, char *argv[]){
-    syntax_tree *tree = NULL; //语法分析树的根节点 抽象的代指这棵树
     const char *input_path = NULL; //输入路径
     if (argc >= 3) {
       printf("%s\n", "errorororor");

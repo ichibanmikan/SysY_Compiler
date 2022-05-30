@@ -2,6 +2,7 @@
 
 add_subdirectory (SysY_Lex)
 add_subdirectory (SysY_Yacc)
+add_subdirectory (AST2IR)
 
 aux_source_directory(. DIR_SRCS)
 # aux_source_directory(SysY_Lex DIR_SRCS)
@@ -10,5 +11,6 @@ add_executable(Test ${DIR_SRCS})
 
 target_link_libraries(Test SysY_Lex)
 target_link_libraries(Test SysY_Yacc)
+target_link_libraries(Test AST2IR)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
