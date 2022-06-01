@@ -328,18 +328,38 @@ term : term mulop factor {
         |term mulop unary_ops_size factor{
           $$ = $2;
           syntax_tree_add_child($$, $1);
-          syntax_tree_add_child($$, node("unary_ops_factor", 1, $3, $4));
+          syntax_tree_add_child($$, node("unary_ops_factor", 2, $3, $4));
+
+          int temp=$$->children[1]->children[0]->children_num;
+          if(temp%2==0){
+            $$->children[1] = $4;
+          } else {
+            $$->children[1]->children[0]=new_syntax_tree_node("-");
+          }
         }
         |factor {
             $$ = $1;
         }
         |unary_ops_size factor{
             $$ = node("unary_ops_factor", 2, $1, $2);
-            int temp=$$->children[0]->children_num;
-            if(temp%2==0){
+            int tempSub=0, tempNot=0;
+            for(int i=0; i<$$->children[0]->children_num; i++){
+              if($$->children[0]->children[i]->name[0]=='!'){
+                tempNot++;
+              }else if($$->children[0]->children[i]->name[0]=='-'){
+                tempSub++;
+              }
+            }
+            if(tempNot%2==0&&tempSub%2==0){
               $$ = $2;
             } else {
-              $$->children[0]=new_syntax_tree_node("-");
+              if(tempNot%2==1&&tempSub%2==1){
+                $$->children[0]=new_syntax_tree_node("!-");
+              } else if(tempNot%2==0) {
+                $$->children[0]=new_syntax_tree_node("-");
+              } else if(tempSub%2==0) {
+                $$->children[0]=new_syntax_tree_node("!");
+              }
             }
         }
 mulop : MUL {
