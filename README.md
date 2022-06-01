@@ -6,7 +6,7 @@
 
 ### 目录树
 
-```
+```shell
 .
 ├── CMakeLists.txt //在 项目架构 链接方式一栏中会提到Cmake的使用方法
 ├── CMakePresets.json //CMake自动生成的
@@ -19,9 +19,9 @@
 │   ├── build //构建目录 也就是CMake文件和make文件输出的地址，编译信息存在这里
 │   └── lib //库文件输出的目录
 │       ├── libSysY_Lex.a
-│       └── libSysY_Yacc.a 
+│       └── libSysY_Yacc.a
 ├── src //源文件目录
-│   ├── CMakeLists.txt 
+│   ├── CMakeLists.txt
 │   ├── SysY_Lex //词法分析模块目录 在 Bison和Lex 一栏中会提到词法分析和语法分析怎样拼接到一起
 │   │   ├── CMakeLists.txt
 │   │   ├── SysY_Lex.h
@@ -39,7 +39,7 @@
     ├── test1.sy
     ├── test1_out1
     └── test1_out2
-   
+
 
 40 directories, 123 files
 ```
@@ -142,17 +142,20 @@ argv[n]：指向执行程序名后的第n个字符串 ，表示传入的第n个�
 
 这篇博客有更详细的解释 感兴趣的可以参考这个
 
-https://blog.csdn.net/z_ryan/article/details/80979432
-
+<https://blog.csdn.net/z_ryan/article/details/80979432>
 
 #### 测试脚本
-请在主目录或`out`,`test`下运行脚本。  
-使用方法：  
+
+请在主目录或`out`,`test`下运行脚本。
+使用方法：
+
 ```SHELL
 python3 test.py
 ```
-默认执行`./out/`下的唯一可执行文件，测试`test`下以`.sy`结尾的所有测试文件。  
+
+默认执行`./out/`下的唯一可执行文件，测试`test`下以`.sy`结尾的所有测试文件。
 脚本参数如下：
+
 ```SHELL
 usage: test.py [-h] [-e OUTFILE] [-s SYFILES] [-y] [-p]
 
@@ -166,7 +169,8 @@ optional arguments:
   -p, --print_stdout    Print standard output (default：False)
   -l, --error_log       Print error log (default：False)
 ```
-脚本会自动判断参数是文件名还是路径名，使用相对`./`的路径。  
+
+脚本会自动判断参数是文件名还是路径名，使用相对`./`的路径。
 e.g.
 
 ```bash
@@ -186,11 +190,11 @@ python3 ./test/test.py -s ./test/performance -l
 
 因为我也是第一次用git真正开发多人项目(之前分组作业都是个人输出)，这里有一篇博客我觉得写得还行，大家可以看一下
 
-https://blog.csdn.net/while10/article/details/108746417
+<https://blog.csdn.net/while10/article/details/108746417>
 
 然后大家可以创建自己的分支 后面就可以进行提交之类的了
 
-**记得把out目录下的文件加入到.gitignore**: https://blog.csdn.net/toopoo/article/details/88660806
+**记得把out目录下的文件加入到.gitignore**: <https://blog.csdn.net/toopoo/article/details/88660806>
 
 ### 链接方式(make/CMake)
 
@@ -204,7 +208,7 @@ gcc -i a.h b.h c.h…… -L 1.c 2.c 3.c
 
 所以这给我们架构项目省了不少事
 
-**这里可以去看看CSAPP第七章 链接那个部分，我觉得这里写的挺好的**
+**这里可以去看看CSAPP第七章 链接那个部分，我觉得这里写的挺好的.**
 
 我们的Cmake就是这么做的
 
@@ -216,7 +220,7 @@ gcc -i a.h b.h c.h…… -L 1.c 2.c 3.c
 cmake_minimum_required (VERSION 3.8) #指定最小的CMake版本 大家版本对不上的自行修改
 
 aux_source_directory(. DIR_LIB_SRCS) #将指定目录下的所有源文件(.c .cpp)全都记录下来，记录到变量 DIR_LIB_SRCS 中
-                                
+
 add_library(SysY_Lex ${DIR_LIB_SRCS}) #编译变量DIR_LIB_SRCS中所有源文件,增加到模块SysY_Lex中使SysY_Lex可以作为一个库
                                       #如果上面不用aux_source_directory，这里也可以改成
                                       #add_library(SysY_Lex lex.yy.c}
@@ -238,9 +242,9 @@ CMake是很常见的工具，网上相关教程特别多，我一般都是用到
 
 我的处理方法是：在词法分析部分把八进制 十六进制数全部转为十进制整数
 
-**因此我们中后端的处理中，所有数据都是十进制的**
+**因此我们中后端的处理中，所有数据都是十进制的.**
 
-C的整数处理部分在这里 http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1124.pdf 54页
+C的整数处理部分在这里 <http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1124.pdf> 54页
 
 本项目只考虑前缀，因此对应的正则表达式就是
 
@@ -265,8 +269,6 @@ void setNewChar(char* ch, char* p) //深拷贝字符
 
 负数保留了符号，正数直接把加号去了当正数
 
-
-
 \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*下面是一个有趣的情况\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*
 
 setNewChar函数的由来挺曲折的, 本来我的写法是这样的
@@ -284,11 +286,6 @@ HextoDec(b);
 
 我们有抽象语法树了！！！
 
-**中端部分**
+**中端部分.**
 
-- 在AST的基础上进行一些优化（如去掉多余的正负号 **短路计算?**等）
-- 遍历AST生成符号表（符号表可以用**map**或者set实现，建议用面向对象方法）
-- 在符号表的基础上遍历AST完成类型检查（~~是否可以投机取巧~~）
-- 从AST到我们的中间表示
-
-之后的主要任务包含这三个部分
+IR设计在../src/AST2IR中有说明

@@ -2,7 +2,7 @@
 
 IR就是从抽象语法树到便于优化的代码
 
-**我们的IR采用SSA的形式，参考LLVM IR**
+**我们的IR采用SSA的形式，参考LLVM IR。**
 
 ## 写在前面
 
@@ -20,7 +20,7 @@ IR就是从抽象语法树到便于优化的代码
 
    可以参考中科大的那个实验
 
-   https://llvm.org/docs/LangRef.html#instruction-reference
+   <https://llvm.org/docs/LangRef.html#instruction-reference>
 
    这里有详细的IR资料
 
@@ -34,7 +34,7 @@ IR就是从抽象语法树到便于优化的代码
 
 ### 类型
 
-我们的IR有5种类型，分别是void i32 float i32* float*
+我们的IR有5种类型，分别是void, i32, float, i32*, float*
 
 这四个就是对应空 int float int指针 float指针
 
@@ -46,7 +46,7 @@ IR就是从抽象语法树到便于优化的代码
 
 常量和变量操作一样，下面只给变量的方法
 
-**AST的根结点是declarations，他下面的每一个子结点对应一个全局变量**
+**AST的根结点是declarations，他下面的每一个子结点对应一个全局变量.**
 
 全局变量的名字用@变量名表示，就比如main函数的IR名就是@main
 
@@ -68,30 +68,30 @@ IR就是从抽象语法树到便于优化的代码
 
 下面是部分 AST中
 
-```
+```shell
 |  >--+ func_declaration  #func_declaration代表这是一个函数语句
 |  |  >--* void           #第一个子结点是返回值类型
-|  |  >--* mem_move	      #第二个子结点是函数名，它在IR中的名字就应该是@mem_move
-|  |  >--+ params		  #第三个子结点是变量
+|  |  >--* mem_move       #第二个子结点是函数名，它在IR中的名字就应该是@mem_move
+|  |  >--+ param          #第三个子结点是变量
 |  |  |  >--+ param_array #第一个子结点是数组变量
 |  |  |  |  >--* int      #i32* 类型的
 |  |  |  |  >--* a        #%1
 |  |  |  |  >--+ array_size #数组大小
 |  |  |  |  |  >--* void  #未规定大小，这里不管是否规定大小都应该被剪掉，所以array_size这个地方在这里是没必要保留的
 |  |  |  >--+ param       #下一个变量 i32 类型的%2
-|  |  |  |  >--* int      
+|  |  |  |  >--* int
 |  |  |  |  >--* n
-|  |  |  >--+ param		  #下一个变量 i32 类型的%3
+|  |  |  >--+ param       #下一个变量 i32 类型的%3
 |  |  |  |  >--* int
 |  |  |  |  >--* i
-|  |  |  >--+ param		  #下一个变量 i32 类型的%4
+|  |  |  >--+ param       #下一个变量 i32 类型的%4
 |  |  |  |  >--* float
 |  |  |  |  >--* j
 ```
 
 这一部分代码应该为
 
-```
+```shell
 define dso_local void @mem_move(i32* %1, i32 %2, i32 %3, float %4)
 #这里函数参数可以当作常量直接用，因此不是指针类型
 ```
@@ -100,7 +100,7 @@ define dso_local void @mem_move(i32* %1, i32 %2, i32 %3, float %4)
 
 如果数值常量有正负号，它的抽象语法树是这样的
 
-```
+```shell
 |  |  |  >--+ =
 |  |  |  |  >--* ttt
 |  |  |  |  >--* 5.3
@@ -130,7 +130,7 @@ p=-6 或者 p=--+-6... '-'的个数必须是奇数，'+'随意
 
 例如下面
 
-```
+```shell
 |  >--+ =
 |  |  >--* k
 |  |  >--* 1
@@ -206,7 +206,7 @@ define dso_local i32 @main() #0 {
 
 加减乘除余的AST都是以对应符号为根节点的，如
 
-```
+```shell
 |  >--+ +
 |  |  >--+ getvalue
 |  |  |  >--+ args
@@ -228,7 +228,7 @@ define dso_local i32 @main() #0 {
 
 其他运算都是一样的，都是如下的格式
 
-```
+```shell
       运算符
       /   \
 第一个数   第二个数
@@ -236,7 +236,7 @@ define dso_local i32 @main() #0 {
 
 看个复杂的
 
-```
+```shell
 >--+ stmts
 |  >--+ =
 |  |  >--+ arr1
@@ -274,7 +274,7 @@ define dso_local i32 @main() #0 {
 
 IR设计
 
-```
+```c
 int main(){
   int p;
   int q=6;
@@ -286,7 +286,7 @@ int main(){
 
 它的IR就是
 
-```
+```shell
 define dso_local i32 @main(){
   %1 = alloca i32
   %2 = alloca i32
@@ -306,11 +306,11 @@ define dso_local i32 @main(){
 
 注意算数运算涉及到的指令有
 
-**add fadd sub fsub div fdiv mul fmul mod fmod(div对应llvm sdiv; mod对应llvm rem)分别代表整数运算和浮点运算**
+**add fadd sub fsub div fdiv mul fmul mod fmod(div对应llvm sdiv; mod对应llvm rem)分别代表整数运算和浮点运算.**
 
-还有大家如果查看llvm IR 会看到`nuw nsw` 
+还有大家如果查看llvm IR 会看到`nuw nsw`
 
-**nuw和nsw分别代表No Unsigned Wrap和No Signed Wrap也就是无符号溢出和有符号溢出,我们先统一按照nsw算**
+**nuw和nsw分别代表No Unsigned Wrap和No Signed Wrap也就是无符号溢出和有符号溢出,我们先统一按照nsw算.**
 
 ### 逻辑运算
 
