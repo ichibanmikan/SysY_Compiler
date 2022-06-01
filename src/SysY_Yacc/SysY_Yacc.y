@@ -328,13 +328,19 @@ term : term mulop factor {
         |term mulop unary_ops_size factor{
           $$ = $2;
           syntax_tree_add_child($$, $1);
-          syntax_tree_add_child($$, node("unary_ops_factor", 2, $3, $4));
+          syntax_tree_add_child($$, node("unary_ops_factor", 1, $3, $4));
         }
         |factor {
             $$ = $1;
         }
         |unary_ops_size factor{
             $$ = node("unary_ops_factor", 2, $1, $2);
+            int temp=$$->children[0]->children_num;
+            if(temp%2==0){
+              $$ = $2;
+            } else {
+              $$->children[0]=new_syntax_tree_node("-");
+            }
         }
 mulop : MUL {
             $$ = $1;
@@ -365,11 +371,16 @@ factor : LPARENTHESE expression RPARENTHESE {
         }
 
 unary_ops_size : unary_ops_size unary_ops{
-                  $$ = $2;
-                  syntax_tree_add_child($$, $1);
+                  $$ = $1;
+                  if($2->name[0]!='+'){
+                    syntax_tree_add_child($$, $2);
+                  }
                 }
                 |unary_ops{
-                  $$ = $1;
+                  $$ = new_syntax_tree_node("unary_ops");
+                  if($1->name[0]!='+'){
+                    syntax_tree_add_child($$, $1);
+                  }
                 }
 
 unary_ops :ADD{
@@ -427,17 +438,18 @@ calllib : GETINT LPARENTHESE RPARENTHESE {
     }
 
 args : arg_list {
-        $$ = node("args", 1, $1);
+        $$ = $1;
     }
     | {
         $$ = new_syntax_tree_node("epsilon");
     }
 arg_list : arg_list COMMA expression {
-            $$ = $3;
-            syntax_tree_add_child($$, $1);
+            $$ = $1;
+            syntax_tree_add_child($$, $3);
         }
         |expression {
-            $$ = $1;
+            $$ = new_syntax_tree_node("args");
+            syntax_tree_add_child($$, $1);
         }
 %%
 

@@ -13,7 +13,6 @@ typedef struct __syntax_tree_node_ {
 	char name[SYNTAX_TREE_NODE_NAME_MAX];
 } syntax_tree_node ;
 
-syntax_tree_node* new_anon_syntax_tree_node();
 syntax_tree_node* new_syntax_tree_node(const char * name);
 int syntax_tree_add_child(syntax_tree_node* parent, syntax_tree_node* child);
 void del_syntax_tree_node(syntax_tree_node * node, int recursive);
