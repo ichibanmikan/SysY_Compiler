@@ -662,9 +662,11 @@ f==3.0
 
 ## 控制流
 
-### compound_stmt
-
 ### 全局常变量和函数
+
+我们所要处理的所有语言包括三种全局量，全局常量，全局变量和函数。所有全局量都用@+变量名表示
+
+#### 全局常量
 
 全局常量是要放入汇编代码的静态数据区的
 
@@ -683,8 +685,51 @@ int main(){
 ```assembly
 @b = dso_local constant i32 1
 
-; 使用constant
+; 使用constant，指定类型和值，名称用@+变量名表示
 ```
+
+#### 全局变量
+
+```C
+int ll1;
+int ll2=0;
+float llf=3.5;
+
+//假设都是全局变量
+```
+
+LLVM IR
+
+```assembly
+@ll2 = dso_local global i32 0
+@llf = dso_local global float 3.500000e+00
+@ll1 = common dso_local global i32 0
+
+# 声明时都要进行初始化，如果未进行初始化就默认初始化0并加一个common
+# 区别就是计算机系统课上学到的，如果被初始化就放置到数据段，否则放到BSS段
+```
+
+因为不会有错误样例，我们不管是否初始化，直接全部放到data段就可以
+
+我们的IR
+
+```assembly
+@ll2 = dso_local global i32 0
+@llf = dso_local global float 3.500000e+00
+@ll1 = common dso_local global i32 0
+```
+
+使用就和局部变量差不多，是
+
+```c
+ll2=3;
+
+store i32 2, i32* @ll2
+```
+
+#### 函数
+
+函数包着基本块
 
 ### While
 
