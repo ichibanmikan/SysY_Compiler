@@ -375,7 +375,7 @@ define dso_local i32 @main() #0 {
 }
 ```
 
-llvm.memcpy函数有四个参数，依次为源指针，目的指针，长度len，易失性(我们的机器基本都是false)
+llvm.memcpy函数有四个参数，依次为目的指针，源指针，长度len，易失性(我们的机器基本都是false)
 
 就是把从源指针开始的长度为len个字节的地址拷贝给目的地址
 
@@ -385,20 +385,22 @@ bitcast a to b 就是把a类型，在不改变bit的情况下转换为b类型
 
 上面的操作就是开辟一块连续的内存，这部分对应elf中的静态数据节，执行的时候直接把他放到数据段，**就跟全局常量一样**，包括数组初始化时的所有元素，然后把这块内存的每个字节拷贝给数组开始的地址。
 
-gcc操作是生成对应的指令，可以试试用gcc编译成汇编来查看
+gcc操作是生成对应的指令，把每个数据一个一个move到对应的地址。可以试试用gcc编译成汇编来查看
 
-目前还是以简便为主，所以我们IR不用去调用这个函数了，暂时用gcc的处理方法。以上，我们的写法是这样的
+老师说**主要考虑性能**，那么我们就按照clang的处理方式，memcpy到时候在运行时调用C库。
+
+int c[5]={3, 4, 5, 6, 7}; IR为
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
+
+; @__const.函数名.数组名 = private unnamed_addr constant 类型 每个数据
+
 %1 = alloca [5 x i32]
+%2 = bitcast [5 x i32]* %1 to i8*
+call void memcpy(i8* %2, i8* bitcast ([5 x i32]* @__const.main.c to i8*), i32* 20)
 
-%2 = getelementptr [5 x i32], [5 x i32]* %1, i32 0
-store i32 3, i32* %2
-
-%3 = getelementptr [5 x i32], [5 x i32]* %1, i32 1
-store i32 4, i32* %4
-
-...
+; 我们的memcpy只保留了前三个参数
 ```
 
 int c\[2][3]={{1, 2, 3}, {4, 5, 6}};
@@ -539,7 +541,7 @@ define dso_local i32 @main(){
   store i32 6, i32* %4
   %5 = load i32, i32* %3
   %6 = load i32, i32* %4
-  %7 = mul i32 %6, 5 #####
+  %7 = mul i32 %6, 5 #####注意这里的常量不需要类型。因为C只支持同类型运算
   %8 = add i32 %5, %7 #####
   store i32 %8, i32* %2
   ret i32 0
@@ -662,13 +664,17 @@ f==3.0
 
 ## 控制流
 
+我们的IR和LLVM的基本框架是一样的，对于全局量，如果不是函数，就放置到汇编的每个节，如果是函数，就把他当一个IR中的函数
+
+函数包着基本块BasicBlock，基本块里是上面所有的以及下面一部分的基础语句。
+
 ### 全局常变量和函数
 
 我们所要处理的所有语言包括三种全局量，全局常量，全局变量和函数。所有全局量都用@+变量名表示
 
 #### 全局常量
 
-全局常量是要放入汇编代码的静态数据区的
+全局常量是要放入汇编代码的数据区(.data)的
 
 全局常量如
 
@@ -683,9 +689,21 @@ int main(){
 对于a，有IR
 
 ```assembly
-@b = dso_local constant i32 1
+@a = dso_local constant i32 1
 
 ; 使用constant，指定类型和值，名称用@+变量名表示
+```
+
+对于数组
+
+```c
+const int lla[5]={3, 4, 5, 6, 7};
+```
+
+就是直接
+
+```assembly
+@lla = dso_local constant [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
 ```
 
 #### 全局变量
@@ -716,7 +734,7 @@ LLVM IR
 ```assembly
 @ll2 = dso_local global i32 0
 @llf = dso_local global float 3.500000e+00
-@ll1 = common dso_local global i32 0
+@ll1 = dso_local global i32 0
 ```
 
 使用就和局部变量差不多，是
@@ -727,12 +745,199 @@ ll2=3;
 store i32 2, i32* @ll2
 ```
 
+对于数组
+
+```assembly
+int lla[5]={3, 4, 5, 6, 7};
+
+@lla = dso_local global [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
+```
+
 #### 函数
 
-函数包着基本块
+函数包着基本块。
+
+我们的语法中没有函数的声明，只保留函数的定义
+
+```c
+float funcf(){
+  return 1.0;
+}
+```
+
+AST是这样的
+
+```shell
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* float
+|  |  >--* funcf
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 1.0
+
+# func_declaration结点下面有四个子结点，包括返回值类型，函数名，参数值(没有参数就是void)，语句
+```
+
+IR结果就是这样的
+
+```assembly
+define dso_local float @funcf(){
+  ret float 1.000000e+00
+}
+
+# define dso_local 返回值类型 @函数名(参数) {}
+# ret 类型 返回值
+```
+
+带参数的AST是长这样的
+
+```c
+float funcf(int a, int b){
+  return 1.0;
+}
+```
+
+```shell
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* float
+|  |  >--* funcf
+|  |  >--+ params
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* a
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* b
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 1.0
+```
+
+如果有参数，那么就是params结点，下面每一个param结点作为子结点，分别包含了类型和变量名(数组和上面的变量处理方式一样)
+
+IR为
+
+```assembly
+define dso_local float @funcf(i32 %0, i32 %1){
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  store i32 %0, i32* %3, align 4
+  store i32 %1, i32* %4, align 4
+  ret float 1.000000e+00
+}
+
+# 注意函数的参数作为局部变量，然后在函数体内先对这几个局部变量分配空间
+```
+
+数组作为参数时不要把他看作数组，看作指针就好了
+
+```c
+int func(int a[2]){
+    return a[0];
+}
+
+int func(int a[]){
+    return a[0];
+}
+...
+```
+
+IR为
+
+```assembly
+define dso_local i32 @func(i32* %1){
+  %2 = alloca i32*
+  store i32* %1, i32** %2 ;注意要分配空间给参数
+  %3 = load i32*, i32** %2
+  %4 = getelementptr i32, i32* %3, i32 0
+  %5 = load i32, i32* %4
+  ret i32 %5
+}
+```
 
 ### While
 
+while和if都是产生基本块的。一个while语句会产生两个基本块(条件和循环体)：
+
+<img src="https://s2.loli.net/2022/06/05/tTbpQrSmC6Kz4Xj.png">
+
+- 一个函数由许多基本块(Basic block)组成
+
+- 每个基本块包含：
+
+  - 开头的标签（可省略）
+  - 一系列指令
+  - 结尾是终结指令(br ret)
+
+- 一个基本块没有标签时，会自动赋给它一个标签
+
+一个简单的例子
+
+```c
+int main(){
+  int a=1;
+  int b=2;
+  while(a<b){
+    a=a+1;
+  }
+  float f=5;
+  return 0;
+}
+```
+
+对应的IR为
+
+```assembly
+define dso_local i32 @main(){
+  %1 = alloca i32
+  %2 = alloca i32
+  %3 = alloca i32
+  %4 = alloca float
+  store i32 0, i32* %1
+  store i32 1, i32* %2
+  store i32 2, i32* %3
+  br label %5
+  ; while前的基本块，这个基本块标签省略掉了
+5:                                                ; preds = %9, %0
+  %6 = load i32, i32* %2
+  %7 = load i32, i32* %3
+  %8 = icmp slt i32 %6, %7
+  br i1 %8, label %9, label %12
+  ; 这个基本块是while的判断条件，标签是5，用变量%5表示，终结指令是br
+9:                                                ; preds = %5
+  %10 = load i32, i32* %2
+  %11 = add nsw i32 %10, 1
+  store i32 %11, i32* %2
+  br label %5
+  ; 这个基本块是while的循环体，标签是9，用变量%9表示，终结指令是br
+12:                                               ; preds = %5
+  store float 5.000000e+00, float* %4, align 4
+  ret i32 0
+  ; 这个基本块是while结束后的语句，标签是12，用变量%12表示，终结指令是ret
+}
+```
+
+br语句分为无条件跳转和条件跳转
+
+C中的break和continue语句，以及循环体执行完毕后重新判断的过程包含在无条件跳转中。
+
+条件跳转一般就是while的条件判断语句
+
+例如
+
+```assembly
+%8 = icmp slt i32 %6, %7
+br i1 %8, label %9, label %12
+
+; %8为icmp比较得出的结果，逻辑运算结果都是i1类似bool类型
+; br开始条件跳转，如果i1为真那么就跳转到第一个对应的标签，这里是标签9，为假就跳转到标签12
+```
+
 ### if
+
+if语句
 
 ### 短路计算
