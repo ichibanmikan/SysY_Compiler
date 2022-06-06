@@ -5,6 +5,8 @@ extern "C"{
   #include "../../include/createTree.h"
 }
 
+#include "../../include/IR.h"
+
 extern syntax_tree* tree;
 
 #endif
