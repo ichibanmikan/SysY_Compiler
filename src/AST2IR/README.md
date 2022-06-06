@@ -36,9 +36,22 @@ IR就是从抽象语法树到便于优化的代码
 
 ### 类型
 
-我们的IR可能遇到的有7种类型，分别是i1, i8, void, i32, float, i32\*, float*
+我们的IR可能遇到的有以下几种类型
 
-这四个就是对应空 int float int指针 float指针
+```c++
+enum valType{
+  i1=0,
+  i8=1,
+  i16=2,
+  i32=3,
+  i1_ptr=4,
+  i8_ptr=5,
+  i16_ptr=6,
+  i32_ptr=7,
+  float=8,
+  float_ptr=9
+};
+```
 
 大家看llvm生成的代码中会有align 4之类的，这好像是对齐的意思，不过我们的int和float都是4字节的，我们不用管他，我们的IR中也不会有这个
 
@@ -196,7 +209,9 @@ int a\[2][3]; 那么a可以看作int\[2][3]型的一个地址(就是说这个int
 
 **按照行优先的规则**，我们需要一步一步算出这个地址
 
-> 计算得出的地址 = getelementptr 基地址什么类型的地址, 基地址, 偏移量
+> 计算得出的地址 = getelementptr 基地址是什么类型的地址, 基地址, 偏移量
+
+中间两个类型好像重复了，我们删掉一个
 
 举个例子，首先是
 
@@ -204,9 +219,9 @@ int a[2]; a[1]=3;
 
 ```assembly
 %1 = alloca [2 x i32]
-%2 = getelementptr [2 x i32], [2 x i32]* %1, i32 1
+%2 = getelementptr [2 x i32]* %1, i32 1
 
-;%1是[2 x i32]类型的，所以要指定操作类型是[2 x i23]，[2 x i32]*类型的变量%1是基地址，i32类型的数1是偏移量。
+;%1是[2 x i32]*类型的，所以要指定操作类型是[2 x i23]，[2 x i32]*类型的变量%1是基地址，i32类型的数1是偏移量。
 ;这步是计算地址的，不实际访存，只算偏移地址
 
 store i32 3, i32* %2 ;%2可以看作i32*类型的a[1]，然后把3放进去
@@ -216,8 +231,8 @@ int a\[2][2]; a\[1][0]=3;
 
 ```assembly
 %1 = alloca [2 x [2 x i32]]
-%2 = getelementptr [2 x [2 x i32]], [2 x [2 x i32]]* %1, i32 1 ;%2是[2 x i32]类型的
-%3 = getelementptr [2 x i32], [2 x i32]* %2, i32 0 ;%3是i32* 类型的
+%2 = getelementptr [2 x [2 x i32]]* %1, i32 1 ;%2是[2 x i32]类型的
+%3 = getelementptr [2 x i32]* %2, i32 0 ;%3是i32* 类型的
 
 store i32 3, i32* %3
 ```
@@ -402,9 +417,9 @@ int c[5]={3, 4, 5, 6, 7}; IR为
 
 %1 = alloca [5 x i32]
 %2 = bitcast [5 x i32]* %1 to i8*
-call void memcpy(i8* %2, i8* bitcast ([5 x i32]* @__const.main.c to i8*), i32* 20)
+call void @memcpy(i8* %2, i8* bitcast ([5 x i32]* @__const.main.c to i8*), i32 20)
 
-; 我们的memcpy只保留了前三个参数
+; 我们的@memcpy只保留了前三个参数
 ```
 
 int c\[2][3]={{1, 2, 3}, {4, 5, 6}};
@@ -412,43 +427,25 @@ int c\[2][3]={{1, 2, 3}, {4, 5, 6}};
 IR为
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [2 x [3 x i32]] [[3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 4, i32 5, i32 6]]
+
 %1 = alloca [2 x [3 x i32]]
-
-%2 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %1
-%3 = getelementptr [3 x i32], [3 x i32]* %2
-store i32 1, i32* %3
-
-...
+%2 = bitcast [2 x [3 x i32]]* %1 to i8*
+call void @memcpy(i8* %2, i8* bitcast ([2 x [3 x i32]]* @__const.main.c to i8*), i32 24)
 ```
 
 对于下面这种维度或每个维度的长度和初始元素个数匹配不起来的，**它需要把所有未知元素都赋值为0**
-
-gcc下面的数组的特性就是，一个数组被初始化了，那么它内部所有元素就有初始值，要么指定要么0，未被初始化的就全都是随机值
 
 clang数组初始元素都是0
 
 int c\[3][2]={{1, 2}, {}, 1}
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [3 x [2 x i32]] [[2 x i32] [i32 1, i32 2], [2 x i32] [i32 0, i32 0], [2 x i32] [i32 1, i32 0]]
+
 %1 = alloca [3 x [2 x i32]]
-
-%2 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 0
-store i32 1, i32* %2
-
-%3 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 1
-store i32 2, i32* %3
-
-%4 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 2
-store i32 0, i32* %4
-
-%5 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 3
-store i32 0, i32* %5
-
-%6 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 4
-store i32 1, i32* %6
-
-%7 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 5
-store i32 0, i32* %7
+%2 = bitcast [3 x [2 x i32]]* %1 to i8*
+call void @memcpy(i8* %2, i8* bitcast ([3 x [2 x i32]]* @__const.main.c to i8*), i32 24)
 ```
 
 ## 运算部分
@@ -534,7 +531,7 @@ int main(){
 
 它的IR就是
 
-```shell
+```assembly
 define dso_local i32 @main(){
   %1 = alloca i32
   %2 = alloca i32
@@ -826,10 +823,10 @@ IR为
 
 ```assembly
 define dso_local float @funcf(i32 %0, i32 %1){
-  %3 = alloca i32, align 4
-  %4 = alloca i32, align 4
-  store i32 %0, i32* %3, align 4
-  store i32 %1, i32* %4, align 4
+  %3 = alloca i32
+  %4 = alloca i32
+  store i32 %0, i32* %3
+  store i32 %1, i32* %4
   ret float 1.000000e+00
 }
 
@@ -856,7 +853,7 @@ define dso_local i32 @func(i32* %1){
   %2 = alloca i32*
   store i32* %1, i32** %2 ;注意要分配空间给参数
   %3 = load i32*, i32** %2
-  %4 = getelementptr i32, i32* %3, i32 0
+  %4 = getelementptr i32* %3, i32 0
   %5 = load i32, i32* %4
   ret i32 %5
 }
@@ -1265,8 +1262,7 @@ define dso_local i32 @main(){
 
 12:                                               ; preds = %8, %0
   %13 = load float, float* %4
-  %14 = fpext float %13 to double
-  %15 = fcmp oeq double %14, 3.300000e+00
+  %15 = fcmp oeq float %13, 3.300000e+00
   br i1 %15, label %16, label %22 ;如果满足f==3.3就跳到16；否则就去22，不再判断d==0
 
 16:                                               ; preds = %12
