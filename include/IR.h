@@ -2,13 +2,19 @@
 #define __SYSY_IR_H_
 
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
 
+// 联合体value表示当前变量名或者常量
+// 举个例子: store i32 5, i32* %1
+// value就指 5 以及 %1
+// 具体怎么区分是哪个变量在命令结构体中都有对应的bool变量
 union value{
-  int local_val__const_i32_val;
-  string global_val;
-  float const_f_val;
+  int local_val__const_i32_val; //表示当前是局部变量(%+数字，这里只保留数字)或者整型数值常量
+  string global_val; //当前是全局变量
+  float const_f_val; //浮点型数值常量
 
   value(){}
   value(string str){
@@ -23,6 +29,7 @@ union value{
   ~value(){}
 };
 
+// cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
     alloca_cmd=0,
     store=1,
@@ -49,35 +56,61 @@ enum cmdTypes{
     ret=22
 };
 
+// valTypes表示当前是哪种类型的
 enum valTypes{
-  i1=0,
-  i8=1,
-  i16=2,
-  i32=3,
-  i1_ptr=4,
-  i8_ptr=5,
-  i16_ptr=6,
-  i32_ptr=7,
-  const_float=8,
-  float_ptr=9
+  void_type=0,
+  i1=1,
+  i8=2,
+  i16=3,
+  i32=4,
+  i1_ptr=5,
+  i8_ptr=6,
+  i16_ptr=7,
+  i32_ptr=8,
+  float_type=9,
+  float_ptr=10
 };
 
+// struct arrayType{
+//   int array_type;
+//   vector<int> dimension_size;
+// };
+
+// union type{
+//   int val_type;
+//   arrayType array_type;
+// };
+
+// type结构体表示当前量的类型，因为要考虑数组所以引入vector，数组维度就是dimension_size.size()
+// 因为数组维度未知，不敢直接开数组，直接用了更为安全的vector
+struct type{
+  int val_type; // 对应枚举类型valTypes
+  vector<int> dimension_size; // 数组维度。dimension_size[0] 就代之第一维，以此类推
+
+  type(int valType){
+    val_type=valType;
+  }
+};
+
+// alloca指令
 struct alloca_cmd{
-  int alloca_type;
-  int dst_val;
-  int align_len;
+  type alloca_type; //需要给变量分配的类型
+
+  int dst_val; //被使用alloca分配的变量只有可能是局部变量，所以直接用int值表示
+  int align_len; //注意这里，每个命令都留有一个保留字，代指对齐方式
 };
 
+//store指令，假设把a存到b
 struct store_cmd{
-  int src_type;
+  int src_type; //a的类型。a必然是寄存器值，所以不可能是数组
 
-  bool is_val;
-  value src_val;
+  bool is_val; // 是变量吗
+  value src_val; // 可能是浮点数常量，整型常量或者寄存器变量
 
-  int dst_type;
+  int dst_type; // 是内存中的一个地址，因此不可能是数组类型，而且必是那几个数组类型(ptr)，但指向的有可能是局部变量和全局变量
 
-  bool is_glo_val;
-  value dst_val;
+  bool is_glo_val; // 是全局变量吗
+  value dst_val; // 变量名，由is_glo_val指示是否是全局变量
 };
 
 struct load_cmd{
@@ -107,6 +140,6 @@ struct bitcast_cmd{
 
   int src_type;
 
-}
+};
 
 #endif
