@@ -68,7 +68,8 @@ enum valTypes{
   i16_ptr=7,
   i32_ptr=8,
   float_type=9,
-  float_ptr=10
+  float_ptr=10,
+  array_ptr=11
 };
 
 // struct arrayType{
@@ -138,8 +139,35 @@ struct getelementptr_cmd{
 struct bitcast_cmd{
   int dst_val;
 
+  type src_type;
+  bool is_glo_val;
+  int src_val;
+
+  type src_type;
+};
+
+struct add_cmd{
+  int dst_val;
+
   int src_type;
 
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fadd_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
 };
 
 #endif
