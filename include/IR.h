@@ -91,6 +91,9 @@ struct type{
   type(int valType){
     val_type=valType;
   }
+  type(){
+
+  }
 };
 
 // alloca指令
@@ -143,7 +146,7 @@ struct bitcast_cmd{
   bool is_glo_val;
   int src_val;
 
-  type src_type;
+  type dst_type;
 };
 
 struct add_cmd{
@@ -159,6 +162,102 @@ struct add_cmd{
 };
 
 struct fadd_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
+};
+
+struct sub_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fsub_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
+};
+
+struct mul_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fmul_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
+};
+
+struct div_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fdiv_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
+};
+
+struct mod_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fmod_cmd{
   int dst_val;
 
   int src_type;
