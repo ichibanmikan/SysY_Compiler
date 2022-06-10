@@ -265,13 +265,12 @@ store float 5.000000e+00, float* %1
 
 #### 以变量形式赋值时
 
-需要用到sitofp、fptosi和ptrtoint等个指令
+需要用到sitofp和fptosi两个指令
 
 ```c
  int b=3;
  float t=3.3;
  int k=b+t;
- int ptr=&b;
 ```
 
 IR为
@@ -290,9 +289,6 @@ store float 0x400A666660000000, float* %2
 %7 = fadd float %5, %6
 %8 = fptosi float %7 to i32
 store i32 %8, i32* %3
-%9 = ptrtoint i32* %1 to i32
-%10 = alloca i32
-store i32 %9, i32* %10
 ```
 
 ### 赋值
@@ -617,7 +613,7 @@ define dso_local i32 @main(){
 
 其中，NAN表示如果阶码全部为1，尾数非0，则表示这个值不是一个真正的值（Not A Number，NAN）。NAN又分成两类：QNAN（Quiet  NAN）和SNAN（Singaling  NAN）。QNAN与SNAN的不同之处在于，QNAN的尾数部分最高位定义为1，SNAN最高位定义为0；QNAN一般表示未定义的算术运算结果，最常见的莫过于除0运算；SNAN一般被用于标记未初始化的值，以此来捕获异常。
 
-由于我们只考虑有符号数，所以我们的状态**只有eq ne sgt sge slt sle true false oeq ogt ogt olt ole une**这几个
+由于我们只考虑有符号数，所以我们的状态**只有eq ne sgt sge slt sle true false oeq ogt oge olt ole une**这几个
 
 对于整数
 

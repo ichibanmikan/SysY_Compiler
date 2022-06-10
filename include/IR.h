@@ -50,10 +50,26 @@ enum cmdTypes{
     fcmp=16,
     sitofp=17,
     fptosi=18,
-    ptrtoint=19,
-    call=20,
-    br=21,
-    ret=22
+    call=19,
+    br=20,
+    ret=21
+};
+
+enum logic_state{
+  eq=0,
+  ne=1,
+  sgt=2,
+  sge=3,
+  slt=4,
+  sle=5,
+  true_st=6,
+  false_st=7,
+  oeq=8,
+  ogt=9,
+  oge=10,
+  olt=11,
+  ole=12,
+  une=13
 };
 
 // valTypes表示当前是哪种类型的
@@ -268,5 +284,73 @@ struct fmod_cmd{
   bool is_val_2;
   value src_val_2;
 };
+
+struct icmp_cmd{
+  int dst_val; //只能是局部变量
+
+  int cmp_st; //比较方法
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct fcmp_cmd{
+  int dst_val; //只能是局部变量
+
+  int cmp_st; //比较方法
+
+  bool is_val_1;
+  value src_val_1;
+
+  bool is_val_2;
+  value src_val_2;
+};
+
+struct sitofp_cmd{
+  int dst_val; //一定是寄存器变量
+
+  bool is_val;
+  int src_val;
+};
+
+struct fptosi_cmd{
+  int dst_val;
+
+  bool is_val;
+  value src_val;
+};
+
+struct param{
+  type param_type;
+  value param_value;
+};
+
+struct call_cmd{
+  type ret_type; //返回值类型，先判断是不是为void
+  int ret_value; //返回值一定先存储到寄存器变量
+
+  string func_name;
+  vector<param> params;
+};
+
+struct br_cmd{
+  bool is_cond; //有条件就是ture, 无条件跳转置为false
+
+  int cond_val; //一定是个i1类型的变量
+
+  int br_label_1; //如果有条件那么条件为真时 或 无条件时 跳转到的基本块号
+
+  int br_label_2; //如果有条件那么条件为假时跳转到的基本块号
+};
+
+struct ret_cmd{
+  type ret_type;
+
+  value ret_value;
+};
+
 
 #endif
