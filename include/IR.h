@@ -1,11 +1,13 @@
 #ifndef __SYSY_IR_H_
 #define __SYSY_IR_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
 using std::string;
 using std::vector;
+using std::map;
 
 // 联合体value表示当前变量名或者常量
 // 举个例子: store i32 5, i32* %1
@@ -352,5 +354,28 @@ struct ret_cmd{
   value ret_value;
 };
 
+struct command{
+  int cmd_type;
+  void* cmd_ptr;
+};
+
+struct var_value{
+
+};
+
+class global_var{
+
+};
+
+// map<int, local_var> local_var_table;
+// map<string, >
+
+class BasicBlock{
+  private:
+    int block_label;
+    vector<command> cmds;
+  // public:
+
+};
 
 #endif
