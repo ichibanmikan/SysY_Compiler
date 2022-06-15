@@ -2,35 +2,48 @@
 #define __SYSY_IR_H_
 
 #include <map>
+#include <utility>
 #include <string>
 #include <vector>
+#include <variant>
+#include <bits/stdint-intn.h>
 
 using std::string;
 using std::vector;
 using std::map;
+using std::variant;
+using std::pair;
 
 // 联合体value表示当前变量名或者常量
 // 举个例子: store i32 5, i32* %1
 // value就指 5 以及 %1
 // 具体怎么区分是哪个变量在命令结构体中都有对应的bool变量
-union value{
-  int local_val__const_i32_val; //表示当前是局部变量(%+数字，这里只保留数字)或者整型数值常量
-  string global_val; //当前是全局变量
-  float const_f_val; //浮点型数值常量
+// union value{
+//   int local_val__const_i32_val; //表示当前是局部变量(%+数字，这里只保留数字)或者整型数值常量
+//   string global_val; //当前是全局变量
+//   float const_f_val; //浮点型数值常量
 
-  value(){}
-  value(string str){
-      global_val=str;
-  }
-  value(int param){
-    local_val__const_i32_val=param;
-  }
-  value(float param){
-    const_f_val=param;
-  }
-  ~value(){}
-};
+//   value(){}
+//   value(string str){
+//       global_val=str;
+//   }
+//   value(int param){
+//     local_val__const_i32_val=param;
+//   }
+//   value(float param){
+//     const_f_val=param;
+//   }
+//   ~value(){}
+// };
 
+//对于value我们使用一个和上面联合体等价的variant，方便操作
+typedef variant<int, float, string> value;
+
+//这个local_var_value是局部变量的值
+typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*, int32_t*> __local_var_value;
+
+//全局变量的值
+typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
 // cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
     alloca_cmd=0,
@@ -288,7 +301,7 @@ struct fmod_cmd{
 };
 
 struct icmp_cmd{
-  int dst_val; //只能是局部变量
+  int dst_val; //比较结果只能是局部变量
 
   int cmp_st; //比较方法
 
@@ -359,23 +372,34 @@ struct command{
   void* cmd_ptr;
 };
 
-struct var_value{
-
+struct local_var{
+  type local_var_type;
+  __local_var_value local_var_value;
+  pair<int, int> live_span; //存活时间，方便后续进行常量替换等优化
 };
 
-class global_var{
-
+struct global_var{
+  type global_value;
+  __global_var_value global_var_value;
 };
 
-// map<int, local_var> local_var_table;
-// map<string, >
+typedef map<int, local_var> __local_var_table; //每个函数块一个局部变量表，不同基本块表不同
+map<string, global_var> global_var_table;
 
-class BasicBlock{
-  private:
+class BasicBlock;
+
+class Function{
+  public:
+    __local_var_table local_var_table;
+    vector<BasicBlock> basic_blocks;
+};
+
+map<string, Function*> functions_table; //函数表，这里实在想不出来表示方法了
+
+class BasicBlock : public Function{
+  public:
     int block_label;
     vector<command> cmds;
-  // public:
-
 };
 
 #endif
