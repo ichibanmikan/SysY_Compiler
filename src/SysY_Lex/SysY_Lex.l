@@ -83,6 +83,7 @@ StopTime stoptime
 {StartTime} {pos_start = pos_end; pos_end += 9; yylval.node = new_syntax_tree_node(yytext); return STARTTIME;}
 {StopTime} {pos_start = pos_end; pos_end += 8; yylval.node = new_syntax_tree_node(yytext); return STOPTIME;}
 [_a-zA-Z]+[_0-9a-zA-Z]*   {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return IDENTIFIER;}
+
 0[0-7]* {
   pos_start = pos_end; pos_end += strlen(yytext);
   char* str=(char *)malloc(sizeof(char*)*20);
@@ -119,8 +120,9 @@ StopTime stoptime
 
 \n  {lines++; pos_start = 1; pos_end = 1;}
 [ \t]   {pos_start = pos_end; pos_end += 1;}
-\/\/\/*.* { yylval.node = new_syntax_tree_node(yytext);}
-\"(\\.|[^"\\])*\" {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}
+\/\/\/*.* { yylval.node = new_syntax_tree_node(yytext);}  //?
+
+\"(\\.|[^"\\])*\" {pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}//限制字符串
 
 \/\*([^\*]|(\*)*[^\*/])*(\*)*\*\/   {
     pos_start = pos_end;
