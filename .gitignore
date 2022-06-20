@@ -4,3 +4,4 @@ out
 .vscode
 test
 !test/test.py
+!test/testAll.sh
