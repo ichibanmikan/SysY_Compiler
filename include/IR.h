@@ -44,6 +44,7 @@ typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*,
 
 //全局变量的值
 typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+
 // cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
     alloca_cmd=0,
@@ -340,6 +341,8 @@ struct fptosi_cmd{
 
 struct param{
   type param_type;
+  bool is_local_val;
+  bool is_global_val;
   value param_value;
 };
 
@@ -390,8 +393,21 @@ class BasicBlock;
 
 class Function{
   public:
-    __local_var_table local_var_table;
-    vector<BasicBlock> basic_blocks;
+    int ret_type;
+    vector<valTypes>* func_params; //只要记录类型，因为这是函数声明，而不是实际的值
+    __local_var_table* local_var_table;
+    vector<BasicBlock>* basic_blocks;
+
+    Function(){
+      func_params=new vector<valTypes>;
+      local_var_table=new __local_var_table;
+      basic_blocks=new vector<BasicBlock>;
+    }
+    ~Function(){
+      delete func_params;
+      delete local_var_table;
+      delete basic_blocks;
+    }
 };
 
 map<string, Function*> functions_table; //函数表，这里实在想不出来表示方法了
@@ -400,6 +416,6 @@ class BasicBlock : public Function{
   public:
     int block_label;
     vector<command> cmds;
-};
+}; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
 
 #endif
