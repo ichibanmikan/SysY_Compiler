@@ -386,8 +386,9 @@ struct global_var{
   __global_var_value global_var_value;
 };
 
-typedef map<int, local_var> __local_var_table; //每个函数块一个局部变量表，不同基本块表不同
-map<string, global_var> global_var_table;
+typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变量表，不同基本块表不同
+typedef global_var const_var;
+typedef map<int, const_var*> __local_const_var_table;
 
 class BasicBlock;
 
@@ -396,12 +397,13 @@ class Function{
     int ret_type;
     vector<valTypes>* func_params; //只要记录类型，因为这是函数声明，而不是实际的值
     __local_var_table* local_var_table;
-    vector<BasicBlock>* basic_blocks;
+    __local_const_var_table* local_const_var_table;
+    vector<BasicBlock*>* basic_blocks;
 
     Function(){
       func_params=new vector<valTypes>;
       local_var_table=new __local_var_table;
-      basic_blocks=new vector<BasicBlock>;
+      basic_blocks=new vector<BasicBlock*>;
     }
     ~Function(){
       delete func_params;
@@ -410,12 +412,21 @@ class Function{
     }
 };
 
-map<string, Function*> functions_table; //函数表，这里实在想不出来表示方法了
+extern map<string, global_var*> global_var_table;
+extern map<string, const_var*> const_var_table;
+extern map<string, Function*> functions_table;
 
 class BasicBlock : public Function{
   public:
     int block_label;
-    vector<command> cmds;
+    vector<command*>* cmds;
+
+  BasicBlock(){
+    cmds=new vector<command*>;
+  }
+  ~BasicBlock(){
+    delete cmds;
+  }
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
 
 #endif
