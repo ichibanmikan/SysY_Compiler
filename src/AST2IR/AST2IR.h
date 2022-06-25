@@ -88,6 +88,7 @@ void logic_expressions_gen(vector<command*>* vcmd, __local_var_table* lvt, synta
 
 void algo_expressions_gen(vector<command*>* vcmd, __local_var_table* lvt, syntax_tree_node* node);
 //算数运算函数 读入的是几个运算符
+//两个运算函数要考虑
 
 void AST2IR(syntax_tree* tree);
 

@@ -1294,3 +1294,28 @@ define dso_local i32 @main(){
 
 函数也用类实现，里面包着基本块
 
+生成函数
+
+第一类函数
+
+params_gen
+call_func_gen
+array_offset_gen
+logic_expressions_gen
+algo_expressions_gen
+
+第二类函数——基本块相关
+
+if_stmt_gen
+while_stmt_gen
+break_stmt_gen
+continue_stmt_gen
+rtmt_stmt_gen
+
+第三类函数——常变量相关
+
+global_val_gen
+const_val_gen
+assignment_stmt_gen
+var_declaration_gen
+const_declartion_assignment_gen
