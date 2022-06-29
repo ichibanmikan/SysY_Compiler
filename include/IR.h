@@ -368,6 +368,25 @@ struct ret_cmd{
   value ret_value;
 };
 
+struct phi_cmd{
+  int dst_var;
+
+  type dst_type;
+
+  bool is_var_1;
+  value src_val_1;
+
+  bool is_var_2;
+  value src_val_2;
+};
+//phi指令 dst_var代表目标变量
+//假设基本块1修改了b并重命名为b1 基本块2修改了b并重命名为b2
+//基本块1和2是基本块3的前驱基本块
+//那么需要重命名一个b3在基本块3，用phi指令选择接受b1还是b2
+//dst_type指明了b1b2b3的类型
+//其中dst_var就是b3，src_val_1和src_val_2分别对应b1和b2
+
+
 struct command{
   int cmd_type;
   void* cmd_ptr;
