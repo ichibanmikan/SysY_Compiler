@@ -123,9 +123,7 @@ struct type{
   type(int valType){
     val_type=valType;
   }
-  type(){
-
-  }
+  type(){}
 };
 
 // alloca指令
@@ -390,6 +388,31 @@ typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变
 typedef global_var const_var;
 typedef map<int, const_var*> __local_const_var_table;
 
+struct local_var_index{
+  int store_index;
+  //这个是指针 一个常变量只能在内存中被分配一次
+  //而且我们在代码中声明一个变量的时候一定对应一个alloca指令
+  //所以他只有一个内存变量
+  //局部变量可以没有内存表示
+  /*
+    比如
+      %8 = icmp ne i32 %7, 0
+      br i1 %8, label %9, label %12
+    %8就没有
+  */
+ //没有就用-1表示
+ int reg_index;
+ // 从内存地址中load出来的寄存器变量的变量号
+ // 同一时间只能有一个
+
+ local_var_index(){
+  store_index=-1;
+  reg_index=-1;
+ }
+};
+//两个int都指代变量号
+//初代版本
+
 class BasicBlock;
 
 class Function{
@@ -399,6 +422,21 @@ class Function{
     __local_var_table* local_var_table;
     __local_const_var_table* local_const_var_table;
     vector<BasicBlock*>* basic_blocks;
+    map<string, local_var_index> local_var_index;
+
+    //local_var_index和local_var_table的联系
+    //大约是 变量名-变量号-变量值 的关系
+    //l_v_i是根据变量名索引得到变量号
+    //l_v_t是根据变量号索引得到变量值
+    //l_v_i在现阶段用不太着，但是也要填
+
+    int getVarNumStore(string str){
+      return local_var_index[str].store_index;
+    } //根据变量名获取当前变量的内存变量的变量号
+
+    int getVarNumLoad(string str){
+      return local_var_index[str].reg_index;
+    } //根据变量名获取当前变量的寄存器变量的变量号
 
     Function(){
       func_params=new vector<valTypes>;
@@ -421,12 +459,13 @@ class BasicBlock : public Function{
     int block_label;
     vector<command*>* cmds;
 
-  BasicBlock(){
-    cmds=new vector<command*>;
-  }
-  ~BasicBlock(){
-    delete cmds;
-  }
+    BasicBlock(){
+      cmds=new vector<command*>;
+    }
+    ~BasicBlock(){
+      delete cmds;
+    }
+
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
 
 #endif

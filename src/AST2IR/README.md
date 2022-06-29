@@ -1294,14 +1294,13 @@ define dso_local i32 @main(){
 
 函数也用类实现，里面包着基本块
 
-生成函数
+### 生成函数
 
 第一类函数
 
 params_gen
 call_func_gen
 array_offset_gen
-logic_expressions_gen
 algo_expressions_gen
 
 第二类函数——基本块相关
@@ -1310,6 +1309,7 @@ if_stmt_gen
 while_stmt_gen
 break_stmt_gen
 continue_stmt_gen
+logic_expressions_gen
 rtmt_stmt_gen
 
 第三类函数——常变量相关
@@ -1319,3 +1319,29 @@ const_val_gen
 assignment_stmt_gen
 var_declaration_gen
 const_declartion_assignment_gen
+
+### 索引变量号
+
+在class Function里
+
+local_var_index和local_var_table的联系
+大约是 变量名-变量号-变量值 的关系
+l_v_i是根据变量名索引得到变量号
+l_v_t是根据变量号索引得到变量值
+l_v_i在现阶段用不太着，但是也要填
+
+类中两个函数负责根据变量名索引变量号
+
+```c++
+int getVarNumStore(string str){
+	return local_var_index[str].store_index;
+} //根据变量名获取当前变量的内存变量的变量号
+
+int getVarNumLoad(string str){
+	return local_var_index[str].reg_index;
+} //根据变量名获取当前变量的寄存器变量的变量号
+```
+
+对于phi我们日后再考虑吧
+
+后续可能会进行相关优化
