@@ -401,9 +401,13 @@ struct local_var_index{
     %8就没有
   */
  //没有就用-1表示
+ //每新store一次就要替换掉store_index
+ //替换内容为local_var_table.size()
  int reg_index;
  // 从内存地址中load出来的寄存器变量的变量号
+ // 每新load一次就要替换掉reg_index
  // 同一时间只能有一个
+ // 替换内容为local_var_table.size()
 
  local_var_index(){
   store_index=-1;
@@ -466,6 +470,7 @@ class BasicBlock : public Function{
       2. 在这个基本块中被修改了
       3. 也就是记录store指令或是AST中=结点赋值过的变量
     */
+    //记录之后顺便替换掉
 
     BasicBlock(){
       cmds=new vector<command*>;
