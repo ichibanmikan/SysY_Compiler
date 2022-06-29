@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <stack>
 #include <bits/stdint-intn.h>
 
 using std::string;
@@ -13,6 +14,7 @@ using std::vector;
 using std::map;
 using std::variant;
 using std::pair;
+using std::stack;
 
 // 联合体value表示当前变量名或者常量
 // 举个例子: store i32 5, i32* %1
@@ -408,10 +410,8 @@ typedef global_var const_var;
 typedef map<int, const_var*> __local_const_var_table;
 
 struct local_var_index{
-  int store_index;
-  //这个是指针 一个常变量只能在内存中被分配一次
-  //而且我们在代码中声明一个变量的时候一定对应一个alloca指令
-  //所以他只有一个内存变量
+  stack<int> store_index;
+  //栈顶元素代表当前的内存变量号
   //局部变量可以没有内存表示
   /*
     比如
@@ -420,8 +420,8 @@ struct local_var_index{
     %8就没有
   */
  //没有就用-1表示
- //每新store一次就要替换掉store_index
- //替换内容为local_var_table.size()
+ //每新store一次就要压入新的store_index
+ //压入内容为local_var_table.size()
  int reg_index;
  // 从内存地址中load出来的寄存器变量的变量号
  // 每新load一次就要替换掉reg_index
@@ -429,7 +429,7 @@ struct local_var_index{
  // 替换内容为local_var_table.size()
 
  local_var_index(){
-  store_index=-1;
+  store_index.push(-1);
   reg_index=-1;
  }
 };
@@ -454,7 +454,7 @@ class Function{
     //l_v_i在现阶段用不太着，但是也要填
 
     int getVarNumStore(string str){
-      return local_var_index[str].store_index;
+      return local_var_index[str].store_index.top();
     } //根据变量名获取当前变量的内存变量的变量号
 
     int getVarNumLoad(string str){

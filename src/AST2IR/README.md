@@ -1334,11 +1334,11 @@ l_v_i在现阶段用不太着，但是也要填
 
 ```c++
 int getVarNumStore(string str){
-	return local_var_index[str].store_index;
+ return local_var_index[str].store_index;
 } //根据变量名获取当前变量的内存变量的变量号
 
 int getVarNumLoad(string str){
-	return local_var_index[str].reg_index;
+ return local_var_index[str].reg_index;
 } //根据变量名获取当前变量的寄存器变量的变量号
 ```
 
