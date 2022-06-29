@@ -458,6 +458,14 @@ class BasicBlock : public Function{
   public:
     int block_label;
     vector<command*>* cmds;
+    vector<string>* changed_vars;
+    //这是在这个基本块中记录下变量名
+    //这些变量名需要满足的特点：
+    /*
+      1. 在这个基本块开始之前就被定义过
+      2. 在这个基本块中被修改了
+      3. 也就是记录store指令或是AST中=结点赋值过的变量
+    */
 
     BasicBlock(){
       cmds=new vector<command*>;
