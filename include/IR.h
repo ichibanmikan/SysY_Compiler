@@ -70,7 +70,8 @@ enum cmdTypes{
     fptosi=18,
     call=19,
     br=20,
-    ret=21
+    ret=21,
+    phi=22
 };
 
 enum logic_state{
@@ -141,7 +142,7 @@ struct store_cmd{
   int src_type; //a的类型。a必然是寄存器值，所以不可能是数组
 
   bool is_val; // 是变量吗
-  value src_val; // 可能是浮点数常量，整型常量或者寄存器变量
+  value src_val; // 可能是浮b点数常量，整型常量或者寄存器变量
 
   int dst_type; // 是内存中的一个地址，因此不可能是数组类型，而且必是那几个数组类型(ptr)，但指向的有可能是局部变量和全局变量
 
@@ -409,7 +410,7 @@ typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变
 typedef global_var const_var;
 typedef map<int, const_var*> __local_const_var_table;
 
-struct local_var_index{
+struct __local_var_index{
   stack<int> store_index;
   //栈顶元素代表当前的内存变量号
   //局部变量可以没有内存表示
@@ -428,7 +429,7 @@ struct local_var_index{
  // 同一时间只能有一个
  // 替换内容为local_var_table.size()
 
- local_var_index(){
+ __local_var_index(){
   store_index.push(-1);
   reg_index=-1;
  }
@@ -445,7 +446,7 @@ class Function{
     __local_var_table* local_var_table;
     __local_const_var_table* local_const_var_table;
     vector<BasicBlock*>* basic_blocks;
-    map<string, local_var_index> local_var_index;
+    map<string, __local_var_index> local_var_index;
 
     //local_var_index和local_var_table的联系
     //大约是 变量名-变量号-变量值 的关系

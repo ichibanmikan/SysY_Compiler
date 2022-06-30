@@ -75,7 +75,7 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //return 语句的生成
 //注意它可以作为基本块的结束语句
 
-void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node);
+void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //逻辑运算函数 读入的是逻辑运算符
 //把逻辑运算放在这里就是要考虑短路计算的
 
@@ -91,6 +91,9 @@ void algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_no
 //算数运算函数 读入的是几个运算符
 //两个运算函数要考虑
 
+
+
 void AST2IR(syntax_tree* tree);
+
 
 #endif
