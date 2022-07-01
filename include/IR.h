@@ -71,7 +71,9 @@ enum cmdTypes{
     call=19,
     br=20,
     ret=21,
-    phi=22
+    phi=22,
+    lor=23,
+    land=24
 };
 
 enum logic_state{
@@ -183,6 +185,30 @@ struct bitcast_cmd{
 };
 
 struct add_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct and_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct or_cmd{
   int dst_val;
 
   int src_type;

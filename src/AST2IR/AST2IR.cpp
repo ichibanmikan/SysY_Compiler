@@ -35,7 +35,9 @@ int isCompLogSta(char* name)
     return -1;
 }
 
-void qiuzhi(Function* func, BasicBlock* bb, syntax_tree_node* node)
+
+//TODO: 所有可能出现在逻辑运算符左右的表达式，包含变量与常量，其值为变量表最后一个
+void expression_value(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
 
 }
@@ -45,7 +47,7 @@ void local_var_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     local_var* lv =new local_var;
     lv->local_var_type = types_get(node);
     lv->local_var_value = 
-    func->local_var_table[func->local_var_table.size()]=lv;
+    func->local_var_table[func->local_var_table->size()]=lv;
     store_cmd * acmd = new store_cmd;
     command* storeCmd = new command;
 
@@ -111,8 +113,28 @@ void const_val_gen(syntax_tree_node* node){
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
     BasicBlock* ifBB=new BasicBlock;
+    int ifBBIdx = func->basic_blocks->size();
     func->basic_blocks->push_back(ifBB);
-    logic_expressions_gen(func,bb,node[0]->children);
+    logic_expressions_gen(func,ifBB,node->children[0]);
+
+    local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+
+    int stmtBBIdx = func->basic_blocks->size();
+    BasicBlock* stmtBB=new BasicBlock;
+    func->basic_blocks->push_back(stmtBB);
+    basic_blocks_gen(func,stmtBB,node->children[1]);
+
+    br_cmd* ifbrcmd = new br_cmd;
+    br->is_cond = true;
+    br->cond_val = brcond;
+    br->br_label_1 = stmtBBIdx;
+    br->br_label_2 = stmtBBIdx+1;
+    //生成玩if后，if后面的基本块编号必须与stmt相邻
+
+    command* brbbcmd = new command;
+    brbbcmd->cmd_type = br;
+    brbbcmd->cmd_ptr = (void*) ifbrcmd;
+
     return ;
 };
 void while_stmt_gen
@@ -151,17 +173,17 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
     int logic_type = isCompLogSta(node->name);
     if(logic_type == 1)
     {
-        qiuzhi(fun,bb,node->children[0]);
+        expression_value(fun,bb,node->children[0]);
         local_var* leftVar;
-        int leftIdx = func->local_var_table.size()-1;
+        int leftIdx = func->local_var_table->size()-1;
         leftvar = func->local_var_table[leftIdx];
-        qiuzhi(fun,bb,node->children[1]);
+        expression_value(fun,bb,node->children[1]);
         local_var* rightVar;
-        int rightIdx = func->local_var_table.size()-1;
+        int rightIdx = func->local_var_table->size()-1;
         rightVar = func->local_var_table[rightIdx];
         local_var* cmpValue = new local_var;
-        int cmpVIdx = func->local_var_table.size();
-        func->local_var_table[cmpVIdx]=lv;
+        int cmpVIdx = func->local_var_table->size();
+        func->local_var_table[cmpVIdx]=cmpValue;
         command* bbcmp = new command;
         if(rightVar->local_var_type->val_type == i32)
         {
@@ -197,7 +219,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
                 printf("cmp error\n");
             }
             icmd->dst_val = cmpVIdx;
-            bbcmp->com_type = icmp;
+            bbcmp->cmd_type = icmp;
             bbcmp->cmd_ptr = (void*) icmd;
         }
         else if(rightVar->local_var_type->val_type == float_type)
@@ -207,34 +229,34 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
             fcmd->src_val_2 = rightIdx;
             if(!strcmp(node->name, "=="))
             {
-                fcmd->cmp_st = eq;
+                fcmd->cmp_st = oeq;
             }
             else if(!strcmp(node->name, "!="))
             {
-                fcmd->cmp_st = ne;
+                fcmd->cmp_st = une;
             }
             else if(!strcmp(node->name, ">="))
             {
-                fcmd->cmp_st = sge;
+                fcmd->cmp_st = oge;
             }
             else if(!strcmp(node->name, "<="))
             {
-                fcmd->cmp_st = sle;
+                fcmd->cmp_st = ole;
             }
             else if(!strcmp(node->name, ">"))
             {
-                fcmd->cmp_st = sgt;
+                fcmd->cmp_st = ogt;
             }
             else if(!strcmp(node->name, "<"))
             {
-                fcmd->cmp_st = slt;
+                fcmd->cmp_st = olt;
             }
             else
             {
                 printf("cmp error\n");
             }
             fcmd->dst_val = cmpVIdx;
-            bbcmp->com_type = fcmp;
+            bbcmp->cmd_type = fcmp;
             bbcmp->cmd_ptr = (void*) fcmd;            
         }
         else
@@ -249,7 +271,46 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
     }
     else if(logic_type == 3)
     {
+        logic_expressions_gen(func,bb,node->children[0]);
+        local_var* leftLeVar = new local_var;
+        int leftLeIdx = func->local_var_table->size()-1;
+        leftLeVar = func->local_var_table[leftLeIdx];
 
+        logic_expressions_gen(func,bb,node->children[1]);
+        local_var* rightLeVar = new local_var;
+        int rightLeIdx = func->local_var_table->size()-1;
+        rightLeVar = func->local_var_table[rightLeIdx];
+
+
+        local_var* lorValue = new local_var;
+        command* bbcmp = new command;
+        int lorIdx = func->local_var_table->size();
+        func->local_var_table[lorIdx]=lorValue;
+
+        //TODO：变量的类型，bool？
+
+        if(!strcmp(node->name, "||"))
+        {
+            or_cmd* orcmd = new or_cmd;
+            orcmd->src_val_1 = leftLeIdx;
+            orcmd->src_val_2 = rightLeIdx;
+            //orcmd->cmp_st = lor;
+            orcmd->dst_val = lorValue;
+            bbcmp->cmd_type = lor;
+            bbcmp->cmd_ptr = (void*) orcmd;
+            bb->command->push_back(bbcmp);
+        }
+        else if(!strcmp(node->name, "&&"))
+        {
+            and_cmd* andcmd = new and_cmd;
+            andcmd->src_val_1 = leftLeIdx;
+            andcmd->src_val_2 = rightLeIdx;
+            //andcmd->cmp_st = land;
+            andcmd->dst_val = landValue;
+            bbcmp->cmd_type = land;
+            bbcmp->cmd_ptr = (void*) andcmd;
+            bb->command->push_back(bbcmp);
+        }
     }
     else
     {
