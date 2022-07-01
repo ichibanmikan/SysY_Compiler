@@ -142,7 +142,7 @@ struct type{
   void printHelp(){
     string typeStr=getTypeStr(val_type);
     if(dimension_size.size()==0){
-      cout << typeStr << endl;
+      cout << typeStr;
     } else {
       for(int i=dimension_size.size()-1; i>=0; i--){
           string strTemp=typeStr;
@@ -296,11 +296,11 @@ struct add_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << src_val_1 << ", " << src_val_2;
-    } else if(!is_val_1&&!is_val_2){
-      cout << src_val_1 << ", " << src_val_2;
-    } else {
       cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
 };
@@ -322,9 +322,9 @@ struct fadd_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else if(!is_val_1&&!is_val_2){
-      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else {
       cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     }
@@ -347,11 +347,11 @@ struct sub_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << src_val_1 << ", " << src_val_2;
-    } else if(!is_val_1&&!is_val_2){
-      cout << src_val_1 << ", " << src_val_2;
-    } else {
       cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
 };
@@ -372,9 +372,9 @@ struct fsub_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else if(!is_val_1&&!is_val_2){
-      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else {
       cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     }
@@ -397,11 +397,11 @@ struct mul_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << src_val_1 << ", " << src_val_2;
-    } else if(!is_val_1&&!is_val_2){
-      cout << src_val_1 << ", " << src_val_2;
-    } else {
       cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
 };
@@ -422,9 +422,9 @@ struct fmul_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else if(!is_val_1&&!is_val_2){
-      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else {
       cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     }
@@ -447,11 +447,11 @@ struct div_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << src_val_1 << ", " << src_val_2;
-    } else if(!is_val_1&&!is_val_2){
-      cout << src_val_1 << ", " << src_val_2;
-    } else {
       cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
 };
@@ -472,9 +472,9 @@ struct fdiv_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else if(!is_val_1&&!is_val_2){
-      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
     } else {
       cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
     }
@@ -497,11 +497,11 @@ struct mod_cmd{
     if(is_val_1&&is_val_2){
       cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
     } else if(is_val_1&&!is_val_2){
-      cout << '%' << src_val_1 << ", " << src_val_2;
+      cout << '%' << src_val_1 << ", " << src_val_2<< endl;
     } else if(!is_val_1&&!is_val_2){
-      cout << src_val_1 << ", " << src_val_2;
+      cout << src_val_1 << ", " << src_val_2<< endl;
     } else {
-      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+      cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
 };
@@ -529,6 +529,20 @@ struct icmp_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    string cmp_st_str=getCompStateStr(cmp_st);
+    cout << '%' << dst_val << " = " << "icmp ";
+    cout << cmp_st_str << " i32 ";
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fcmp_cmd{
@@ -541,6 +555,20 @@ struct fcmp_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    string cmp_st_str=getCompStateStr(cmp_st);
+    cout << '%' << dst_val << " = " << "fcmp ";
+    cout << cmp_st_str << " float ";
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct sitofp_cmd{
@@ -562,6 +590,12 @@ struct param{
   bool is_local_val;
   bool is_global_val;
   value param_value;
+
+  void printHelp(){
+    param_type.printHelp();
+    cout << ' ';
+    value_printHelp(param_value);
+  }
 };
 
 struct call_cmd{
@@ -570,6 +604,18 @@ struct call_cmd{
 
   string func_name;
   vector<param> params;
+
+  void printHelp(){
+    cout << '%' << ret_value << " = call ";
+    ret_type.printHelp();
+    cout << '@' << func_name << " (";
+    for(int i=0; i<params.size()-1; i++){
+      params[i].printHelp();
+      cout << ", ";
+    }
+    params[params.size()-1].printHelp();
+    cout << ')' << endl;
+  }
 };
 
 struct br_cmd{
@@ -580,12 +626,28 @@ struct br_cmd{
   int br_label_1; //如果有条件那么条件为真时 或 无条件时 跳转到的基本块号
 
   int br_label_2; //如果有条件那么条件为假时跳转到的基本块号
+
+  void printHelp(){
+    cout << "br ";
+    if(is_cond){
+      cout << "i1 %" << cond_val << ", label %";
+      cout << br_label_1 << ", label %" << br_label_2 << endl;
+    } else {
+      cout << "label %" << br_label_1 << endl;
+    }
+  }
 };
 
 struct ret_cmd{
   type ret_type;
 
   value ret_value;
+  void printHelp(){
+    cout << "ret";
+    ret_type.printHelp();
+    value_printHelp(ret_value);
+    cout << endl;
+  }
 };
 
 struct phi_cmd{

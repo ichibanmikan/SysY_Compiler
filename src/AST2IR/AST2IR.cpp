@@ -120,6 +120,7 @@ string getCompStateStr(int compState){
     case 13:
       return "une";
     default:
+      cerr << "compare state print error !!!" << endl;
       return "error";
   }
 }
