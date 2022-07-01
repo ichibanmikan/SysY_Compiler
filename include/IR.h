@@ -574,15 +574,24 @@ struct fcmp_cmd{
 struct sitofp_cmd{
   int dst_val; //一定是寄存器变量
 
-  bool is_val;
-  int src_val;
+  // bool is_val;
+  int src_val; //一定是变量
+
+  void printHelp(){
+    cout << '%' << dst_val << " = sitofp i32 %";
+    cout << src_val << " to float" << endl;
+  }
 };
 
 struct fptosi_cmd{
   int dst_val;
 
-  bool is_val;
-  value src_val;
+  // bool is_val;
+  int src_val;
+  void printHelp(){
+    cout << '%' << dst_val << " = fptosi float %";
+    cout << src_val << " to i32" << endl;
+  }
 };
 
 struct param{
