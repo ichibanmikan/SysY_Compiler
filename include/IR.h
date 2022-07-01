@@ -254,11 +254,10 @@ struct getelementptr_cmd{
     src_type.printHelp();
     cout << "* ";
     if(is_global_val){
-      cout << '@' << get<2>(src_val);
+      cout << '@' << get<2>(src_val) << endl;
     } else{
-      cout << '%' << get<0>(src_val);
+      cout << '%' << get<0>(src_val) << endl;
     }
-
   }
 };
 
@@ -266,10 +265,17 @@ struct bitcast_cmd{
   int dst_val;
 
   type src_type;
-  bool is_glo_val;
   int src_val;
 
   type dst_type;
+  void printHelp(){
+    cout << '%' << dst_val << " = ";
+    cout << "bitcast ";
+    src_type.printHelp();
+    cout << "* " << '%' << src_val << " to ";
+    dst_type.printHelp();
+    cout << endl;
+  }
 };
 
 struct add_cmd{
@@ -282,6 +288,20 @@ struct add_cmd{
 
   bool is_val_2;
   int src_val_2;
+
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "add";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2;
+    } else {
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    }
+  }
 };
 
 struct fadd_cmd{
@@ -294,6 +314,20 @@ struct fadd_cmd{
 
   bool is_val_2;
   value src_val_2;
+
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fadd ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct sub_cmd{
@@ -306,6 +340,19 @@ struct sub_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "sub";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2;
+    } else {
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    }
+  }
 };
 
 struct fsub_cmd{
@@ -318,6 +365,19 @@ struct fsub_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fsub ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct mul_cmd{
@@ -330,6 +390,19 @@ struct mul_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "mul";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2;
+    } else {
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    }
+  }
 };
 
 struct fmul_cmd{
@@ -342,6 +415,19 @@ struct fmul_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fmul ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct div_cmd{
@@ -354,6 +440,19 @@ struct div_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "sdiv ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2;
+    } else {
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    }
+  }
 };
 
 struct fdiv_cmd{
@@ -366,6 +465,19 @@ struct fdiv_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fdiv ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2);
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2);
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct mod_cmd{
