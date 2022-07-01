@@ -6,8 +6,6 @@ extern "C"{
 }
 
 #include "../../include/IR.h"
-#include <iostream>
-#include <string.h>
 
 using std::cerr;
 using std::endl;

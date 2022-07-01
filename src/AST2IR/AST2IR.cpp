@@ -59,6 +59,48 @@ void basic_cmds_gen
   }
 }
 
+string getTypeStr(int val_type){
+  switch (val_type){
+    case 0:
+      return "void";
+    case 1:
+      return "i1";
+    case 2:
+      return "i8";
+    case 3:
+      return "i16";
+    case 4:
+      return "i32";
+    case 5:
+      return "i1*";
+    case 6:
+      return "i8*";
+    case 7:
+      return "i16*";
+    case 8:
+      return "i32*";
+    case 9:
+      return "float";
+    case 10:
+      return "float*";
+    default:
+      cerr << "type print error !!!" << endl;
+      return "error";
+  }
+}
+
+void value_printHelp(value v){
+  if(get_if<0>(&v)){
+    cout << get<0>(v);
+  }
+  if(get_if<1>(&v)){
+    cout << get<1>(v);
+  }
+  if(get_if<2>(&v)){
+    cout << get<2>(v);
+  }
+}
+
 void params_gen(Function* func, syntax_tree_node* node){
   return ;
 }

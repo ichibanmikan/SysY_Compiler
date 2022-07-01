@@ -8,6 +8,8 @@
 #include <variant>
 #include <stack>
 #include <bits/stdint-intn.h>
+#include <iostream>
+#include <string.h>
 
 using std::string;
 using std::vector;
@@ -15,6 +17,11 @@ using std::map;
 using std::variant;
 using std::pair;
 using std::stack;
+using std::cerr;
+using std::endl;
+using std::cout;
+using std::get;
+using std::get_if;
 
 // 联合体value表示当前变量名或者常量
 // 举个例子: store i32 5, i32* %1
@@ -46,6 +53,8 @@ typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*,
 
 //全局变量的值
 typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+
+void value_printHelp(value v);
 
 // cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
@@ -106,6 +115,8 @@ enum valTypes{
   array_ptr=11
 };
 
+string getTypeStr(int val_type);
+
 // struct arrayType{
 //   int array_type;
 //   vector<int> dimension_size;
@@ -126,6 +137,28 @@ struct type{
     val_type=valType;
   }
   type(){}
+
+  void printHelp(){
+    string typeStr=getTypeStr(val_type);
+    if(dimension_size.size()==0){
+      cout << typeStr << endl;
+    } else {
+      for(int i=dimension_size.size()-1; i>=0; i--){
+          string strTemp=typeStr;
+          typeStr = (dimension_size[i]+'0');
+          typeStr += " x ";
+          bool b=(i!=dimension_size.size()-1);
+          if(b){
+              typeStr += '[';
+          }
+          typeStr += strTemp;
+          if(b){
+              typeStr += ']';
+          }
+      }
+      cout << '[' << typeStr << ']';
+    }
+  }
 };
 
 // alloca指令
@@ -134,6 +167,11 @@ struct alloca_cmd{
 
   int dst_val; //被使用alloca分配的变量只有可能是局部变量，所以直接用int值表示
   int align_len; //注意这里，每个命令都留有一个保留字，代指对齐方式
+  void printHelp(){
+    cout << '%' << dst_val << ' ' << "alloca" << ' ';
+    alloca_type.printHelp();
+    cout << endl;
+  }
 };
 
 //store指令，假设把a存到b
@@ -147,6 +185,31 @@ struct store_cmd{
 
   bool is_glo_val; // 是全局变量吗
   value dst_val; // 变量名，由is_glo_val指示是否是全局变量
+  void printHelp(){
+    string src_type_str=getTypeStr(src_type);
+    string dst_type_str=getTypeStr(dst_type);
+    if(is_val&&is_glo_val){
+      cout << "store" << ' ' << src_type_str << " %";
+      cout << get<0>(src_val);
+      cout << ", " << dst_type_str << " @";
+      cout << get<2>(dst_val) << endl;
+    } else if(!is_val&&is_glo_val){
+      cout << "store" << ' ' << src_type_str << ' ';
+      value_printHelp(src_val);
+      cout << ", " << dst_type_str << " @";
+      cout << get<2>(dst_val) << endl;
+    } else if(is_val&&!is_glo_val){
+      cout << "store" << ' ' << src_type_str << " %";
+      cout << get<0>(src_val);
+      cout << ", " << dst_type_str << " %";
+      cout << get<0>(dst_val) << endl;
+    } else {
+      cout << "store" << ' ' << src_type_str << ' ';
+      value_printHelp(src_val);
+      cout << ", " << dst_type_str << " %";
+      cout << get<0>(dst_val) << endl;
+    }
+  }
 };
 
 struct load_cmd{
@@ -156,18 +219,46 @@ struct load_cmd{
   int src_type;
   bool is_glo_val;
   value src_val;
+
+  void printHelp(){
+    string dst_type_str=getTypeStr(dst_type);
+    string src_type_str=getTypeStr(src_type);
+    if(is_glo_val){
+      cout << '%' << dst_val << " = " << "load ";
+      cout << dst_type_str << ", " << src_type_str;
+      cout << " @" << get<2>(src_val) << endl;
+    } else {
+      cout << '%' << dst_val << " = " << "load ";
+      cout << dst_type_str << ", " << src_type_str;
+      cout << " %" << get<0>(src_val);
+    }
+  }
 };
 
 struct getelementptr_cmd{
   int dst_val;
 
-  int src_type;
+  type src_type;
+  bool is_global_val;
   value src_val;
 
   int offset_type;
   int offset;
   getelementptr_cmd(){
     offset_type=i32;
+  }
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "getelementptr inbounds";
+    src_type.printHelp();
+    cout << ", ";
+    src_type.printHelp();
+    cout << "* ";
+    if(is_global_val){
+      cout << '@' << get<2>(src_val);
+    } else{
+      cout << '%' << get<0>(src_val);
+    }
+
   }
 };
 
