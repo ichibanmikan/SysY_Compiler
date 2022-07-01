@@ -683,6 +683,8 @@ struct command{
   void* cmd_ptr;
 };
 
+void cmd_printHelp(command* cmd);
+
 struct local_var{
   type local_var_type;
   __local_var_value local_var_value;

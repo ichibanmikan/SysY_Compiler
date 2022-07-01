@@ -26,6 +26,16 @@ void functions_gen(syntax_tree_node* node){
   functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
 }
 
+void cmd_printHelp(command* cmd){
+  switch(cmd->cmd_type){
+    case 0:
+      struct alloca_cmd* ac=new struct alloca_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct alloca_cmd*)vac, sizeof(alloca_cmd));
+      ac->printHelp();
+  }
+}
+
 void basic_blocks_gen
 (Function* func, syntax_tree_node* node){
   BasicBlock* thisBB=new BasicBlock;
