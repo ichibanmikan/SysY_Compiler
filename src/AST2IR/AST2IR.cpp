@@ -89,6 +89,41 @@ string getTypeStr(int val_type){
   }
 }
 
+string getCompStateStr(int compState){
+  switch(compState){
+    case 0:
+      return "eq";
+    case 1:
+      return "ne";
+    case 2:
+      return "sgt";
+    case 3:
+      return "sge";
+    case 4:
+      return "slt";
+    case 5:
+      return "sle";
+    case 6:
+      return "true";
+    case 7:
+      return "false";
+    case 8:
+      return "oeq";
+    case 9:
+      return "ogt";
+    case 10:
+      return "oge";
+    case 11:
+      return "olt";
+    case 12:
+      return "ole";
+    case 13:
+      return "une";
+    default:
+      return "error";
+  }
+}
+
 void value_printHelp(value v){
   if(get_if<0>(&v)){
     cout << get<0>(v);

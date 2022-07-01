@@ -99,6 +99,7 @@ enum logic_state{
   une=13
 };
 
+string getCompStateStr(int compState);
 // valTypes表示当前是哪种类型的
 enum valTypes{
   void_type=0,
@@ -490,6 +491,19 @@ struct mod_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "srem ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2;
+    } else {
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    }
+  }
 };
 
 struct fmod_cmd{
@@ -503,6 +517,7 @@ struct fmod_cmd{
   bool is_val_2;
   value src_val_2;
 };
+//可能用不到fmod指令
 
 struct icmp_cmd{
   int dst_val; //比较结果只能是局部变量
