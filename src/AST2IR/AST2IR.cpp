@@ -28,11 +28,160 @@ void functions_gen(syntax_tree_node* node){
 
 void cmd_printHelp(command* cmd){
   switch(cmd->cmd_type){
-    case 0:
+    case 0:{
       struct alloca_cmd* ac=new struct alloca_cmd;
       void* vac=cmd->cmd_ptr;
       memcpy(ac, (struct alloca_cmd*)vac, sizeof(alloca_cmd));
       ac->printHelp();
+      break;
+    }
+    case 1:{
+      struct store_cmd* sc=new struct store_cmd;
+      void* vsc=cmd->cmd_ptr;
+      memcpy(sc, (struct store_cmd*)vsc, sizeof(store_cmd));
+      sc->printHelp();
+      break;
+    }
+    case 2:{
+      struct load_cmd* ac=new struct load_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct load_cmd*)vac, sizeof(load_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 3:{
+      struct getelementptr_cmd* ac=new struct getelementptr_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct getelementptr_cmd*)vac, sizeof(getelementptr_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 4:{
+      struct bitcast_cmd* ac=new struct bitcast_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct bitcast_cmd*)vac, sizeof(bitcast_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 5:{
+      struct add_cmd* ac=new struct add_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct add_cmd*)vac, sizeof(add_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 6:{
+      struct fadd_cmd* ac=new struct fadd_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fadd_cmd*)vac, sizeof(fadd_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 7:{
+      struct sub_cmd* ac=new struct sub_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct sub_cmd*)vac, sizeof(sub_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 8:{
+      struct fsub_cmd* ac=new struct fsub_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fsub_cmd*)vac, sizeof(fsub_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 9:{
+      struct div_cmd* ac=new struct div_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct div_cmd*)vac, sizeof(div_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 10:{
+      struct fdiv_cmd* ac=new struct fdiv_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fdiv_cmd*)vac, sizeof(fdiv_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 11:{
+      struct mul_cmd* ac=new struct mul_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct mul_cmd*)vac, sizeof(mul_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 12:{
+      struct fmul_cmd* ac=new struct fmul_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fmul_cmd*)vac, sizeof(fmul_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 13:{
+      struct mod_cmd* ac=new struct mod_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct mod_cmd*)vac, sizeof(mod_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 14:{
+      struct fmod_cmd* ac=new struct fmod_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fmod_cmd*)vac, sizeof(fmod_cmd));
+      cout << "here used fmod cmd" << endl;
+      break;
+    }
+    case 15:{
+      struct icmp_cmd* ac=new struct icmp_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct icmp_cmd*)vac, sizeof(icmp_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 16:{
+      struct fcmp_cmd* ac=new struct fcmp_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fcmp_cmd*)vac, sizeof(fcmp_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 17:{
+      struct sitofp_cmd* ac=new struct sitofp_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct sitofp_cmd*)vac, sizeof(sitofp_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 18:{
+      struct fptosi_cmd* ac=new struct fptosi_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct fptosi_cmd*)vac, sizeof(fptosi_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 19:{
+      struct call_cmd* ac=new struct call_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct call_cmd*)vac, sizeof(call_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 20:{
+      struct br_cmd* ac=new struct br_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct br_cmd*)vac, sizeof(br_cmd));
+      ac->printHelp();
+      break;
+    }
+    case 21:{
+      struct ret_cmd* ac=new struct ret_cmd;
+      void* vac=cmd->cmd_ptr;
+      memcpy(ac, (struct ret_cmd*)vac, sizeof(ret_cmd));
+      ac->printHelp();
+      break;
+    }
   }
 }
 
@@ -210,7 +359,7 @@ void AST2IR(syntax_tree* tree){
     } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
       functions_gen(tree->root->children[i]);
     } else {
-      cerr << "command error !!!" << endl;
+      cerr << "global command error !!!" << endl;
     }
   }
   return;
