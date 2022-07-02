@@ -789,6 +789,12 @@ class BasicBlock : public Function{
       delete cmds;
     }
 
+    void printHelp(){
+      for(int i=0; i<cmds->size(); i++){
+        cmd_printHelp((*cmds)[i]);
+      }
+    }
+
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
 
 #endif
