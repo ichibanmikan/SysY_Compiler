@@ -49,7 +49,7 @@ using std::get_if;
 typedef variant<int, float, string> value;
 
 //这个local_var_value是局部变量的值
-typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*, int32_t*> __local_var_value;
+typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*, int32_t*, float*> __local_var_value;
 
 //全局变量的值
 typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
@@ -692,8 +692,48 @@ struct local_var{
 };
 
 struct global_var{
-  type global_value;
+  type global_var_type;
   __global_var_value global_var_value;
+
+  void printHelp(){
+    global_var_type.printHelp();
+    cout << ' ';
+    if(global_var_type.dimension_size.size()==0){
+      if(get_if<0>(&global_var_value)){
+        cout << get<0>(global_var_value);
+      } else if(get_if<1>(&global_var_value)){
+        cout << get<1>(global_var_value);
+      } else {
+        cerr << "global var value error 1!!!";
+      }
+    } else {
+      cout << '[';
+      int temp=1;
+      for(int i=0; i<global_var_type.dimension_size.size(); i++){
+        temp*=global_var_type.dimension_size[i];
+      }
+      if(get_if<2>(&global_var_value)){
+        int32_t* glo_int_arr=get<2>(global_var_value);
+        cout << '[';
+        for(int i=0; i<temp-1; i++){
+          cout << glo_int_arr[i] << ", " << endl;
+        }
+        cout << glo_int_arr[temp-1];
+        cout << "] ";
+      } else if(get_if<3>(&global_var_value)){
+        float* glo_float_arr=get<3>(global_var_value);
+        cout << '[';
+        for(int i=0; i<temp-1; i++){
+          cout << glo_float_arr[i] << ", " << endl;
+        }
+        cout << glo_float_arr[temp-1];
+        cout << "] ";
+      } else {
+        cerr << "global var value error 2!!!";
+      }
+      cout << "] ";
+    }
+  }
 };
 
 typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变量表，不同基本块表不同
@@ -762,6 +802,8 @@ class Function{
       delete local_var_table;
       delete basic_blocks;
     }
+
+    void printHelp();
 };
 
 extern map<string, global_var*> global_var_table;

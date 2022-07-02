@@ -1,5 +1,27 @@
 #include "AST2IR.h"
 
+void Function::printHelp(){
+  for(int i=0; i<basic_blocks->size(); i++){
+    cout << (*basic_blocks)[i]->block_label << ':' << endl;
+    (*basic_blocks)[i]->printHelp();
+  }
+}
+
+void printHelp(){
+  for(map<string, global_var*>::iterator iter=global_var_table.begin(); iter!=global_var_table.end(); iter++){
+    cout << '@' << iter->first << " = " << "dso_local global ";
+    iter->second->printHelp();
+    cout << endl;
+  }
+
+  for(map<string, Function*>::iterator iter=functions_table.begin(); iter!=functions_table.end(); iter++){
+    string ret_type_str=getTypeStr(iter->second->ret_type);
+    cout << "define dso_local " << ret_type_str << '@' << iter->first << " () #0" << '{' << endl;
+    iter->second->printHelp();
+    cout << '}' << endl;
+  }
+}
+
 int types_get(char* name){
   if(!strcmp(name, "void")){
     return 0;
