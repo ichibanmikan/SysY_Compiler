@@ -7,6 +7,14 @@ void Function::printHelp(){
   }
 }
 
+void Function::local_var_printHelp(){
+  for(auto iter=local_var_table->begin(); iter!=local_var_table->end(); iter++){
+    cout << '%' << iter->first << ' ' << endl;
+    iter->second->local_var_type.printHelp();
+
+  }
+}
+
 void printHelp(){
   for(map<string, global_var*>::iterator iter=global_var_table.begin(); iter!=global_var_table.end(); iter++){
     cout << '@' << iter->first << " = " << "dso_local global ";
@@ -14,9 +22,15 @@ void printHelp(){
     cout << endl;
   }
 
+  for(map<string, const_var*>::iterator iter=const_var_table.begin(); iter!=const_var_table.end(); iter++){
+    cout << '@' << iter->first << " = " << "dso_local global ";
+    iter->second->printHelp();
+    cout << endl;
+  }
+
   for(map<string, Function*>::iterator iter=functions_table.begin(); iter!=functions_table.end(); iter++){
     string ret_type_str=getTypeStr(iter->second->ret_type);
-    cout << "define dso_local " << ret_type_str << '@' << iter->first << " () #0" << '{' << endl;
+    cout << "define dso_local " << ret_type_str << " @" << iter->first << "() #0" << '{' << endl;
     iter->second->printHelp();
     cout << '}' << endl;
   }
@@ -51,156 +65,156 @@ void functions_gen(syntax_tree_node* node){
 void cmd_printHelp(command* cmd){
   switch(cmd->cmd_type){
     case 0:{
-      struct alloca_cmd* ac=new struct alloca_cmd;
+      alloca_cmd* ac=new alloca_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct alloca_cmd*)vac, sizeof(alloca_cmd));
+      memcpy(ac, (alloca_cmd*)vac, sizeof(alloca_cmd));
       ac->printHelp();
       break;
     }
     case 1:{
-      struct store_cmd* sc=new struct store_cmd;
+      store_cmd* sc=new store_cmd;
       void* vsc=cmd->cmd_ptr;
-      memcpy(sc, (struct store_cmd*)vsc, sizeof(store_cmd));
+      memcpy(sc, (store_cmd*)vsc, sizeof(store_cmd));
       sc->printHelp();
       break;
     }
     case 2:{
-      struct load_cmd* ac=new struct load_cmd;
+      load_cmd* ac=new load_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct load_cmd*)vac, sizeof(load_cmd));
+      memcpy(ac, (load_cmd*)vac, sizeof(load_cmd));
       ac->printHelp();
       break;
     }
     case 3:{
-      struct getelementptr_cmd* ac=new struct getelementptr_cmd;
+      getelementptr_cmd* ac=new getelementptr_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct getelementptr_cmd*)vac, sizeof(getelementptr_cmd));
+      memcpy(ac, (getelementptr_cmd*)vac, sizeof(getelementptr_cmd));
       ac->printHelp();
       break;
     }
     case 4:{
-      struct bitcast_cmd* ac=new struct bitcast_cmd;
+      bitcast_cmd* ac=new bitcast_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct bitcast_cmd*)vac, sizeof(bitcast_cmd));
+      memcpy(ac, (bitcast_cmd*)vac, sizeof(bitcast_cmd));
       ac->printHelp();
       break;
     }
     case 5:{
-      struct add_cmd* ac=new struct add_cmd;
+      add_cmd* ac=new add_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct add_cmd*)vac, sizeof(add_cmd));
+      memcpy(ac, (add_cmd*)vac, sizeof(add_cmd));
       ac->printHelp();
       break;
     }
     case 6:{
-      struct fadd_cmd* ac=new struct fadd_cmd;
+      fadd_cmd* ac=new fadd_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fadd_cmd*)vac, sizeof(fadd_cmd));
+      memcpy(ac, (fadd_cmd*)vac, sizeof(fadd_cmd));
       ac->printHelp();
       break;
     }
     case 7:{
-      struct sub_cmd* ac=new struct sub_cmd;
+      sub_cmd* ac=new sub_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct sub_cmd*)vac, sizeof(sub_cmd));
+      memcpy(ac, (sub_cmd*)vac, sizeof(sub_cmd));
       ac->printHelp();
       break;
     }
     case 8:{
-      struct fsub_cmd* ac=new struct fsub_cmd;
+      fsub_cmd* ac=new fsub_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fsub_cmd*)vac, sizeof(fsub_cmd));
+      memcpy(ac, (fsub_cmd*)vac, sizeof(fsub_cmd));
       ac->printHelp();
       break;
     }
     case 9:{
-      struct div_cmd* ac=new struct div_cmd;
+      div_cmd* ac=new div_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct div_cmd*)vac, sizeof(div_cmd));
+      memcpy(ac, (div_cmd*)vac, sizeof(div_cmd));
       ac->printHelp();
       break;
     }
     case 10:{
-      struct fdiv_cmd* ac=new struct fdiv_cmd;
+      fdiv_cmd* ac=new fdiv_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fdiv_cmd*)vac, sizeof(fdiv_cmd));
+      memcpy(ac, (fdiv_cmd*)vac, sizeof(fdiv_cmd));
       ac->printHelp();
       break;
     }
     case 11:{
-      struct mul_cmd* ac=new struct mul_cmd;
+      mul_cmd* ac=new mul_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct mul_cmd*)vac, sizeof(mul_cmd));
+      memcpy(ac, (mul_cmd*)vac, sizeof(mul_cmd));
       ac->printHelp();
       break;
     }
     case 12:{
-      struct fmul_cmd* ac=new struct fmul_cmd;
+      fmul_cmd* ac=new fmul_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fmul_cmd*)vac, sizeof(fmul_cmd));
+      memcpy(ac, (fmul_cmd*)vac, sizeof(fmul_cmd));
       ac->printHelp();
       break;
     }
     case 13:{
-      struct mod_cmd* ac=new struct mod_cmd;
+      mod_cmd* ac=new mod_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct mod_cmd*)vac, sizeof(mod_cmd));
+      memcpy(ac, (mod_cmd*)vac, sizeof(mod_cmd));
       ac->printHelp();
       break;
     }
     case 14:{
-      struct fmod_cmd* ac=new struct fmod_cmd;
+      fmod_cmd* ac=new fmod_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fmod_cmd*)vac, sizeof(fmod_cmd));
+      memcpy(ac, (fmod_cmd*)vac, sizeof(fmod_cmd));
       cout << "here used fmod cmd" << endl;
       break;
     }
     case 15:{
-      struct icmp_cmd* ac=new struct icmp_cmd;
+      icmp_cmd* ac=new icmp_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct icmp_cmd*)vac, sizeof(icmp_cmd));
+      memcpy(ac, (icmp_cmd*)vac, sizeof(icmp_cmd));
       ac->printHelp();
       break;
     }
     case 16:{
-      struct fcmp_cmd* ac=new struct fcmp_cmd;
+      fcmp_cmd* ac=new fcmp_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fcmp_cmd*)vac, sizeof(fcmp_cmd));
+      memcpy(ac, (fcmp_cmd*)vac, sizeof(fcmp_cmd));
       ac->printHelp();
       break;
     }
     case 17:{
-      struct sitofp_cmd* ac=new struct sitofp_cmd;
+      sitofp_cmd* ac=new sitofp_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct sitofp_cmd*)vac, sizeof(sitofp_cmd));
+      memcpy(ac, (sitofp_cmd*)vac, sizeof(sitofp_cmd));
       ac->printHelp();
       break;
     }
     case 18:{
-      struct fptosi_cmd* ac=new struct fptosi_cmd;
+      fptosi_cmd* ac=new fptosi_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct fptosi_cmd*)vac, sizeof(fptosi_cmd));
+      memcpy(ac, (fptosi_cmd*)vac, sizeof(fptosi_cmd));
       ac->printHelp();
       break;
     }
     case 19:{
-      struct call_cmd* ac=new struct call_cmd;
+      call_cmd* ac=new call_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct call_cmd*)vac, sizeof(call_cmd));
+      memcpy(ac, (call_cmd*)vac, sizeof(call_cmd));
       ac->printHelp();
       break;
     }
     case 20:{
-      struct br_cmd* ac=new struct br_cmd;
+      br_cmd* ac=new br_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct br_cmd*)vac, sizeof(br_cmd));
+      memcpy(ac, (br_cmd*)vac, sizeof(br_cmd));
       ac->printHelp();
       break;
     }
     case 21:{
-      struct ret_cmd* ac=new struct ret_cmd;
+      ret_cmd* ac=new ret_cmd;
       void* vac=cmd->cmd_ptr;
-      memcpy(ac, (struct ret_cmd*)vac, sizeof(ret_cmd));
+      memcpy(ac, (ret_cmd*)vac, sizeof(ret_cmd));
       ac->printHelp();
       break;
     }

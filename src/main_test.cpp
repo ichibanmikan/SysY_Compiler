@@ -24,6 +24,59 @@ map<string, Function*> functions_table; //函数表，这里实在想不出来�
 
 syntax_tree *tree = NULL; //语法分析树的根节点 抽象的代指这棵树
 
+// void testPrint(){
+//   Function* f1=new Function;
+//   Function* f2=new Function;
+//   BasicBlock* b1=new BasicBlock;
+//   BasicBlock* b2=new BasicBlock(1);
+//   BasicBlock* b3=new BasicBlock(2);
+//   BasicBlock* b4=new BasicBlock(3);
+//   f1->basic_blocks->push_back(b1);
+//   f1->basic_blocks->push_back(b2);
+//   f1->basic_blocks->push_back(b3);
+//   f2->basic_blocks->push_back(b4);
+
+//   alloca_cmd* ac1=new alloca_cmd;
+//   ac1->dst_val=1;
+//   ac1->align_len=4;
+//   type* t1=new type(i32);
+//   ac1->alloca_type=*t1;
+//   command* cac1=new command;
+
+//   cac1->cmd_ptr=(void*)ac1;
+//   cac1->cmd_type=alloca_c;
+
+//   store_cmd* sc1=new store_cmd;
+//   sc1->dst_type=float_type;
+//   sc1->src_type=float_ptr;
+//   sc1->is_glo_val=false;
+//   sc1->is_val=false;
+//   sc1->dst_val=1;
+//   sc1->src_val=(float)2.3;
+//   command* csc2=new command;
+
+//   csc2->cmd_ptr=(void*) sc1;
+//   csc2->cmd_type=store;
+
+//   load_cmd* lc1=new load_cmd;
+//   lc1->dst_type=i32;
+//   lc1->dst_val=2;
+//   lc1->is_glo_val=true;
+//   lc1->src_type=i32_ptr;
+//   lc1->src_val="int_a";
+
+//   command* clc3=new command;
+//   clc3->cmd_ptr=(void*)lc1;
+//   clc3->cmd_type=load;
+
+//   b1->cmds->push_back(cac1);
+//   b1->cmds->push_back(csc2);
+//   b3->cmds->push_back(clc3);
+//   functions_table.insert(pair<string, Function*>("func1", f1));
+//   functions_table.insert(pair<string, Function*>("func2", f2));
+//   printHelp();
+// }
+
 int main(int argc, char *argv[]){
     const char *input_path = NULL; //输入路径
     if (argc >= 3) {
@@ -44,7 +97,7 @@ int main(int argc, char *argv[]){
     print_syntax_tree(stdout, tree); //把这棵树打印出来 主要是用来测试的
 
     AST2IR(tree);
-
+    // testPrint();
     // del_syntax_tree(tree); //删除这棵树 主要操作就是new之后delete了(不过我倒是觉得没啥必要了因为下一步就return 0了)
     return 0;
 }

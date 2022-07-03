@@ -58,7 +58,7 @@ void value_printHelp(value v);
 
 // cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
-    alloca_cmd=0,
+    alloca_c=0,
     store=1,
     load=2,
     getelementptr=3,
@@ -67,7 +67,7 @@ enum cmdTypes{
     fadd=6,
     sub=7,
     fsub=8,
-    div_cmd=9,
+    div_c=9,
     fdiv=10,
     mul=11,
     fmul=12,
@@ -169,7 +169,7 @@ struct alloca_cmd{
   int dst_val; //被使用alloca分配的变量只有可能是局部变量，所以直接用int值表示
   int align_len; //注意这里，每个命令都留有一个保留字，代指对齐方式
   void printHelp(){
-    cout << '%' << dst_val << ' ' << "alloca" << ' ';
+    cout << '%' << dst_val << " = " << "alloca" << ' ';
     alloca_type.printHelp();
     cout << endl;
   }
@@ -801,9 +801,11 @@ class Function{
       delete func_params;
       delete local_var_table;
       delete basic_blocks;
+      delete local_const_var_table;
     }
 
     void printHelp();
+    void local_var_printHelp();
 };
 
 extern map<string, global_var*> global_var_table;
@@ -829,6 +831,12 @@ class BasicBlock : public Function{
     }
     ~BasicBlock(){
       delete cmds;
+      delete changed_vars;
+    }
+
+    BasicBlock(int a){
+      this->block_label=a;
+      cmds=new vector<command*>;
     }
 
     void printHelp(){

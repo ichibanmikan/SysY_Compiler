@@ -12,6 +12,9 @@ using std::endl;
 
 extern syntax_tree* tree;
 
+void printHelp();
+//打印测试的
+
 int types_get(char* name);
 //types_get函数读入抽象树中的类型字符串比如"int"，返回enum valTypes中的值
 
