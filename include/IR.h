@@ -740,7 +740,7 @@ typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变
 typedef global_var const_var;
 typedef map<int, const_var*> __local_const_var_table;
 
-struct local_var_index{
+struct __local_var_index{
   stack<int> store_index;
   //栈顶元素代表当前的内存变量号
   //局部变量可以没有内存表示
@@ -753,16 +753,19 @@ struct local_var_index{
  //没有就用-1表示
  //每新store一次就要压入新的store_index
  //压入内容为local_var_table.size()
- int reg_index;
- // 从内存地址中load出来的寄存器变量的变量号
- // 每新load一次就要替换掉reg_index
- // 同一时间只能有一个
- // 替换内容为local_var_table.size()
+ map<int, int> reg_index;
+ //key代指内存形式的变量号
+ //value代指被load出来的寄存器形式的变量号
 
- local_var_index(){
-  store_index.push(-1);
-  reg_index=-1;
+ int find_reg_index(int key){
+  if(reg_index.find(key)==reg_index.end()){
+    return -1;
+  } else {
+    return reg_index[key];
+  }
  }
+ //根据当前变量对应的内存值返回寄存器值，防止多次load。
+ //如果得到了-1的结果，说明当前变量还未被用过，就需要新load一次
 };
 //两个int都指代变量号
 //初代版本
@@ -776,7 +779,8 @@ class Function{
     __local_var_table* local_var_table;
     __local_const_var_table* local_const_var_table;
     vector<BasicBlock*>* basic_blocks;
-    map<string, local_var_index> local_var_index;
+    map<string, __local_var_index>* local_var_index;
+    map<int, bool>* is_used_var;
 
     //local_var_index和local_var_table的联系
     //大约是 变量名-变量号-变量值 的关系
@@ -785,23 +789,53 @@ class Function{
     //l_v_i在现阶段用不太着，但是也要填
 
     int getVarNumStore(string str){
-      return local_var_index[str].store_index.top();
+      return (*local_var_index)[str].store_index.top();
     } //根据变量名获取当前变量的内存变量的变量号
 
     int getVarNumLoad(string str){
-      return local_var_index[str].reg_index;
+      return (*local_var_index)[str].find_reg_index((*local_var_index)[str].store_index.top());
     } //根据变量名获取当前变量的寄存器变量的变量号
+
+    int add_new_var_store(local_var* lv, string var_name){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+      if(local_var_index->find(var_name)==local_var_index->end()){
+        __local_var_index lvi;
+        lvi.store_index.push(local_var_table->size());
+        local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      } else {
+        (*local_var_index)[var_name].store_index.push(local_var_table->size());
+      }
+      (*is_used_var)[local_var_table->size()]=false;
+      return local_var_table->size();
+    }
+
+    int add_new_var_load(local_var* lv, string var_name){
+      int temp=(*local_var_index)[var_name].find_reg_index((*local_var_index)[var_name].store_index.top());
+      if(temp!=-1){
+        return temp;
+      } else {
+        (*is_used_var)[(*local_var_index)[var_name].store_index.top()]=true;
+        local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+        (*local_var_index)[var_name].reg_index.insert(pair<int, int>((*local_var_index)[var_name].store_index.top(), local_var_table->size()));
+        return local_var_table->size();
+      }
+    }
 
     Function(){
       func_params=new vector<valTypes>;
       local_var_table=new __local_var_table;
       basic_blocks=new vector<BasicBlock*>;
+      local_const_var_table=new __local_const_var_table;
+      local_var_index=new map<string, __local_var_index>;
+      is_used_var=new map<int, bool>;
     }
     ~Function(){
       delete func_params;
       delete local_var_table;
       delete basic_blocks;
       delete local_const_var_table;
+      delete local_var_index;
+      delete is_used_var;
     }
 
     void printHelp();

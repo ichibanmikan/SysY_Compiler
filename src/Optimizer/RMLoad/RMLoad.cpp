@@ -6,7 +6,7 @@ void remove_load(){
   }
 }
 
-void remove_load_func(Function* func){
+inline void remove_load_func(Function* func){
   for(int i=0; i<func->basic_blocks->size(); i++){
 
   }

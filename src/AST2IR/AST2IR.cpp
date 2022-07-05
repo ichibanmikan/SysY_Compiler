@@ -11,7 +11,6 @@ void Function::local_var_printHelp(){
   for(auto iter=local_var_table->begin(); iter!=local_var_table->end(); iter++){
     cout << '%' << iter->first << ' ' << endl;
     iter->second->local_var_type.printHelp();
-
   }
 }
 
