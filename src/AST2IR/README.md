@@ -1354,7 +1354,7 @@ int getVarNumLoad(string str){
 //根据变量名索引出来的变量号结构如下所示
 
 struct __local_var_index{
-  stack<int> store_index;
+  int
   //栈顶元素代表当前的内存变量号
   //局部变量可以没有内存表示
   /*
@@ -1374,7 +1374,7 @@ struct __local_var_index{
   if(reg_index.find(key)==reg_index.end()){
     return -1;
   } else {
-    return reg_index[key]
+    return reg_index[key];
   }
  }
  //根据当前变量对应的内存值返回寄存器值，防止多次load。
@@ -1391,6 +1391,7 @@ int b;
 int a=1;
 a=2;
 b=a;
+c=a;
 
 //SSA IR为
 %1 = alloca i32
