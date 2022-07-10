@@ -36,9 +36,22 @@ IR就是从抽象语法树到便于优化的代码
 
 ### 类型
 
-我们的IR可能遇到的有7种类型，分别是i1, i8, void, i32, float, i32\*, float*
+我们的IR可能遇到的有以下几种类型
 
-这四个就是对应空 int float int指针 float指针
+```c++
+enum valType{
+  i1=0,
+  i8=1,
+  i16=2,
+  i32=3,
+  i1_ptr=4,
+  i8_ptr=5,
+  i16_ptr=6,
+  i32_ptr=7,
+  float=8,
+  float_ptr=9
+};
+```
 
 大家看llvm生成的代码中会有align 4之类的，这好像是对齐的意思，不过我们的int和float都是4字节的，我们不用管他，我们的IR中也不会有这个
 
@@ -196,7 +209,9 @@ int a\[2][3]; 那么a可以看作int\[2][3]型的一个地址(就是说这个int
 
 **按照行优先的规则**，我们需要一步一步算出这个地址
 
-> 计算得出的地址 = getelementptr 基地址什么类型的地址, 基地址, 偏移量
+> 计算得出的地址 = getelementptr 基地址是什么类型的地址, 基地址, 偏移量
+
+中间两个类型好像重复了，我们删掉一个
 
 举个例子，首先是
 
@@ -204,9 +219,9 @@ int a[2]; a[1]=3;
 
 ```assembly
 %1 = alloca [2 x i32]
-%2 = getelementptr [2 x i32], [2 x i32]* %1, i32 1
+%2 = getelementptr [2 x i32]* %1, i32 1
 
-;%1是[2 x i32]类型的，所以要指定操作类型是[2 x i23]，[2 x i32]*类型的变量%1是基地址，i32类型的数1是偏移量。
+;%1是[2 x i32]*类型的，所以要指定操作类型是[2 x i23]，[2 x i32]*类型的变量%1是基地址，i32类型的数1是偏移量。
 ;这步是计算地址的，不实际访存，只算偏移地址
 
 store i32 3, i32* %2 ;%2可以看作i32*类型的a[1]，然后把3放进去
@@ -216,8 +231,8 @@ int a\[2][2]; a\[1][0]=3;
 
 ```assembly
 %1 = alloca [2 x [2 x i32]]
-%2 = getelementptr [2 x [2 x i32]], [2 x [2 x i32]]* %1, i32 1 ;%2是[2 x i32]类型的
-%3 = getelementptr [2 x i32], [2 x i32]* %2, i32 0 ;%3是i32* 类型的
+%2 = getelementptr [2 x [2 x i32]]* %1, i32 1 ;%2是[2 x i32]类型的
+%3 = getelementptr [2 x i32]* %2, i32 0 ;%3是i32* 类型的
 
 store i32 3, i32* %3
 ```
@@ -375,7 +390,7 @@ define dso_local i32 @main() #0 {
 }
 ```
 
-llvm.memcpy函数有四个参数，依次为源指针，目的指针，长度len，易失性(我们的机器基本都是false)
+llvm.memcpy函数有四个参数，依次为目的指针，源指针，长度len，易失性(我们的机器基本都是false)
 
 就是把从源指针开始的长度为len个字节的地址拷贝给目的地址
 
@@ -385,20 +400,22 @@ bitcast a to b 就是把a类型，在不改变bit的情况下转换为b类型
 
 上面的操作就是开辟一块连续的内存，这部分对应elf中的静态数据节，执行的时候直接把他放到数据段，**就跟全局常量一样**，包括数组初始化时的所有元素，然后把这块内存的每个字节拷贝给数组开始的地址。
 
-gcc操作是生成对应的指令，可以试试用gcc编译成汇编来查看
+gcc操作是生成对应的指令，把每个数据一个一个move到对应的地址。可以试试用gcc编译成汇编来查看
 
-目前还是以简便为主，所以我们IR不用去调用这个函数了，暂时用gcc的处理方法。以上，我们的写法是这样的
+老师说**主要考虑性能**，那么我们就按照clang的处理方式，memcpy到时候在运行时调用C库。
+
+int c[5]={3, 4, 5, 6, 7}; IR为
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
+
+; @__const.函数名.数组名 = private unnamed_addr constant 类型 每个数据
+
 %1 = alloca [5 x i32]
+%2 = bitcast [5 x i32]* %1 to i8*
+call void @memcpy(i8* %2, i8* bitcast ([5 x i32]* @__const.main.c to i8*), i32 20)
 
-%2 = getelementptr [5 x i32], [5 x i32]* %1, i32 0
-store i32 3, i32* %2
-
-%3 = getelementptr [5 x i32], [5 x i32]* %1, i32 1
-store i32 4, i32* %4
-
-...
+; 我们的@memcpy只保留了前三个参数
 ```
 
 int c\[2][3]={{1, 2, 3}, {4, 5, 6}};
@@ -406,43 +423,25 @@ int c\[2][3]={{1, 2, 3}, {4, 5, 6}};
 IR为
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [2 x [3 x i32]] [[3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 4, i32 5, i32 6]]
+
 %1 = alloca [2 x [3 x i32]]
-
-%2 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %1
-%3 = getelementptr [3 x i32], [3 x i32]* %2
-store i32 1, i32* %3
-
-...
+%2 = bitcast [2 x [3 x i32]]* %1 to i8*
+call void @memcpy(i8* %2, i8* bitcast ([2 x [3 x i32]]* @__const.main.c to i8*), i32 24)
 ```
 
 对于下面这种维度或每个维度的长度和初始元素个数匹配不起来的，**它需要把所有未知元素都赋值为0**
-
-gcc下面的数组的特性就是，一个数组被初始化了，那么它内部所有元素就有初始值，要么指定要么0，未被初始化的就全都是随机值
 
 clang数组初始元素都是0
 
 int c\[3][2]={{1, 2}, {}, 1}
 
 ```assembly
+@__const.main.c = private unnamed_addr constant [3 x [2 x i32]] [[2 x i32] [i32 1, i32 2], [2 x i32] [i32 0, i32 0], [2 x i32] [i32 1, i32 0]]
+
 %1 = alloca [3 x [2 x i32]]
-
-%2 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 0
-store i32 1, i32* %2
-
-%3 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 1
-store i32 2, i32* %3
-
-%4 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 2
-store i32 0, i32* %4
-
-%5 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 3
-store i32 0, i32* %5
-
-%6 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 4
-store i32 1, i32* %6
-
-%7 = getelementptr [3 x [2 x i32]], [3 x [2 x i32]]* %1, 5
-store i32 0, i32* %7
+%2 = bitcast [3 x [2 x i32]]* %1 to i8*
+call void @memcpy(i8* %2, i8* bitcast ([3 x [2 x i32]]* @__const.main.c to i8*), i32 24)
 ```
 
 ## 运算部分
@@ -528,7 +527,7 @@ int main(){
 
 它的IR就是
 
-```shell
+```assembly
 define dso_local i32 @main(){
   %1 = alloca i32
   %2 = alloca i32
@@ -539,7 +538,7 @@ define dso_local i32 @main(){
   store i32 6, i32* %4
   %5 = load i32, i32* %3
   %6 = load i32, i32* %4
-  %7 = mul i32 %6, 5 #####
+  %7 = mul i32 %6, 5 #####注意这里的常量不需要类型。因为C只支持同类型运算
   %8 = add i32 %5, %7 #####
   store i32 %8, i32* %2
   ret i32 0
@@ -614,7 +613,7 @@ define dso_local i32 @main(){
 
 其中，NAN表示如果阶码全部为1，尾数非0，则表示这个值不是一个真正的值（Not A Number，NAN）。NAN又分成两类：QNAN（Quiet  NAN）和SNAN（Singaling  NAN）。QNAN与SNAN的不同之处在于，QNAN的尾数部分最高位定义为1，SNAN最高位定义为0；QNAN一般表示未定义的算术运算结果，最常见的莫过于除0运算；SNAN一般被用于标记未初始化的值，以此来捕获异常。
 
-由于我们只考虑有符号数，所以我们的状态**只有eq ne sgt sge slt sle true false oeq ogt ogt olt ole une**这几个
+由于我们只考虑有符号数，所以我们的状态**只有eq ne sgt sge slt sle true false oeq ogt oge olt ole une**这几个
 
 对于整数
 
@@ -662,11 +661,17 @@ f==3.0
 
 ## 控制流
 
-### compound_stmt
+我们的IR和LLVM的基本框架是一样的，对于全局量，如果不是函数，就放置到汇编的每个节，如果是函数，就把他当一个IR中的函数
+
+函数包着基本块BasicBlock，基本块里是上面所有的以及下面一部分的基础语句。
 
 ### 全局常变量和函数
 
-全局常量是要放入汇编代码的静态数据区的
+我们所要处理的所有语言包括三种全局量，全局常量，全局变量和函数。所有全局量都用@+变量名表示
+
+#### 全局常量
+
+全局常量是要放入汇编代码的数据区(.data)的
 
 全局常量如
 
@@ -681,13 +686,788 @@ int main(){
 对于a，有IR
 
 ```assembly
-@b = dso_local constant i32 1
+@a = dso_local constant i32 1
 
-; 使用constant
+; 使用constant，指定类型和值，名称用@+变量名表示
+```
+
+对于数组
+
+```c
+const int lla[5]={3, 4, 5, 6, 7};
+```
+
+就是直接
+
+```assembly
+@lla = dso_local constant [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
+```
+
+#### 全局变量
+
+```C
+int ll1;
+int ll2=0;
+float llf=3.5;
+
+//假设都是全局变量
+```
+
+LLVM IR
+
+```assembly
+@ll2 = dso_local global i32 0
+@llf = dso_local global float 3.500000e+00
+@ll1 = common dso_local global i32 0
+
+# 声明时都要进行初始化，如果未进行初始化就默认初始化0并加一个common
+# 区别就是计算机系统课上学到的，如果被初始化就放置到数据段，否则放到BSS段
+```
+
+因为不会有错误样例，我们不管是否初始化，直接全部放到data段就可以
+
+我们的IR
+
+```assembly
+@ll2 = dso_local global i32 0
+@llf = dso_local global float 3.500000e+00
+@ll1 = dso_local global i32 0
+```
+
+使用就和局部变量差不多，是
+
+```c
+ll2=3;
+
+store i32 2, i32* @ll2
+```
+
+对于数组
+
+```assembly
+int lla[5]={3, 4, 5, 6, 7};
+
+@lla = dso_local global [5 x i32] [i32 3, i32 4, i32 5, i32 6, i32 7]
+```
+
+#### 函数
+
+函数包着基本块。
+
+我们的语法中没有函数的声明，只保留函数的定义
+
+```c
+float funcf(){
+  return 1.0;
+}
+```
+
+AST是这样的
+
+```shell
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* float
+|  |  >--* funcf
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 1.0
+
+# func_declaration结点下面有四个子结点，包括返回值类型，函数名，参数值(没有参数就是void)，语句
+```
+
+IR结果就是这样的
+
+```assembly
+define dso_local float @funcf(){
+  ret float 1.000000e+00
+}
+
+# define dso_local 返回值类型 @函数名(参数) {}
+# ret 类型 返回值
+```
+
+带参数的AST是长这样的
+
+```c
+float funcf(int a, int b){
+  return 1.0;
+}
+```
+
+```shell
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* float
+|  |  >--* funcf
+|  |  >--+ params
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* a
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* b
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 1.0
+```
+
+如果有参数，那么就是params结点，下面每一个param结点作为子结点，分别包含了类型和变量名(数组和上面的变量处理方式一样)
+
+IR为
+
+```assembly
+define dso_local float @funcf(i32 %0, i32 %1){
+  %3 = alloca i32
+  %4 = alloca i32
+  store i32 %0, i32* %3
+  store i32 %1, i32* %4
+  ret float 1.000000e+00
+}
+
+# 注意函数的参数作为局部变量，然后在函数体内先对这几个局部变量分配空间
+```
+
+数组作为参数时不要把他看作数组，看作指针就好了
+
+```c
+int func(int a[2]){
+    return a[0];
+}
+
+int func(int a[]){
+    return a[0];
+}
+...
+```
+
+IR为
+
+```assembly
+define dso_local i32 @func(i32* %1){
+  %2 = alloca i32*
+  store i32* %1, i32** %2 ;注意要分配空间给参数
+  %3 = load i32*, i32** %2
+  %4 = getelementptr i32* %3, i32 0
+  %5 = load i32, i32* %4
+  ret i32 %5
+}
 ```
 
 ### While
 
+while的语法树如下
+
+```shell
+while(a==0||b==a&&b!=d){
+    a=a-1;
+    b=b+1;
+    continue;
+}
+
+
+
+|  |  |  >--+ while_stmt
+|  |  |  |  >--+ ||
+|  |  |  |  |  >--+ ==
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--* 0
+|  |  |  |  |  >--+ &&
+|  |  |  |  |  |  >--+ ==
+|  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--+ !=
+|  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--* d
+|  |  |  |  >--+ stmts
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--+ -
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  >--* 1
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* b
+|  |  |  |  |  |  >--+ +
+|  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--* 1
+|  |  |  |  |  >--* continue
+
+# while_stmt有两个子结点，一个是判断条件，参见上面的逻辑运算，另一个结点为stmts，代表循环体的内容
+```
+
+while和if都是产生基本块的。一个单条件的while语句会产生两个基本块(条件和循环体)：
+
+<img src="https://s2.loli.net/2022/06/05/tTbpQrSmC6Kz4Xj.png">
+
+- 一个函数由许多基本块(Basic block)组成
+
+- 每个基本块包含：
+
+  - 开头的标签（可省略）
+  - 一系列指令（可省略）
+  - **结尾是终结指令(br ret)（不能省略）**
+
+- 一个基本块没有标签时，会自动赋给它一个标签
+
+一个简单的例子
+
+```c
+int main(){
+  int a=1;
+  int b=2;
+  while(a<b){
+    a=a+1;
+  }
+  float f=5;
+  return 0;
+}
+```
+
+对应的IR为
+
+```assembly
+define dso_local i32 @main(){
+  %1 = alloca i32
+  %2 = alloca i32
+  %3 = alloca i32
+  %4 = alloca float
+  store i32 0, i32* %1
+  store i32 1, i32* %2
+  store i32 2, i32* %3
+  br label %5
+  ; while前的基本块，这个基本块标签省略掉了
+5:                                                ; preds = %9, %0
+  %6 = load i32, i32* %2
+  %7 = load i32, i32* %3
+  %8 = icmp slt i32 %6, %7
+  br i1 %8, label %9, label %12
+  ; 这个基本块是while的判断条件，标签是5，用变量%5表示，终结指令是br
+9:                                                ; preds = %5
+  %10 = load i32, i32* %2
+  %11 = add nsw i32 %10, 1
+  store i32 %11, i32* %2
+  br label %5
+  ; 这个基本块是while的循环体，标签是9，用变量%9表示，终结指令是br
+12:                                               ; preds = %5
+  store float 5.000000e+00, float* %4, align 4
+  ret i32 0
+  ; 这个基本块是while结束后的语句，标签是12，用变量%12表示，终结指令是ret
+}
+```
+
+br语句分为无条件跳转和条件跳转
+
+C中的break和continue语句，以及循环体执行完毕后重新判断的过程包含在无条件跳转中。
+
+条件跳转一般就是while和if的条件判断语句
+
+例如
+
+```assembly
+%8 = icmp slt i32 %6, %7
+br i1 %8, label %9, label %12
+
+; %8为icmp比较得出的结果，逻辑运算结果都是i1类似bool类型
+; br开始条件跳转，如果i1为真那么就跳转到第一个对应的标签，这里是标签9，为假就跳转到标签12
+```
+
+ret语句就是 变量 返回值
+
 ### if
 
+if和if-else的语法树如下
+
+```shell
+if(a==b&&c==d&&!a&&e==f){
+    a=a+1;
+    b=c-e;
+    f=f*5;
+}
+
+
+|  |  |  >--+ if_stmt
+|  |  |  |  >--+ &&
+|  |  |  |  |  >--+ &&
+|  |  |  |  |  |  >--+ &&
+|  |  |  |  |  |  |  >--+ ==
+|  |  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--+ ==
+|  |  |  |  |  |  |  |  >--* c
+|  |  |  |  |  |  |  |  >--* d
+|  |  |  |  |  |  >--+ unary_ops_factor
+|  |  |  |  |  |  |  >--* !
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  >--+ ==
+|  |  |  |  |  |  >--* e
+|  |  |  |  |  |  >--* f
+|  |  |  |  >--+ stmts
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--+ +
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  >--* 1
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* b
+|  |  |  |  |  |  >--+ -
+|  |  |  |  |  |  |  >--* c
+|  |  |  |  |  |  |  >--* e
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* f
+|  |  |  |  |  |  >--+ *
+|  |  |  |  |  |  |  >--* f
+|  |  |  |  |  |  |  >--* 5
+```
+
+if_stmt有两个子结点，一个是条件一个是stmts操作
+
+if-else的语法树如下
+
+```shell
+if(a==b&&c==d&&!a&&e==f){
+  a=a+1;
+  b=c-e;
+  f=f*5;
+} else {
+  c=0;
+}
+
+
+|  |  |  >--+ if_else_stmt
+|  |  |  |  >--+ &&
+|  |  |  |  |  >--+ &&
+|  |  |  |  |  |  >--+ &&
+|  |  |  |  |  |  |  >--+ ==
+|  |  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--+ ==
+|  |  |  |  |  |  |  |  >--* c
+|  |  |  |  |  |  |  |  >--* d
+|  |  |  |  |  |  >--+ unary_ops_factor
+|  |  |  |  |  |  |  >--* !
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  >--+ ==
+|  |  |  |  |  |  >--* e
+|  |  |  |  |  |  >--* f
+|  |  |  |  >--+ stmts
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--+ +
+|  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  >--* 1
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* b
+|  |  |  |  |  |  >--+ -
+|  |  |  |  |  |  |  >--* c
+|  |  |  |  |  |  |  >--* e
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* f
+|  |  |  |  |  |  >--+ *
+|  |  |  |  |  |  |  >--* f
+|  |  |  |  |  |  |  >--* 5
+|  |  |  |  >--+ stmts
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* c
+|  |  |  |  |  |  >--* 0
+```
+
+if_else_stmts语法树有三个子结点，分别是判断条件，if体内内容，else体内内容
+
+单条件的if语句会产生一个基本块
+
+<img src="https://s2.loli.net/2022/06/05/OJ7ZM49dpinVvyG.png">
+
+```c
+int main(){
+  int a=5;
+  if(a==4){
+    a=a-1;
+  }
+}
+```
+
+IR为
+
+```assembly
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store i32 5, i32* %2, align 4
+  %3 = load i32, i32* %2, align 4
+  %4 = icmp eq i32 %3, 4
+  br i1 %4, label %5, label %8
+
+5:                                                ; preds = %0
+  %6 = load i32, i32* %2, align 4
+  %7 = add nsw i32 %6, -1
+  store i32 %7, i32* %2, align 4
+  br label %8
+
+8:                                                ; preds = %5, %0
+  %9 = load i32, i32* %1, align 4
+  ret i32 %9
+}
+```
+
+同理，单条件的if-else语句产生两个基本块
+
+<img src="https://s2.loli.net/2022/06/05/3Llvt4Zoqc2YDsh.png">
+
+```c
+int main(){
+  int a=5;
+  if(a==4){
+    a=a-1;
+  } else {
+    a=1;
+  }
+}
+```
+
+IR为
+
+```assembly
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  store i32 5, i32* %2, align 4
+  %3 = load i32, i32* %2, align 4
+  %4 = icmp eq i32 %3, 4
+  br i1 %4, label %5, label %8
+
+5:                                                ; preds = %0
+  %6 = load i32, i32* %2, align 4
+  %7 = sub nsw i32 %6, 1
+  store i32 %7, i32* %2, align 4
+  br label %9
+
+8:                                                ; preds = %0
+  store i32 1, i32* %2, align 4
+  br label %9
+
+9:                                                ; preds = %8, %5
+  %10 = load i32, i32* %1, align 4
+  ret i32 %10
+}
+
+```
+
 ### 短路计算
+
+短路计算体现在多基本块上
+
+设Ca Cb Cc Cd都是条件语句
+
+当if(Ca&&Cb&&Cc&&Cd)时，拆成
+
+```c
+if(Ca){
+  if(Cb){
+    if(Cc){
+      if(Cd){
+        ...
+      }
+    }
+  }
+}
+```
+
+如果时if(Ca||Cb||Cc||Cd)，就拆成如下的感觉
+
+```c
+if(Ca){
+  goto aaa;
+}
+if(Cb){
+  goto aaa;
+}
+if(Cc){
+  goto aaa;
+}
+if(Cd){
+  goto aaa;
+}
+aaa
+```
+
+举个例子
+
+```C
+int main(){
+  int a=5;
+  int b=3;
+  float f=5.6;
+  float d=6.3;
+  if(a==4&&b==a||f==3.3&&d==0){
+    a=a-1;
+  } else {
+    a=1;
+  }
+}
+```
+
+由于||优先级小于&&，因此条件可以写作 (a==4&&b==a) || (f==3.3&&d==0)
+
+可以拆分为
+
+```c
+if(a==4){
+  if(b==a){
+    goto 1;
+  }
+}
+if(f==3.3){
+  if(d==0){
+    goto 1;
+  }
+}
+goto 2;
+1:  a=a-1;
+  goto 3;
+2:  a=1;
+  goto 3;
+3: ...
+```
+
+IR为
+
+```assembly
+define dso_local i32 @main(){
+  %1 = alloca i32
+  %2 = alloca i32
+  %3 = alloca i32
+  %4 = alloca float
+  %5 = alloca float
+  store i32 0, i32* %1
+  store i32 5, i32* %2
+  store i32 3, i32* %3
+  store float 0x4016666660000000, float* %4
+  store float 0x4019333340000000, float* %5
+  %6 = load i32, i32* %2
+  %7 = icmp eq i32 %6, 4
+  br i1 %7, label %8, label %12 ;满足a==4就去8；否则就去12，不再判断b==a
+
+8:                                                ; preds = %0
+  %9 = load i32, i32* %3
+  %10 = load i32, i32* %2
+  %11 = icmp eq i32 %9, %10
+  br i1 %11, label %19, label %12 ;如果也满足b==a就去19，不再判断(f==3.3&&d==0)；否则去12
+
+12:                                               ; preds = %8, %0
+  %13 = load float, float* %4
+  %15 = fcmp oeq float %13, 3.300000e+00
+  br i1 %15, label %16, label %22 ;如果满足f==3.3就跳到16；否则就去22，不再判断d==0
+
+16:                                               ; preds = %12
+  %17 = load float, float* %5
+  %18 = fcmp oeq float %17, 0.000000e+00
+  br i1 %18, label %19, label %22 ;如果满足d==0就跳到19，不然跳到22
+
+19:                                               ; preds = %16, %8
+  %20 = load i32, i32* %2
+  %21 = sub nsw i32 %20, 1
+  store i32 %21, i32* %2
+  br label %23 ;a=a-1
+
+22:                                               ; preds = %16, %12
+  store i32 1, i32* %2
+  br label %23 ;a=1
+
+23:                                               ; preds = %22, %19
+  %24 = load i32, i32* %1
+  ret i32 %24
+}
+```
+
+## 实现
+
+目前处于构想阶段
+
+每个指令对应一个结构体类型
+
+然后用一个通用的结构体类型，里面有两个变量，分别为void\*的地址，以及一个标识符。void\*的地址表示对应指令的结构体地址，标识符是表示这个结构体对应哪种指令
+
+基本块用类实现
+
+函数也用类实现，里面包着基本块
+
+### 生成函数
+
+第一类函数
+
+params_gen
+call_func_gen
+array_offset_gen
+algo_expressions_gen
+
+第二类函数——基本块相关
+
+if_stmt_gen
+while_stmt_gen
+break_stmt_gen
+continue_stmt_gen
+logic_expressions_gen
+rtmt_stmt_gen
+
+第三类函数——常变量相关
+
+global_val_gen
+const_val_gen
+assignment_stmt_gen
+var_declaration_gen
+const_declartion_assignment_gen
+
+### 索引变量号
+
+在class Function里
+
+local_var_index和local_var_table的联系
+大约是 变量名-变量号-变量值 的关系
+l_v_i是根据变量名索引得到变量号
+l_v_t是根据变量号索引得到变量值
+l_v_i在现阶段用不太着，但是也要填
+
+local_var_index的详情在下一个部分
+
+类中两个函数负责根据变量名索引变量号
+
+```c++
+int getVarNumStore(string str){
+    return local_var_index[str].store_index.top();
+} //根据变量名获取当前变量的内存变量的变量号
+
+int getVarNumLoad(string str){
+    return local_var_index[str].find_reg_index();
+} //根据变量名获取当前变量的寄存器变量的变量号
+```
+
+对于phi我们日后再考虑吧
+
+后续可能会进行相关优化
+
+## 关于SSA
+
+```cpp
+//根据变量名索引出来的变量号结构如下所示
+
+struct __local_var_index{
+  int
+  //栈顶元素代表当前的内存变量号
+  //局部变量可以没有内存表示
+  /*
+    比如
+      %8 = icmp ne i32 %7, 0
+      br i1 %8, label %9, label %12
+    %8就没有
+  */
+ //没有就用-1表示
+ //每新store一次就要压入新的store_index
+ //压入内容为local_var_table.size()
+ map<int, int> reg_index;
+ //key代指内存形式的变量号
+ //value代指被load出来的寄存器形式的变量号
+    
+ int find_reg_index(int key){
+  if(reg_index.find(key)==reg_index.end()){
+    return -1;
+  } else {
+    return reg_index[key];
+  }
+ }
+ //根据当前变量对应的内存值返回寄存器值，防止多次load。
+ //如果得到了-1的结果，说明当前变量还未被用过，就需要新load一次
+};
+
+//所有变量的u-d链就很明确了，store_index存的是所有的d，reg_index存的是u对应的d
+
+//根据SSA格式，每次定义一个变量，都需要重新引入一个内存格式的变量号
+
+//比如
+int b;
+//在这里固定将0存入b，算作第一次定义
+int a=1;
+a=2;
+b=a;
+c=a;
+
+//SSA IR为
+%1 = alloca i32
+store i32 0, i32* %1
+%2 = alloca i32
+store i32 1, i32* %2
+    //我们分别把变量号1和2压入a和b对应的栈store_index中
+    //此时，Function里的local_var_index["a"]->store_index.top()应该返回1
+    //local_var_index["b"]->store_index.top()应该返回2
+    //而因为还未被使用，所以find_reg_index(1)和find_reg_index(2)返回值都为-1
+    //把值0赋给%1
+    //把值1赋给%2
+%3 = alloca i32
+store i32 2, i32* %3
+    //新建变量%3，将2赋值给%3
+%4 = load i32, i32* %3
+    //将%3加载出来到%4
+%5 = alloca i32
+store i32 %4, i32* %5
+    //把%4赋值给b，也就是%5
+```
+
+从上面可以看出，我们把alloca和store绑定起来了。这必然会导致很多没意义的store，这好办。之后优化的时候遍历命令，发现alloca了，用is_used_var判断alloca的变量是否被使用过就行了
+
+
+
+Function类里有这两个函数，前者增加一个内存中的变量，后者增加一个寄存器变量，返回变量号，可以直接调用。**我们选择加载为寄存器变量的那个内存变量总是栈顶变量号**，这里会不会有错误呢
+
+```c++
+    int add_new_var_store(local_var* lv, string var_name){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+        //在变量表中增加一个变量，假如说是int a;
+        
+      if(local_var_index->find(var_name)==local_var_index->end()){
+        __local_var_index lvi;
+        lvi.store_index.push(local_var_table->size());
+        local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      } else {
+        (*local_var_index)[var_name].store_index.push(local_var_table->size());
+      }//如果说这个a被定义过了(仅声明的时候也赋值为0, 所以也算)，那就将新的变量号压栈
+        
+      (*is_used_var)[local_var_table->size()]=false;
+      return local_var_table->size();
+    }
+
+    int add_new_var_load(local_var* lv, string var_name){
+      int temp=(*local_var_index)[var_name].find_reg_index((*local_var_index)[var_name].store_index.top());
+      if(temp!=-1){
+        return temp;
+      } else {
+        (*is_used_var)[(*local_var_index)[var_name].store_index.top()]=true;
+        local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+        (*local_var_index)[var_name].reg_index.insert(pair<int, int>((*local_var_index)[var_name].store_index.top(), local_var_table->size()));
+        return local_var_table->size();
+      }
+    }
+```
+
+
+
+未能解决的问题：
+
+<img src="https://s2.loli.net/2022/07/05/gZk5iHPr6hjqcOm.png">
+
+if基本块对a做了重新定义，else对a也做了定义，而在b中需要考虑与区分给他赋值的a究竟是哪个a(是1还是2)。
+
+这里在SSA中用phi函数进行区分。
+
+问题在于我们每次定义只是重建一个内存形式的变量然后压入栈store_index，怎么表示这个b需要使用phi函数了呢？
+
+换句话说，另一种情况：同一个基本块中
+
+a=1;
+
+a=2;
+
+b=a;
+
+这很明显b是不需要用phi的，只需要取栈顶变量号load就行，怎样修改设计使IR能区分这两种情况呢
