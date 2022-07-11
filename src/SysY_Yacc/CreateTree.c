@@ -58,6 +58,16 @@ void print_syntax_tree_node(FILE * fout, syntax_tree_node * node, int level){
 		fprintf(fout, "|  ");
 	}
 	fprintf(fout, ">--%s %s\n", (node->children_num ? "+" : "*"), node->name);
+  if(!strcmp(node->name, "if_stmt")){
+    int j, k, temp;
+    for (j = 0; j < node->children_num; j++) {
+      print_syntax_tree_node(fout, node->children[j], level + 1);
+    }
+    strcpy(node->children[1]->name, "goto");
+    temp=node->children[1]->children_num;
+    node->children[1]->children_num=0;
+    return ;
+  }
 	for (i = 0; i < node->children_num; i++) {
 		print_syntax_tree_node(fout, node->children[i], level + 1);
 	}
@@ -84,7 +94,6 @@ void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, i
   memcpy(temp, children, sizeof(syntax_tree_node));
   int i;
   for(i=parent->children_num-1; i>pos; i--){
-    printf("%d, %d, %d\n", i, parent->children_num, pos);
     parent->children[i]=parent->children[i-1];
   }
   parent->children[pos]=temp;
