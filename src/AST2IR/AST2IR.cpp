@@ -274,9 +274,7 @@ void if_set_sc_node(syntax_tree_node* node, int pos){
 }
 
 void while_set_sc_node(syntax_tree_node* node, int pos){
-  if(!strcmp(node->children[0]->name, "&&")){
-
-  } else if(!strcmp(node->children[0]->name, "||")){
+  if(!strcmp(node->children[0]->name, "||")){
     add_children_by_pos(node, node->children[0]->children[1], pos);
     node->children[0]=node->children[0]->children[0];
     for(int i=0; i<node->children_num-1; i++){
