@@ -88,5 +88,4 @@ void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, i
     parent->children[i]=parent->children[i-1];
   }
   parent->children[pos]=temp;
-  // del_syntax_tree_node(children, 1);
 }
