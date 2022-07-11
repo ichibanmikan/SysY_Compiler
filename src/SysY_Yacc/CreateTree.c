@@ -71,13 +71,22 @@ void print_syntax_tree(FILE * fout, syntax_tree * tree){
 }
 
 void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, int pos){
+  if(pos>=parent->children_num){
+    printf("too long");
+    return ;
+  }
+  if(pos<0){
+    printf("too small");
+    return ;
+  }
   syntax_tree_add_child(parent, children);
   syntax_tree_node* temp=(syntax_tree_node *)malloc(sizeof(syntax_tree_node));
   memcpy(temp, children, sizeof(syntax_tree_node));
   int i;
   for(i=parent->children_num-1; i>pos; i--){
+    printf("%d, %d, %d\n", i, parent->children_num, pos);
     parent->children[i]=parent->children[i-1];
   }
   parent->children[pos]=temp;
-  del_syntax_tree_node(children, 1);
+  // del_syntax_tree_node(children, 1);
 }

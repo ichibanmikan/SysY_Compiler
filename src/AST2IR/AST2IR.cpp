@@ -242,15 +242,17 @@ void test_bbgen(syntax_tree_node* stn){
 void set_sc_tree(syntax_tree_node* node){
   for(int i=0; i<node->children_num; i++){
     if(!strcmp(node->children[i]->name, "if_stmt")){
-      set_sc_node(node->children[i]);
+      node->children[i]->parent=node;
+      set_sc_node(node->children[i], i);
     } else if(!strcmp(node->children[i]->name, "while_stmt")){
-      set_sc_node(node->children[i]);
+      node->children[i]->parent=node;
+      set_sc_node(node->children[i], i);
     }
     continue;
   }
 }
 
-void set_sc_node(syntax_tree_node* node){
+void set_sc_node(syntax_tree_node* node, int pos){
   if(!strcmp(node->children[0]->name, "&&")){
     syntax_tree_node* new_if=new_syntax_tree_node("if_stmt");
     syntax_tree_add_child(new_if, node->children[0]->children[1]);
@@ -259,10 +261,14 @@ void set_sc_node(syntax_tree_node* node){
     syntax_tree_add_child(new_stmt, new_if);
     node->children[0]=node->children[0]->children[0];
     node->children[1]=new_stmt;
-    set_sc_node(node);
-    set_sc_node(node->children[1]->children[0]);
+    set_sc_node(node, 0);
+    set_sc_node(node->children[1]->children[0], 0);
   } else if(!strcmp(node->children[0]->name, "||")){
-
+    syntax_tree_node* new_if = new_syntax_tree_node("if_stmt");
+    syntax_tree_add_child(new_if, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if, node->children[1]);
+    node->children[0]=node->children[0]->children[0];
+    add_children_by_pos(node->parent, new_if, pos+1);
   }
 }
 
