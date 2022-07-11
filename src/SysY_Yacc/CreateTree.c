@@ -70,3 +70,14 @@ void print_syntax_tree(FILE * fout, syntax_tree * tree){
 	print_syntax_tree_node(fout, tree->root, 0);
 }
 
+void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, int pos){
+  syntax_tree_add_child(parent, children);
+  syntax_tree_node* temp=(syntax_tree_node *)malloc(sizeof(syntax_tree_node));
+  memcpy(temp, children, sizeof(syntax_tree_node));
+  int i;
+  for(i=parent->children_num-1; i>pos; i--){
+    parent->children[i]=parent->children[i-1];
+  }
+  parent->children[pos]=temp;
+  del_syntax_tree_node(children, 1);
+}
