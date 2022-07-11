@@ -180,7 +180,14 @@ expression_stmt : expression SEMICOLON {
 
                 }
 selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("if_stmt", 2, $3, $5);
+                    syntax_tree_node* stn;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    $$ = node("if_stmt", 2, $3, stn);
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
                     $$ = node("if_else_stmt", 3, $3, $5, $7);
