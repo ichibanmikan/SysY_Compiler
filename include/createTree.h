@@ -24,5 +24,6 @@ typedef struct __syntax_tree_ {
 syntax_tree* new_syntax_tree();
 void del_syntax_tree(syntax_tree * tree);
 void print_syntax_tree(FILE * fout, syntax_tree * tree);
+// void add_children_by_pos()
 
 #endif

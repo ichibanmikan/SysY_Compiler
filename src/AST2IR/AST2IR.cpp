@@ -51,14 +51,20 @@ int types_get(char* name){
 }
 
 void functions_gen(syntax_tree_node* node){
+  // Function* func_ptr=new Function;
+  // func_ptr->ret_type=types_get(node->children[0]->name);
+
+  // params_gen(func_ptr, node->children[2]);
+
+  // basic_blocks_gen(func_ptr, node->children[3]);
+
+  // functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
+
+  /*******************************/
   Function* func_ptr=new Function;
   func_ptr->ret_type=types_get(node->children[0]->name);
-
-  params_gen(func_ptr, node->children[2]);
-
   basic_blocks_gen(func_ptr, node->children[3]);
-
-  functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
+  /*******************************/
 }
 
 void cmd_printHelp(command* cmd){
@@ -222,11 +228,43 @@ void cmd_printHelp(command* cmd){
 
 void basic_blocks_gen
 (Function* func, syntax_tree_node* node){
-  BasicBlock* thisBB=new BasicBlock;
-  func->basic_blocks->push_back(thisBB);
-  thisBB->block_label=func->local_var_table->size();
-  basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
+  set_sc_tree(node);
+  // BasicBlock* thisBB=new BasicBlock;
+  // func->basic_blocks->push_back(thisBB);
+  // thisBB->block_label=func->local_var_table->size();
+  // basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
 } //basic_block_gen和basic_cmds_gen读取到的都是stmts结点
+
+void test_bbgen(syntax_tree_node* stn){
+  set_sc_tree(stn);
+}
+
+void set_sc_tree(syntax_tree_node* node){
+  for(int i=0; i<node->children_num; i++){
+    if(!strcmp(node->children[i]->name, "if_stmt")){
+      set_sc_node(node->children[i]);
+    } else if(!strcmp(node->children[i]->name, "while_stmt")){
+      set_sc_node(node->children[i]);
+    }
+    continue;
+  }
+}
+
+void set_sc_node(syntax_tree_node* node){
+  if(!strcmp(node->children[0]->name, "&&")){
+    syntax_tree_node* new_if=new_syntax_tree_node("if_stmt");
+    syntax_tree_add_child(new_if, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if, node->children[1]);
+    syntax_tree_node* new_stmt=new_syntax_tree_node("stmts");
+    syntax_tree_add_child(new_stmt, new_if);
+    node->children[0]=node->children[0]->children[0];
+    node->children[1]=new_stmt;
+    set_sc_node(node);
+    set_sc_node(node->children[1]->children[0]);
+  } else if(!strcmp(node->children[0]->name, "||")){
+
+  }
+}
 
 void basic_cmds_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
@@ -337,7 +375,7 @@ void params_gen(Function* func, syntax_tree_node* node){
 
 void global_val_gen(syntax_tree_node* node){
   return ;
-};
+}
 
 void const_val_gen(syntax_tree_node* node){
   return ;
@@ -345,57 +383,66 @@ void const_val_gen(syntax_tree_node* node){
 
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void while_stmt_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 
 void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void const_declartion_assignment_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 
 void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 
 void array_offset_gen(syntax_tree_node* node){
   return ;
-};
+}
 void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
   return ;
-};
+}
 void algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
   return ;
-};
+}
 
 void AST2IR(syntax_tree* tree){
+  // for(int i=0; i<tree->root->children_num; i++){
+  //   if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
+  //     const_val_gen(tree->root->children[i]);
+  //   } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
+  //     global_val_gen(tree->root->children[i]);
+  //   } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
+  //     functions_gen(tree->root->children[i]);
+  //   } else {
+  //     cerr << "global command error !!!" << endl;
+  //   }
+  // }
+
+  /****************************/
   for(int i=0; i<tree->root->children_num; i++){
-    if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
-      const_val_gen(tree->root->children[i]);
-    } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
-      global_val_gen(tree->root->children[i]);
-    } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
+    if(!strcmp(tree->root->children[i]->name, "func_declaration")){
       functions_gen(tree->root->children[i]);
-    } else {
-      cerr << "global command error !!!" << endl;
     }
   }
+  /****************************/
+
   return;
 }
