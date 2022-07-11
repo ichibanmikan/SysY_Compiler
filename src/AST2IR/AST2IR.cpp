@@ -51,20 +51,14 @@ int types_get(char* name){
 }
 
 void functions_gen(syntax_tree_node* node){
-  // Function* func_ptr=new Function;
-  // func_ptr->ret_type=types_get(node->children[0]->name);
-
-  // params_gen(func_ptr, node->children[2]);
-
-  // basic_blocks_gen(func_ptr, node->children[3]);
-
-  // functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
-
-  /*******************************/
   Function* func_ptr=new Function;
   func_ptr->ret_type=types_get(node->children[0]->name);
+
+  params_gen(func_ptr, node->children[2]);
+
   basic_blocks_gen(func_ptr, node->children[3]);
-  /*******************************/
+
+  functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
 }
 
 void cmd_printHelp(command* cmd){
@@ -229,10 +223,10 @@ void cmd_printHelp(command* cmd){
 void basic_blocks_gen
 (Function* func, syntax_tree_node* node){
   set_sc_tree(node);
-  // BasicBlock* thisBB=new BasicBlock;
-  // func->basic_blocks->push_back(thisBB);
-  // thisBB->block_label=func->local_var_table->size();
-  // basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
+  BasicBlock* thisBB=new BasicBlock;
+  func->basic_blocks->push_back(thisBB);
+  thisBB->block_label=func->local_var_table->size();
+  basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
 } //basic_block_gen和basic_cmds_gen读取到的都是stmts结点
 
 void test_bbgen(syntax_tree_node* stn){
@@ -441,25 +435,16 @@ void algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_no
 }
 
 void AST2IR(syntax_tree* tree){
-  // for(int i=0; i<tree->root->children_num; i++){
-  //   if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
-  //     const_val_gen(tree->root->children[i]);
-  //   } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
-  //     global_val_gen(tree->root->children[i]);
-  //   } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
-  //     functions_gen(tree->root->children[i]);
-  //   } else {
-  //     cerr << "global command error !!!" << endl;
-  //   }
-  // }
-
-  /****************************/
   for(int i=0; i<tree->root->children_num; i++){
-    if(!strcmp(tree->root->children[i]->name, "func_declaration")){
+    if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
+      const_val_gen(tree->root->children[i]);
+    } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
+      global_val_gen(tree->root->children[i]);
+    } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
       functions_gen(tree->root->children[i]);
+    } else {
+      cerr << "global command error !!!" << endl;
     }
   }
-  /****************************/
-
   return;
 }
