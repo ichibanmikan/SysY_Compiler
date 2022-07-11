@@ -213,9 +213,6 @@ struct store_cmd{
       cout << get<0>(dst_val) << endl;
     }
   }
-  // void fix_reg_index(Function* func, string var_name){
-  //   (*func->local_var_index)[var_name].reg_index=-1;
-  // }
 };
 
 struct load_cmd{
