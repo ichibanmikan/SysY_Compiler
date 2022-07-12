@@ -58,14 +58,14 @@ void print_syntax_tree_node(FILE * fout, syntax_tree_node * node, int level){
 		fprintf(fout, "|  ");
 	}
 	fprintf(fout, ">--%s %s\n", (node->children_num ? "+" : "*"), node->name);
-  if(!strcmp(node->name, "if_stmt")){
+  if(!strcmp(node->name, "stmts")){
     int j, k, temp;
     for (j = 0; j < node->children_num; j++) {
       print_syntax_tree_node(fout, node->children[j], level + 1);
     }
-    strcpy(node->children[1]->name, "goto");
-    temp=node->children[1]->children_num;
-    node->children[1]->children_num=0;
+    strcpy(node->name, "goto");
+    temp=node->children_num;
+    node->children_num=0;
     return ;
   }
 	for (i = 0; i < node->children_num; i++) {

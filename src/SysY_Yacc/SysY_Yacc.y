@@ -190,10 +190,31 @@ selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
                     $$ = node("if_stmt", 2, $3, stn);
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
-                    $$ = node("if_else_stmt", 3, $3, $5, $7);
+                    syntax_tree_node* stn;
+                    syntax_tree_node* stn7;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    if(!strcmp($7->name, "stmts")){
+                      stn7=$7;
+                    } else {
+                      stn7=new_syntax_tree_node("stmts");
+                      syntax_tree_add_child(stn7, $7);
+                    }
+                    $$ = node("if_else_stmt", 3, $3, stn, stn7);
                 }
 iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("while_stmt", 2, $3, $5);
+                    syntax_tree_node* stn;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    $$ = node("while_stmt", 2, $3, stn);
                 }
 return_stmt : RETURN SEMICOLON {
                 $$ = node("return_stmt", 0);

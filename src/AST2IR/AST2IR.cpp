@@ -293,6 +293,17 @@ void if_else_set_sc_node(syntax_tree_node* node, int pos){
     add_children_by_pos(node->parent, new_if_else, pos+1);
     if_set_sc_node(node, pos);
     if_else_set_sc_node(node->children[1]->children[0], pos);
+  } else if(!strcmp(node->children[0]->name, "&&")){
+    syntax_tree_node* new_if_else = new_syntax_tree_node("if_else_stmt");
+    syntax_tree_add_child(new_if_else, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[2]);
+    syntax_tree_node* new_stmt=new_syntax_tree_node("stmts");
+    syntax_tree_add_child(new_stmt, new_if_else);
+    node->children[0]=node->children[0]->children[0];
+    node->children[1]=new_stmt;
+    if_else_set_sc_node(node, pos);
+    if_else_set_sc_node(node->children[1], pos);
   }
 }
 
