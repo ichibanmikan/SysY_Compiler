@@ -694,11 +694,23 @@ struct local_var{
   type local_var_type;
   __local_var_value local_var_value;
   pair<int, int> live_span; //存活时间，方便后续进行常量替换等优化
+  
+  local_var(type varType_,__local_var_value v){
+    local_var_type=varType_;
+    local_var_value=v;
+  }
 };
 
 struct global_var{
   type global_var_type;
   __global_var_value global_var_value;
+
+  global_var(){}
+  global_var(type varType_,__global_var_value varValue_)
+  {
+    global_var_type=varType_;
+    global_var_value=varValue_;
+  }
 
   void printHelp(){
     global_var_type.printHelp();
@@ -814,13 +826,23 @@ class Function{
       // return (*local_var_index)[str].find_reg_index((*local_var_index)[str].store_index.top());
     } //根据变量名获取当前变量的寄存器变量的变量号
 
-    int add_new_var_store(local_var* lv, string var_name){
-      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+    int add_new_local_var_store(local_var* lv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_var_table->insert(pair<int, local_var*>(idx, lv));
       __local_var_index lvi;
-      lvi.store_index=local_var_table->size();
+      lvi.store_index=idx;
       local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
       // (*is_used_var)[local_var_table->size()]=false;
-      return local_var_table->size();
+      return idx;
+    }
+
+    int add_new_local_const_var_store(const_var* lcv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_const_var_table->insert(pair<int, const_var*>(idx, lcv));
+      __local_var_index lvi;
+      lvi.store_index=idx;
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      return idx;
     }
 
     bool is_loaded(string var_name){
@@ -899,4 +921,7 @@ class BasicBlock : public Function{
     }
 
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
+
+
+
 #endif

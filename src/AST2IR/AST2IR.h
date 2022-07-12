@@ -12,6 +12,10 @@ using std::endl;
 
 extern syntax_tree* tree;
 
+// Scope scope;
+// void init_scope();
+//set up scope for a program
+
 void printHelp();
 //打印测试的
 
@@ -43,6 +47,7 @@ void global_val_gen(syntax_tree_node* node);
 void const_val_gen(syntax_tree_node* node);
 //全局常量生成
 
+// void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //赋值语句，读入的是'='结点
 
