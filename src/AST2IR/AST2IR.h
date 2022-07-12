@@ -97,6 +97,7 @@ void AST2IR(syntax_tree* tree);
 void set_sc_tree(syntax_tree_node* node);
 void if_set_sc_node(syntax_tree_node* node, int pos);
 void while_set_sc_node(syntax_tree_node* node, int pos);
+void if_else_set_sc_node(syntax_tree_node* node, int pos);
 
 
 #endif

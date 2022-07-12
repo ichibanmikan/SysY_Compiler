@@ -240,6 +240,9 @@ void set_sc_tree(syntax_tree_node* node){
       if_set_sc_node(node->children[i], i);
     } else if(!strcmp(node->children[i]->name, "while_stmt")){
       while_set_sc_node(node->children[i], 1);
+    } else if(!strcmp(node->children[i]->name, "if_else_stmt")){
+      node->children[i]->parent=node;
+      if_else_set_sc_node(node->children[i], i);
     }
     continue;
   }
@@ -274,6 +277,22 @@ void while_set_sc_node(syntax_tree_node* node, int pos){
     for(int i=0; i<node->children_num-1; i++){
       while_set_sc_node(node, i+1);
     }
+  }
+}
+
+void if_else_set_sc_node(syntax_tree_node* node, int pos){
+  if(!strcmp(node->children[0]->name, "||")){
+    syntax_tree_node* new_if_else = new_syntax_tree_node("if_else_stmt");
+    syntax_tree_add_child(new_if_else, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[2]);
+
+    node->children_num=2;
+    strcpy(node->name, "if_stmt");
+    node->children[0]=node->children[0]->children[0];
+    add_children_by_pos(node->parent, new_if_else, pos+1);
+    if_set_sc_node(node, pos);
+    if_else_set_sc_node(node->children[1]->children[0], pos);
   }
 }
 
