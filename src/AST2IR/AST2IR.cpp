@@ -631,6 +631,7 @@ void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_n
 /*
 函数计算b=a+c+b中“a+c+b”的值，并返回
 a+3的情况？
+%x=add  
 |  |  |  |  |  |  >--+ +
 |  |  |  |  |  |  |  >--+ +
 |  |  |  |  |  |  |  |  >--* a
@@ -655,7 +656,12 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     if(func->is_loaded(arg_name2)){
       key2=func->getVarNumLoad(arg_name2);
     }
-    else key2=func->getVarNumStore(arg_name2);
+    else {
+      key2=func->getVarNumStore(arg_name2);
+      // load_cmd* lc=new load_cmd;
+      
+    }
+    
     __local_var_value t1,t2;
     type ty1,ty2;
     if(func->local_var_table->find(key1)!=func->local_var_table->end()){//若实参为局部变量
@@ -723,7 +729,13 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     if(ty1.val_type==i32_ptr){
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key1,ty1);
       load_cmd* loadcmd;
-      loadcmd->dst_val=ptr1+1;
+      // loadcmd->dst_val=ptr1+1;
+      loadcmd->dst_val=func->local_var_table->size()+func->local_const_var_table->size();
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=4;
+      loaddst->local_var_type=loaddst_type;
+      // func->add_new_var_load()
       loadcmd->dst_type=4;
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
