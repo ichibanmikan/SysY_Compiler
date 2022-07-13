@@ -213,9 +213,6 @@ struct store_cmd{
       cout << get<0>(dst_val) << endl;
     }
   }
-  // void fix_reg_index(Function* func, string var_name){
-  //   (*func->local_var_index)[var_name].reg_index=-1;
-  // }
 };
 
 struct load_cmd{
@@ -815,12 +812,12 @@ class Function{
     } //根据变量名获取当前变量的寄存器变量的变量号
 
     int add_new_var_store(local_var* lv, string var_name){
-      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
       __local_var_index lvi;
-      lvi.store_index=local_var_table->size();
+      lvi.store_index=local_var_table->size()+local_const_var_table->size();
       local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
       // (*is_used_var)[local_var_table->size()]=false;
-      return local_var_table->size();
+      return local_var_table->size()+local_const_var_table->size();
     }
 
     bool is_loaded(string var_name){
@@ -835,9 +832,14 @@ class Function{
     int add_new_var_load(local_var* lv, string var_name){
       int temp=(*local_var_index)[var_name].find_reg_index();
       // (*is_used_var)[(*local_var_index)[var_name].store_index.top()]=true;
-      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
-      (*local_var_index)[var_name].reg_index=local_var_table->size();
-      return local_var_table->size();
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
+      (*local_var_index)[var_name].reg_index=local_var_table->size()+local_const_var_table->size();
+      return local_var_table->size()+local_const_var_table->size();
+    }
+
+    int add_new_var_load(local_var* lv){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
+      return local_var_table->size()+local_const_var_table->size();
     }
 
     Function(){

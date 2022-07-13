@@ -222,11 +222,86 @@ void cmd_printHelp(command* cmd){
 
 void basic_blocks_gen
 (Function* func, syntax_tree_node* node){
+  set_sc_tree(node);
   BasicBlock* thisBB=new BasicBlock;
   func->basic_blocks->push_back(thisBB);
   thisBB->block_label=func->local_var_table->size();
   basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
 } //basic_block_gen和basic_cmds_gen读取到的都是stmts结点
+
+void set_sc_tree(syntax_tree_node* node){
+  for(int i=0; i<node->children_num; i++){
+    if(!strcmp(node->children[i]->name, "if_stmt")){
+      node->children[i]->parent=node;
+      if_set_sc_node(node->children[i], i);
+    } else if(!strcmp(node->children[i]->name, "while_stmt")){
+      while_set_sc_node(node->children[i], 1);
+    } else if(!strcmp(node->children[i]->name, "if_else_stmt")){
+      node->children[i]->parent=node;
+      if_else_set_sc_node(node->children[i], i);
+    }
+    continue;
+  }
+}
+
+void if_set_sc_node(syntax_tree_node* node, int pos){
+  if(!strcmp(node->children[0]->name, "&&")){
+    syntax_tree_node* new_if=new_syntax_tree_node("if_stmt");
+    syntax_tree_add_child(new_if, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if, node->children[1]);
+    syntax_tree_node* new_stmt=new_syntax_tree_node("stmts");
+    syntax_tree_add_child(new_stmt, new_if);
+    node->children[0]=node->children[0]->children[0];
+    node->children[1]=new_stmt;
+    if_set_sc_node(node, pos);
+    if_set_sc_node(node->children[1]->children[0], pos);
+  } else if(!strcmp(node->children[0]->name, "||")){
+    syntax_tree_node* new_if = new_syntax_tree_node("if_stmt");
+    syntax_tree_add_child(new_if, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if, node->children[1]);
+    node->children[0]=node->children[0]->children[0];
+    add_children_by_pos(node->parent, new_if, pos+1);
+    if_set_sc_node(node, pos);
+    if_set_sc_node(node->children[1]->children[0], pos);
+  }
+}
+
+void while_set_sc_node(syntax_tree_node* node, int pos){
+  if(!strcmp(node->children[0]->name, "||")){
+    add_children_by_pos(node, node->children[0]->children[1], pos);
+    node->children[0]=node->children[0]->children[0];
+    for(int i=0; i<node->children_num-1; i++){
+      while_set_sc_node(node, i+1);
+    }
+  }
+}
+
+void if_else_set_sc_node(syntax_tree_node* node, int pos){
+  if(!strcmp(node->children[0]->name, "||")){
+    syntax_tree_node* new_if_else = new_syntax_tree_node("if_else_stmt");
+    syntax_tree_add_child(new_if_else, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[2]);
+
+    node->children_num=2;
+    strcpy(node->name, "if_stmt");
+    node->children[0]=node->children[0]->children[0];
+    add_children_by_pos(node->parent, new_if_else, pos+1);
+    if_set_sc_node(node, pos);
+    if_else_set_sc_node(node->children[1]->children[0], pos);
+  } else if(!strcmp(node->children[0]->name, "&&")){
+    syntax_tree_node* new_if_else = new_syntax_tree_node("if_else_stmt");
+    syntax_tree_add_child(new_if_else, node->children[0]->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[1]);
+    syntax_tree_add_child(new_if_else, node->children[2]);
+    syntax_tree_node* new_stmt=new_syntax_tree_node("stmts");
+    syntax_tree_add_child(new_stmt, new_if_else);
+    node->children[0]=node->children[0]->children[0];
+    node->children[1]=new_stmt;
+    if_else_set_sc_node(node, pos);
+    if_else_set_sc_node(node->children[1], pos);
+  }
+}
 
 void basic_cmds_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
@@ -400,7 +475,7 @@ void params_gen(Function* func, syntax_tree_node* node){
 
 void global_val_gen(syntax_tree_node* node){
   return ;
-};
+}
 
 void const_val_gen(syntax_tree_node* node){
   return ;
@@ -408,15 +483,15 @@ void const_val_gen(syntax_tree_node* node){
 
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void while_stmt_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 
 void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 /*
 type ret_type; //返回值类型，先判断是不是为void
   int ret_value; //返回值一定先存储到寄存器变量
@@ -595,22 +670,21 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 void const_declartion_assignment_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
+}
 
 void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
-};
-
+}
 
 int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* node,int key,type stype){
   getelementptr_cmd* gcmd;
@@ -966,7 +1040,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     return key_1;
   }
 
-};
+}
 
 // void expression_value(Function* func, BasicBlock* bb, syntax_tree_node* node)
 // {
