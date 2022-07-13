@@ -22,7 +22,7 @@ int isCompLogSta(char* name)
     {
         return 1;
     }
-    if(!strcmp(name, "!"))
+    if(!strcmp(name, "unary_ops_factor"))
     {
         return 2;
     }
@@ -244,6 +244,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
     int logic_type = isCompLogSta(node->name);
     if(logic_type == 1)
     {
+/*
         expression_value(fun,bb,node->children[0]);
         local_var* leftVar;
         int leftIdx = func->local_var_table->size()-1;
@@ -252,6 +253,16 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
         local_var* rightVar;
         int rightIdx = func->local_var_table->size()-1;
         rightVar = func->local_var_table[rightIdx];
+
+        */
+
+        int leftIdx = algo_expressions_gen(bb->command,func,node->children[0]);
+		local_var* leftVar;
+        leftvar = func->local_var_table[leftIdx];
+        local_var* rightVar;
+        int rightIdx = algo_expressions_gen(bb->command,func,node->children[1]);
+        rightVar = func->local_var_table[rightIdx];
+
         local_var* cmpValue = new local_var;
         int cmpVIdx = func->local_var_table->size();
         func->local_var_table[cmpVIdx]=cmpValue;
@@ -338,6 +349,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
     }
     else if(logic_type == 2)
     {
+    	logic_expressions_gen(func,bb,node->children[1]);
 
     }
     else if(logic_type == 3)
@@ -385,12 +397,26 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
     }
     else
     {
-        printf("fuck\n");
+        int midIdx = algo_expressions_gen(bb->command,func,node);
+        local_var* midVar = new local_var;
+        midVar = func->local_var_table[midIdx];
+        bitcast_cmd* toBool = new bitcast_cmd;
+        local_var* boolVar = new local_var;
+        int toboolIdx = func->local_var_table->size();
+        func->local_var_table[toboolIdx] = boolVar;
+
+        toBool->dst_val = toboolIdx;
+        toBool->dst_type = i1;
+        toBool->src_val = midVar;
+        toBool->src_type = midVar->local_var_type->val_type;
+        toBool->is_glo_val = false;
+
+        command* cmd2 = new command;
+        cmd2->cmd_type = bitcast;
+        cmd2->cmd_ptr = (void*) toBool;
+
     }
     return ;
-};
-void algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
-  return ;
 };
 
 void AST2IR(syntax_tree* tree){
