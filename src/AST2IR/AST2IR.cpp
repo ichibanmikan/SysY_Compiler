@@ -229,10 +229,6 @@ void basic_blocks_gen
   basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
 } //basic_block_gen和basic_cmds_gen读取到的都是stmts结点
 
-void test_bbgen(syntax_tree_node* stn){
-  set_sc_tree(stn);
-}
-
 void set_sc_tree(syntax_tree_node* node){
   for(int i=0; i<node->children_num; i++){
     if(!strcmp(node->children[i]->name, "if_stmt")){
