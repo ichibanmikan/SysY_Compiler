@@ -257,10 +257,12 @@ struct getelementptr_cmd{
     src_type.printHelp();
     cout << "* ";
     if(is_global_val){
-      cout << '@' << get<2>(src_val) << endl;
+      cout << '@' << get<2>(src_val);
     } else{
-      cout << '%' << get<0>(src_val) << endl;
+      cout << '%' << get<0>(src_val);
     }
+    string str=getTypeStr(offset_type);
+    cout << ", " << str << " 0, " << str << ' ' << offset << endl; 
   }
 };
 

@@ -457,7 +457,7 @@ void params_gen(Function* func, syntax_tree_node* node){
         for(int j=0;j<dsize;j++){
           char* str=t->children[i]->name;
           if(strcmp(str,"void")==0){  //!!!!有个疑惑，当某一维不知道大小时，dimension_size[i]应该为多少？
-            t2.dimension_size[j]=1000000;
+            t2.dimension_size[j]=-1;
             break;
           }
           else{
@@ -686,19 +686,58 @@ void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
 }
 
+/*
+|  |  |  |  |  |  |  |  |  >--+ e
+|  |  |  |  |  |  |  |  |  |  >--+ array_size
+|  |  |  |  |  |  |  |  |  |  |  >--* 1
+|  |  |  |  |  |  |  |  |  |  |  >--* 2
+|  |  |  |  |  |  |  |  |  |  |  >--* 3
+*/
 int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* node,int key,type stype){
-  getelementptr_cmd* gcmd;
-  gcmd->dst_val=func->local_var_table->size()+1;
+  cout<<"----run array_offset_gen----: node_name="<<node->name<<endl;
+  type arr_type=stype;
+  int size_=node->children_num;
+  int res;
+  type last_type;
+  if(stype.val_type==i32_ptr){
+    last_type.val_type=i32;
+  }
+  else last_type.val_type=float_type;
+
+  for(int i=0;i<size_;i++){
+    
+  vector<int>::iterator k = arr_type.dimension_size.begin();
+	
+  arr_type.dimension_size.erase(k);
+  
+  getelementptr_cmd* gcmd=new getelementptr_cmd;
+  local_var* gcmddst=new local_var;
+    if(i==size_-1){
+      gcmddst->local_var_type=last_type;
+    }
+    else{
+      gcmddst->local_var_type=arr_type;
+    }
+  gcmd->dst_val=func->add_new_var_load(gcmddst);
   gcmd->is_global_val=0;
   gcmd->src_val=key;
   gcmd->src_type=stype;
-  // gcmd->offset如何赋值？
-  command* cmd;
+  char offset_str[30];
+  strcpy(offset_str,node->children[i]->name);
+  gcmd->offset=atoi(offset_str);
+  
+  command* cmd=new command;
   cmd->cmd_type=3;
   cmd->cmd_ptr=gcmd;
   vcmd->push_back(cmd);
-  return gcmd->dst_val;
-};
+
+  res=gcmd->dst_val;
+  cout<<"当前数组规模："<<arr_type.dimension_size.size()<<endl;
+  cout<<"当前变量号："<<res<<endl;
+
+  }
+  return res;
+}
 void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
   return ;
 };
@@ -716,7 +755,7 @@ map<int, local_var*>::iterator it ;
 map<int, const_var*>::iterator it2 ;
 map<string, global_var*>::iterator it3 ;
 map<string, const_var*>::iterator it4 ;
-int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
+int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f ){
   char arg_name[30],arg_name2[30],op_name[30];
   strcpy(arg_name,node->name);
   int key1,key2;
@@ -724,50 +763,20 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   if(strcmp(arg_name,"+")==0||strcmp(arg_name,"-")==0||strcmp(arg_name,"/")==0||strcmp(arg_name,"*")==0){
     strcpy(op_name,arg_name);
     // strcpy(arg_name,node->name);
+    int has_float=0,has_float2=0;
 
-    key1=algo_expressions_gen(vcmd, func, node->children[0]);
+    key1=algo_expressions_gen(vcmd, func, node->children[0],has_float);
     strcpy(arg_name2,node->children[1]->name);
     if(func->is_loaded(arg_name2)){
       key2=func->getVarNumLoad(arg_name2);
     }
     else {
       key2=func->getVarNumStore(arg_name2);
-      // load_cmd* lc=new load_cmd;
-      
-    }
+    // load
+       
+    __local_var_value t2;
+    type ty2;
     
-    __local_var_value t1,t2;
-    type ty1,ty2;
-    if(func->local_var_table->find(key1)!=func->local_var_table->end()){//若实参为局部变量
-          
-          it = func->local_var_table->find(key1);
-          ty1=it->second->local_var_type;
-          t1=it->second->local_var_value;
-        }
-    else if(func->local_const_var_table->find(key1)!=func->local_const_var_table->end()){//若实参为局部常变量          
-          it2=func->local_const_var_table->find(key1);
-          ty1=it2->second->global_var_type;
-          t1=it2->second->global_var_value;
-
-        }
-    // else if(global_var_table.find(arg_name)!=global_var_table.end()){//若实参为全局变量
-    //       it3=global_var_table.find(arg_name);
-        
-    //       ty1=it3->second->global_var_type;
-    //       t1=it3->second->global_var_value;
-          
-
-    //     }
-    // else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
-    //       it4=const_var_table.find(arg_name);
-    //       ty1=it4->second->global_var_type;
-    //       t1=it4->second->global_var_value;
-
-    //     }
-    else{
-          printf("error(AST2IR.610):找不到实参\n");
-          exit(0);
-    }
     if(func->local_var_table->find(key2)!=func->local_var_table->end()){//若实参为局部变量
           
           it = func->local_var_table->find(key2);
@@ -780,113 +789,90 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           t2=it2->second->global_var_value;
 
         }
-    // else if(global_var_table.find(arg_name)!=global_var_table.end()){//若实参为全局变量
-    //       it3=global_var_table.find(arg_name);
+    else if(global_var_table.find(arg_name2)!=global_var_table.end()){//若实参为全局变量
+          it3=global_var_table.find(arg_name2);
         
-    //       ty2=it3->second->global_var_type;
-    //       t2=it3->second->global_var_value;
+          ty2=it3->second->global_var_type;
+          t2=it3->second->global_var_value;
           
 
-    //     }
-    // else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
-    //       it4=const_var_table.find(arg_name);
-    //       ty2=it4->second->global_var_type;
-    //       t2=it4->second->global_var_value;
+        }
+    else if(const_var_table.find(arg_name2)!=const_var_table.end()){//若实参为全局常变量
+          it4=const_var_table.find(arg_name2);
+          ty2=it4->second->global_var_type;
+          t2=it4->second->global_var_value;
 
-    //     }
+        }
     else{
-          printf("error(AST2IR.610):找不到实参\n");
+          printf("error(AST2IR.810):找不到实参\n");
           exit(0);
     }
     //若为数组，load取出值
-    int has_float=0,has_float2=0;
-    if(ty1.val_type==i32_ptr){
-     int ptr1= array_offset_gen(func,vcmd,node->children[0],key1,ty1);
-      load_cmd* loadcmd;
+    if(ty2.val_type==i32_ptr){
+     int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
+    load_cmd* loadcmd;
       // loadcmd->dst_val=ptr1+1;
-      loadcmd->dst_val=func->local_var_table->size()+func->local_const_var_table->size();
       local_var* loaddst=new local_var;
       type loaddst_type;
       loaddst_type.val_type=4;
       loaddst->local_var_type=loaddst_type;
-      // func->add_new_var_load()
+      loadcmd->dst_val=func->add_new_var_load(loaddst);  
       loadcmd->dst_type=4;
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
       loadcmd->src_type=8;
-      //ptr1,ptr1+1两个变量号放哪？？
-      command* cmd;
-      cmd->cmd_type=2;
-      cmd->cmd_ptr=loadcmd;
-      vcmd->push_back(cmd);
-      key1=ptr1+1;
-    }
-    else if(ty1.val_type==float_ptr){
-     has_float=1;
-     int ptr1= array_offset_gen(func,vcmd,node->children[0],key1,ty1);
 
-  // %6 = load float(目的), float* %2（源）
-  //  dst_val= dst_type_str src_type_str %src_val
-      load_cmd* loadcmd;
-      loadcmd->dst_val=ptr1+1;
-      loadcmd->dst_type=9;
-      loadcmd->is_glo_val=0;
-      loadcmd->src_val=ptr1;
-      loadcmd->src_type=10;
-      //ptr1,ptr1+1两个变量号放哪？？
-      command* cmd;
+      command* cmd=new command;
       cmd->cmd_type=2;
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
-      key1=ptr1+1;
-    }
 
-    if(ty2.val_type==i32_ptr){
-     int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
-      load_cmd* loadcmd;
-      loadcmd->dst_val=ptr1+1;
-      loadcmd->dst_type=4;
-      loadcmd->is_glo_val=0;
-      loadcmd->src_val=ptr1;
-      loadcmd->src_type=8;
-      //ptr1,ptr1+1两个变量号放哪？？
-      command* cmd;
-      cmd->cmd_type=2;
-      cmd->cmd_ptr=loadcmd;
-      vcmd->push_back(cmd);
-      key2=ptr1+1;
+      key2=loadcmd->dst_val;
     }
     else if(ty2.val_type==float_ptr){
      has_float2=1;
-     int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
+    int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
       load_cmd* loadcmd;
-      loadcmd->dst_val=ptr1+1;
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=float_type;
+      loaddst->local_var_type=loaddst_type;
+      loadcmd->dst_val=func->add_new_var_load(loaddst);
+
+      // loadcmd->dst_val=ptr1+1;
       loadcmd->dst_type=9;
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
       loadcmd->src_type=10;
-      //ptr1,ptr1+1两个变量号放哪？？
       command* cmd;
       cmd->cmd_type=2;
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
-      key2=ptr1+1;
+      key2=loadcmd->dst_val;
       
     }
+  }
+
     //浮点数和整型一起运算时，整型值需要进行类型提升，转换成浮点数类型
     if(has_float==0&&has_float2==0){
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=i32;
+      loaddst->local_var_type=loaddst_type;
+
       if(strcmp(op_name,"+")==0){
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
-      add_cmd* add;
-      add->dst_val=func->local_var_table->size()+1;
+      
+      add_cmd* add=new add_cmd;
+      add->dst_val=func->add_new_var_load(loaddst);
       add->is_val_1=1;
       add->is_val_2=1;
       add->src_type=9;
       add->src_val_1=key1;
       add->src_val_2=key2;
 
-      command* addcmd;
+      command* addcmd=new command;
         addcmd->cmd_type=5;
         addcmd->cmd_ptr=add;
         vcmd->push_back(addcmd);
@@ -894,7 +880,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else if(strcmp(op_name,"-")==0){
       sub_cmd* sub;
-      sub->dst_val=func->local_var_table->size()+1;
+      sub->dst_val=func->add_new_var_load(loaddst);
       sub->is_val_1=1;
       sub->is_val_2=1;
       sub->src_type=9;
@@ -909,7 +895,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else if(strcmp(op_name,"*")==0){
       mul_cmd* mul;
-      mul->dst_val=func->local_var_table->size()+1;
+      mul->dst_val=func->add_new_var_load(loaddst);
       mul->is_val_1=1;
       mul->is_val_2=1;
       mul->src_type=9;
@@ -924,7 +910,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else {
       div_cmd* div;
-      div->dst_val=func->local_var_table->size()+1;
+      div->dst_val=func->add_new_var_load(loaddst);
       div->is_val_1=1;
       div->is_val_2=1;
       div->src_type=9;
@@ -939,11 +925,20 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     }
     else{
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=float_type;
+      loaddst->local_var_type=loaddst_type;
     if(has_float==1){
       if(has_float2==0){
-        int key2_f=func->local_var_table->size();
+        local_var* loaddst2=new local_var;
+        type loaddst_type2;
+        loaddst_type2.val_type=float_type;
+        loaddst2->local_var_type=loaddst_type2;
+
+        // int key2_f=func->local_var_table->size();
         sitofp_cmd* itof;
-        itof->dst_val=key2_f+1;
+        itof->dst_val=func->add_new_var_load(loaddst2);
         itof->src_val=key2;
         command* itofcmd;
         itofcmd->cmd_type=17;
@@ -953,9 +948,14 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else if(has_float2==1){
       if(has_float==0){
-        int key1_f=func->local_var_table->size();
+        local_var* loaddst2=new local_var;
+        type loaddst_type2;
+        loaddst_type2.val_type=float_type;
+        loaddst2->local_var_type=loaddst_type2;
+
+        // int key1_f=func->local_var_table->size();
         sitofp_cmd* itof;
-        itof->dst_val=key1_f+1;
+        itof->dst_val=func->add_new_var_load(loaddst2);
         itof->src_val=key1;
         command* itofcmd;
         itofcmd->cmd_type=17;
@@ -967,7 +967,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
       fadd_cmd* fadd;
-      fadd->dst_val=func->local_var_table->size()+1;
+      fadd->dst_val=func->add_new_var_load(loaddst);
       fadd->is_val_1=1;
       fadd->is_val_2=1;
       fadd->src_type=9;
@@ -982,7 +982,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else if(strcmp(op_name,"-")==0){
       fsub_cmd* fsub;
-      fsub->dst_val=func->local_var_table->size()+1;
+      fsub->dst_val=func->add_new_var_load(loaddst);
       fsub->is_val_1=1;
       fsub->is_val_2=1;
       fsub->src_type=9;
@@ -997,7 +997,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else if(strcmp(op_name,"*")==0){
       fmul_cmd* fmul;
-      fmul->dst_val=func->local_var_table->size()+1;
+      fmul->dst_val=func->add_new_var_load(loaddst);
       fmul->is_val_1=1;
       fmul->is_val_2=1;
       fmul->src_type=9;
@@ -1012,7 +1012,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
     else {
       fdiv_cmd* fdiv;
-      fdiv->dst_val=func->local_var_table->size()+1;
+      fdiv->dst_val=func->add_new_var_load(loaddst);
       fdiv->is_val_1=1;
       fdiv->is_val_2=1;
       fdiv->src_type=9;
@@ -1036,16 +1036,94 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     if(func->is_loaded(arg_name)){
       key_1=func->getVarNumLoad(arg_name);
     }
-    else key_1=func->getVarNumStore(arg_name);
+    else {
+      key_1=func->getVarNumStore(arg_name);
+    // load
+       
+    __local_var_value t1;
+    type ty1;
+    
+    if(func->local_var_table->find(key_1)!=func->local_var_table->end()){//若实参为局部变量
+          
+          it = func->local_var_table->find(key_1);
+          ty1=it->second->local_var_type;
+          t1=it->second->local_var_value;
+        }
+    else if(func->local_const_var_table->find(key_1)!=func->local_const_var_table->end()){//若实参为局部常变量          
+          it2=func->local_const_var_table->find(key_1);
+          ty1=it2->second->global_var_type;
+          t1=it2->second->global_var_value;
+
+        }
+    else if(global_var_table.find(arg_name)!=global_var_table.end()){//若实参为全局变量
+          it3=global_var_table.find(arg_name);
+        
+          ty1=it3->second->global_var_type;
+          t1=it3->second->global_var_value;
+          
+
+        }
+    else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
+          it4=const_var_table.find(arg_name);
+          ty1=it4->second->global_var_type;
+          t1=it4->second->global_var_value;
+
+        }
+    else{
+          printf("error(AST2IR.810):找不到实参\n");
+          exit(0);
+    }
+    //若为数组，load取出值
+    if(ty1.val_type==i32_ptr){
+     int ptr1= array_offset_gen(func,vcmd,node->children[0],key_1,ty1);
+    load_cmd* loadcmd;
+      // loadcmd->dst_val=ptr1+1;
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=4;
+      loaddst->local_var_type=loaddst_type;
+      loadcmd->dst_val=func->add_new_var_load(loaddst);  
+      loadcmd->dst_type=4;
+      loadcmd->is_glo_val=0;
+      loadcmd->src_val=ptr1;
+      loadcmd->src_type=8;
+
+      command* cmd=new command;
+      cmd->cmd_type=2;
+      cmd->cmd_ptr=loadcmd;
+      vcmd->push_back(cmd);
+
+      key_1=loadcmd->dst_val;
+    }
+    else if(ty1.val_type==float_ptr){
+     has_f=1;
+    int ptr1= array_offset_gen(func,vcmd,node->children[0],key_1,ty1);
+      load_cmd* loadcmd;
+      local_var* loaddst=new local_var;
+      type loaddst_type;
+      loaddst_type.val_type=float_type;
+      loaddst->local_var_type=loaddst_type;
+      loadcmd->dst_val=func->add_new_var_load(loaddst);
+
+      // loadcmd->dst_val=ptr1+1;
+      loadcmd->dst_type=9;
+      loadcmd->is_glo_val=0;
+      loadcmd->src_val=ptr1;
+      loadcmd->src_type=10;
+      command* cmd;
+      cmd->cmd_type=2;
+      cmd->cmd_ptr=loadcmd;
+      vcmd->push_back(cmd);
+      key_1=loadcmd->dst_val;
+      
+    }
+  }
     return key_1;
   }
 
 }
 
-// void expression_value(Function* func, BasicBlock* bb, syntax_tree_node* node)
-// {
 
-// }
 
 
 void AST2IR(syntax_tree* tree){
