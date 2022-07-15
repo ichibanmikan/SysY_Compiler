@@ -11,7 +11,8 @@ function getdir(){
       continue
     else
         echo $file
-        arr=(${arr[*]} $file)
+        arr=${file##*/}
+        echo $arr
         let var++
         python3 test.py -s ./test/$arr -l
         getdir $file

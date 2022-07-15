@@ -190,7 +190,11 @@ selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
                      stn=new_syntax_tree_node("stmts");
                      syntax_tree_add_child(stn, $5);
                     }
-                    $$ = node("if_stmt", 2, $3, stn);
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";")))){
+                      $$ = node("if_stmt", 2, $3, stn);
+                    } else {
+                      $$ = NULL;
+                    }
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
                     syntax_tree_node* stn;
@@ -207,7 +211,13 @@ selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
                       stn7=new_syntax_tree_node("stmts");
                       syntax_tree_add_child(stn7, $7);
                     }
-                    $$ = node("if_else_stmt", 3, $3, stn, stn7);
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";"))) && !(stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";"))) ){
+                      $$ = node("if_else_stmt", 3, $3, stn, stn7);
+                    } else if((stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";"))) && (stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";")))){
+                      $$ = NULL;
+                    } else if((stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";")))){
+                      $$ = node("if_stmt", 2, $3, stn);
+                    }
                 }
 iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
                     syntax_tree_node* stn;
@@ -217,7 +227,11 @@ iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
                      stn=new_syntax_tree_node("stmts");
                      syntax_tree_add_child(stn, $5);
                     }
-                    $$ = node("while_stmt", 2, $3, stn);
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";")))){
+                      $$ = node("while_stmt", 2, $3, stn);
+                    } else {
+                      $$ = NULL;
+                    }
                 }
 return_stmt : RETURN SEMICOLON {
                 $$ = node("return_stmt", 0);
