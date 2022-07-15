@@ -1369,7 +1369,7 @@ struct __local_var_index{
  map<int, int> reg_index;
  //key代指内存形式的变量号
  //value代指被load出来的寄存器形式的变量号
-    
+
  int find_reg_index(int key){
   if(reg_index.find(key)==reg_index.end()){
     return -1;
@@ -1416,15 +1416,13 @@ store i32 %4, i32* %5
 
 从上面可以看出，我们把alloca和store绑定起来了。这必然会导致很多没意义的store，这好办。之后优化的时候遍历命令，发现alloca了，用is_used_var判断alloca的变量是否被使用过就行了
 
-
-
 Function类里有这两个函数，前者增加一个内存中的变量，后者增加一个寄存器变量，返回变量号，可以直接调用。**我们选择加载为寄存器变量的那个内存变量总是栈顶变量号**，这里会不会有错误呢
 
 ```c++
     int add_new_var_store(local_var* lv, string var_name){
       local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
         //在变量表中增加一个变量，假如说是int a;
-        
+
       if(local_var_index->find(var_name)==local_var_index->end()){
         __local_var_index lvi;
         lvi.store_index.push(local_var_table->size());
@@ -1432,7 +1430,7 @@ Function类里有这两个函数，前者增加一个内存中的变量，后者
       } else {
         (*local_var_index)[var_name].store_index.push(local_var_table->size());
       }//如果说这个a被定义过了(仅声明的时候也赋值为0, 所以也算)，那就将新的变量号压栈
-        
+
       (*is_used_var)[local_var_table->size()]=false;
       return local_var_table->size();
     }
@@ -1449,8 +1447,6 @@ Function类里有这两个函数，前者增加一个内存中的变量，后者
       }
     }
 ```
-
-
 
 未能解决的问题：
 

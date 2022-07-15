@@ -81,7 +81,7 @@ void print_syntax_tree(FILE * fout, syntax_tree * tree){
 }
 
 void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, int pos){
-  if(pos>=parent->children_num){
+  if(pos>parent->children_num){
     printf("too long");
     return ;
   }
