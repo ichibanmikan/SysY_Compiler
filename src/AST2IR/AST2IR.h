@@ -89,6 +89,7 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
 //数组偏移函数，也就是getelementptr指令的生成
 
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node);
+int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node, int &has_f );
 //算数运算函数 读入的是几个运算符
 //两个运算函数要考虑
 

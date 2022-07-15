@@ -395,14 +395,14 @@ string getCompStateStr(int compState){
 }
 
 void value_printHelp(value v){
-  if(get_if<0>(&v)){
-    cout << get<0>(v);
+  if(get_if<3>(&v)){
+    cout << get<3>(v);
   }
-  if(get_if<1>(&v)){
-    cout << get<1>(v);
+  if(get_if<4>(&v)){
+    cout << get<4>(v);
   }
-  if(get_if<2>(&v)){
-    cout << get<2>(v);
+  if(get_if<10>(&v)){
+    cout << get<10>(v);
   }
 }
 
@@ -415,7 +415,7 @@ INT，FLOAT，VOID
 */
 void params_gen(Function* func, syntax_tree_node* node){
   syntax_tree_node* t;
-   
+
   if(strcmp(node->name,"void")!=0){
     int param_num=node->children_num;
     int key;
@@ -423,18 +423,18 @@ void params_gen(Function* func, syntax_tree_node* node){
     for(int i=0;i<param_num;i++){
       local_var* lval_;
       valTypes val_;
-      
+
       t=node->children[i];
 
       if(strcmp(t->name,"param")==0){//不为数组
         char* name_=t->children[0]->name;
-        
+
         if(strcmp(name_,"int")==0){
           val_=i32;
         }
         else if(strcmp(name_,"float")==0){
           val_=float_type;
-        }      
+        }
         type t2(val_);
         lval_->local_var_type=t2;
         // add_new_var_store(local_var* lv, string var_name)
@@ -449,14 +449,14 @@ void params_gen(Function* func, syntax_tree_node* node){
         }
         else if(strcmp(name_,"float")==0){
           val_=float_ptr;
-        }       
+        }
 
         type t2(val_);
         //如果形参为int a[1][2][]
         int dsize=t->children[2]->children_num;//取出这个数组的维度
         for(int j=0;j<dsize;j++){
           char* str=t->children[i]->name;
-          if(strcmp(str,"void")==0){  //!!!!有个疑惑，当某一维不知道大小时，dimension_size[i]应该为多少？
+          if(strcmp(str,"void")==0){  //有个疑惑，当某一维不知道大小时，dimension_size[i]应该为多少？
             t2.dimension_size[j]=-1;
             break;
           }
@@ -464,9 +464,9 @@ void params_gen(Function* func, syntax_tree_node* node){
             t2.dimension_size[j]=atoi(str);
           }
         }
-        lval_->local_var_type=t2;       
+        lval_->local_var_type=t2;
         func->add_new_var_store(lval_,t->children[1]->name);
-        
+
       }
 
     }
@@ -509,13 +509,13 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 
   int args_num=node->children_num;
   if(args_num>0){
-    
+
     if(strcmp(node->children[0]->name,"args")==0){    //若调用的是自定义函数
-      
+
       if(strcmp(node->children[0]->children[0]->name,"epsilon")!=0){
         int user_args_num=node->children[0]->children_num;
         for(int i=0;i<user_args_num;i++){
-        param arg_;     
+        param arg_;
         char arg_name[30];
         syntax_tree_node* t=node->children[0]->children[i];
 
@@ -526,15 +526,16 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
         if(strcmp(arg_name,"+")==0||strcmp(arg_name,"-")==0||strcmp(arg_name,"/")==0||strcmp(arg_name,"*")==0){//为算数表达式：+
 
       //algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node)
-         key_ = algo_expressions_gen(bb->cmds, func, t);
+         int __imp_name__=0;
+         key_ = algo_expressions_gen(bb->cmds, func, t, __imp_name__);
         }
         else{
-        
+
         if(func->is_loaded(arg_name)){
           key_=func->getVarNumLoad(arg_name);
         }
         else key_=func->getVarNumStore(arg_name);
-        
+
         map<int, local_var*>::iterator it ;
         map<int, const_var*>::iterator it2 ;
         map<string, global_var*>::iterator it3 ;
@@ -547,7 +548,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
           arg_.param_type=it->second->local_var_type;
           arg_.param_value=it->second->local_var_value;
         }
-        else if(func->local_const_var_table->find(key_)!=func->local_const_var_table->end()){//若实参为局部常变量          
+        else if(func->local_const_var_table->find(key_)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key_);
           arg_.is_global_val=false;
           arg_.is_local_val=true;
@@ -561,7 +562,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
           arg_.is_local_val=false;
           arg_.param_type=it3->second->global_var_type;
           arg_.param_value=it3->second->global_var_value;
-          
+
 
         }
         else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
@@ -578,35 +579,36 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
         }
         call_->params.push_back(arg_);
       }
-        
+
       }
-      
+
       }
-      
+
 
     }
     else{   //若调用的是特殊函数
       if(strcmp(node->children[0]->name,"epsilon")!=0){
-        
+
         int lib_args_num=node->children_num;
 
         for(int i=0;i<lib_args_num;i++){
-        param arg_;     
-        char arg_name[30];       
+        param arg_;
+        char arg_name[30];
         strcpy(arg_name,node->children[i]->name);
-        
+
         int key_;
         if(strcmp(arg_name,"+")==0||strcmp(arg_name,"-")==0||strcmp(arg_name,"/")==0||strcmp(arg_name,"*")==0){//为算数表达式：+
-          key_=algo_expressions_gen(bb->cmds, func, node->children[i]);
+          int __imp_name__=0;
+          key_=algo_expressions_gen(bb->cmds, func, node->children[i], __imp_name__);
         }
         else{
-        
+
         if(func->is_loaded(arg_name)){
           key_=func->getVarNumLoad(arg_name);
         }
         else key_=func->getVarNumStore(arg_name);
 
-        
+
         map<int, local_var*>::iterator it ;
         map<int, const_var*>::iterator it2 ;
         map<string, global_var*>::iterator it3 ;
@@ -620,7 +622,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
           arg_.param_type=it->second->local_var_type;
           arg_.param_value=it->second->local_var_value;
         }
-        else if(func->local_const_var_table->find(key_)!=func->local_const_var_table->end()){//若实参为局部常变量          
+        else if(func->local_const_var_table->find(key_)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key_);
           arg_.is_global_val=false;
           arg_.is_local_val=true;
@@ -634,7 +636,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
           arg_.is_local_val=false;
           arg_.param_type=it3->second->global_var_type;
           arg_.param_value=it3->second->global_var_value;
-          
+
 
         }
         else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
@@ -650,15 +652,15 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
           exit(0);
         }
         call_->params.push_back(arg_);
-        } 
+        }
       }
-      
+
 
     }
 
   }
 
-  
+
   }
 
   command* callcmd;
@@ -666,7 +668,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   callcmd->cmd_ptr=call_;
   bb->cmds->push_back(callcmd);
 
-};
+}
 
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
@@ -705,11 +707,11 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
   else last_type.val_type=float_type;
 
   for(int i=0;i<size_;i++){
-    
+
   vector<int>::iterator k = arr_type.dimension_size.begin();
-	
+
   arr_type.dimension_size.erase(k);
-  
+
   getelementptr_cmd* gcmd=new getelementptr_cmd;
   local_var* gcmddst=new local_var;
     if(i==size_-1){
@@ -725,7 +727,7 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
   char offset_str[30];
   strcpy(offset_str,node->children[i]->name);
   gcmd->offset=atoi(offset_str);
-  
+
   command* cmd=new command;
   cmd->cmd_type=3;
   cmd->cmd_ptr=gcmd;
@@ -740,11 +742,11 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
 }
 void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
   return ;
-};
+}
 /*
 函数计算b=a+c+b中“a+c+b”的值，并返回
 a+3的情况？
-%x=add  
+%x=add
 |  |  |  |  |  |  >--+ +
 |  |  |  |  |  |  |  >--+ +
 |  |  |  |  |  |  |  |  >--* a
@@ -755,11 +757,17 @@ map<int, local_var*>::iterator it ;
 map<int, const_var*>::iterator it2 ;
 map<string, global_var*>::iterator it3 ;
 map<string, const_var*>::iterator it4 ;
+
+int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node){
+  int __imp_name__=0;
+  return algo_expressions_gen(vcmd, func, node, __imp_name__);
+}
+
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f ){
   char arg_name[30],arg_name2[30],op_name[30];
   strcpy(arg_name,node->name);
   int key1,key2;
-  
+
   if(strcmp(arg_name,"+")==0||strcmp(arg_name,"-")==0||strcmp(arg_name,"/")==0||strcmp(arg_name,"*")==0){
     strcpy(op_name,arg_name);
     // strcpy(arg_name,node->name);
@@ -773,17 +781,17 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     else {
       key2=func->getVarNumStore(arg_name2);
     // load
-       
+
     __local_var_value t2;
     type ty2;
-    
+
     if(func->local_var_table->find(key2)!=func->local_var_table->end()){//若实参为局部变量
-          
+
           it = func->local_var_table->find(key2);
           ty2=it->second->local_var_type;
           t2=it->second->local_var_value;
         }
-    else if(func->local_const_var_table->find(key2)!=func->local_const_var_table->end()){//若实参为局部常变量          
+    else if(func->local_const_var_table->find(key2)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key2);
           ty2=it2->second->global_var_type;
           t2=it2->second->global_var_value;
@@ -791,10 +799,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         }
     else if(global_var_table.find(arg_name2)!=global_var_table.end()){//若实参为全局变量
           it3=global_var_table.find(arg_name2);
-        
+
           ty2=it3->second->global_var_type;
           t2=it3->second->global_var_value;
-          
+
 
         }
     else if(const_var_table.find(arg_name2)!=const_var_table.end()){//若实参为全局常变量
@@ -816,7 +824,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       type loaddst_type;
       loaddst_type.val_type=4;
       loaddst->local_var_type=loaddst_type;
-      loadcmd->dst_val=func->add_new_var_load(loaddst);  
+      loadcmd->dst_val=func->add_new_var_load(loaddst);
       loadcmd->dst_type=4;
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
@@ -849,7 +857,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
       key2=loadcmd->dst_val;
-      
+
     }
   }
 
@@ -863,7 +871,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       if(strcmp(op_name,"+")==0){
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
-      
+
       add_cmd* add=new add_cmd;
       add->dst_val=func->add_new_var_load(loaddst);
       add->is_val_1=1;
@@ -1025,10 +1033,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         vcmd->push_back(fdivcmd);
         return fdiv->dst_val;
     }
-    
+
     }
-    
-    
+
+
   }
   else{
 
@@ -1039,17 +1047,17 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     else {
       key_1=func->getVarNumStore(arg_name);
     // load
-       
+
     __local_var_value t1;
     type ty1;
-    
+
     if(func->local_var_table->find(key_1)!=func->local_var_table->end()){//若实参为局部变量
-          
+
           it = func->local_var_table->find(key_1);
           ty1=it->second->local_var_type;
           t1=it->second->local_var_value;
         }
-    else if(func->local_const_var_table->find(key_1)!=func->local_const_var_table->end()){//若实参为局部常变量          
+    else if(func->local_const_var_table->find(key_1)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key_1);
           ty1=it2->second->global_var_type;
           t1=it2->second->global_var_value;
@@ -1057,10 +1065,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         }
     else if(global_var_table.find(arg_name)!=global_var_table.end()){//若实参为全局变量
           it3=global_var_table.find(arg_name);
-        
+
           ty1=it3->second->global_var_type;
           t1=it3->second->global_var_value;
-          
+
 
         }
     else if(const_var_table.find(arg_name)!=const_var_table.end()){//若实参为全局常变量
@@ -1082,7 +1090,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       type loaddst_type;
       loaddst_type.val_type=4;
       loaddst->local_var_type=loaddst_type;
-      loadcmd->dst_val=func->add_new_var_load(loaddst);  
+      loadcmd->dst_val=func->add_new_var_load(loaddst);
       loadcmd->dst_type=4;
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
@@ -1115,7 +1123,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
       key_1=loadcmd->dst_val;
-      
+
     }
   }
     return key_1;

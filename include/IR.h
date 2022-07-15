@@ -46,13 +46,15 @@ using std::get_if;
 // };
 
 //对于value我们使用一个和上面联合体等价的variant，方便操作
-typedef variant<int, float, string> value;
+// typedef variant<int, float, string> value;
 
 //这个local_var_value是局部变量的值
-typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*, int32_t*, float*> __local_var_value;
+typedef variant<int32_t, float, string, int32_t*, float*, bool, bool*, int8_t, int16_t, int8_t*, int16_t*> __local_var_value;
 
 //全局变量的值
-typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+// typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+typedef __local_var_value __global_var_value;
+typedef __local_var_value value;
 
 void value_printHelp(value v);
 
@@ -262,7 +264,7 @@ struct getelementptr_cmd{
       cout << '%' << get<0>(src_val);
     }
     string str=getTypeStr(offset_type);
-    cout << ", " << str << " 0, " << str << ' ' << offset << endl; 
+    cout << ", " << str << " 0, " << str << ' ' << offset << endl;
   }
 };
 
@@ -716,16 +718,16 @@ struct global_var{
       for(int i=0; i<global_var_type.dimension_size.size(); i++){
         temp*=global_var_type.dimension_size[i];
       }
-      if(get_if<2>(&global_var_value)){
-        int32_t* glo_int_arr=get<2>(global_var_value);
+      if(get_if<3>(&global_var_value)){
+        int32_t* glo_int_arr=get<3>(global_var_value);
         cout << '[';
         for(int i=0; i<temp-1; i++){
           cout << glo_int_arr[i] << ", " << endl;
         }
         cout << glo_int_arr[temp-1];
         cout << "] ";
-      } else if(get_if<3>(&global_var_value)){
-        float* glo_float_arr=get<3>(global_var_value);
+      } else if(get_if<4>(&global_var_value)){
+        float* glo_float_arr=get<4>(global_var_value);
         cout << '[';
         for(int i=0; i<temp-1; i++){
           cout << glo_float_arr[i] << ", " << endl;
