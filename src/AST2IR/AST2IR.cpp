@@ -141,7 +141,7 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     command* brbbcmd = new command;
     brbbcmd->cmd_type = br;
     brbbcmd->cmd_ptr = (void*) ifbrcmd;
-    bb->command->push_back(brbbcmd);
+    ifBB->command->push_back(brbbcmd);
     return ;
 };
 
@@ -170,7 +170,7 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     command* brbbcmd = new command;
     brbbcmd->cmd_type = br;
     brbbcmd->cmd_ptr = (void*) ifbrcmd;
-    bb->command->push_back(brbbcmd);
+    ifBB->command->push_back(brbbcmd);
     return ;
 };
 
@@ -209,7 +209,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     command* brbbcmd = new command;
     brbbcmd->cmd_type = br;
     brbbcmd->cmd_ptr = (void*) whilebrcmd;
-    bb->command->push_back(brbbcmd);
+    whileBB->command->push_back(brbbcmd);
     return ;
 };
 
