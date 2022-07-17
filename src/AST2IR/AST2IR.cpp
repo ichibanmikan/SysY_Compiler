@@ -236,11 +236,35 @@ void set_sc_tree(syntax_tree_node* node){
       if_set_sc_node(node->children[i], i);
     } else if(!strcmp(node->children[i]->name, "while_stmt")){
       while_set_sc_node(node->children[i], 1);
+      while_cut_tree_node(node->children[i]);
     } else if(!strcmp(node->children[i]->name, "if_else_stmt")){
       node->children[i]->parent=node;
       if_else_set_sc_node(node->children[i], i);
     }
     continue;
+  }
+}
+
+void while_cut_tree_node(syntax_tree_node* node){
+  for(int i=0; i<node->children_num-1; i++){
+    vector<syntax_tree_node*> vec;
+    if(!strcmp(node->children[i]->name, "&&")){
+      cut_tree_node(node->children[i], vec);
+    }
+    node->children[i]->children_num=0;
+    for(int j=0; j<vec.size(); j++){
+      syntax_tree_add_child(node->children[i], vec[j]);
+    }
+  }
+}
+
+void cut_tree_node(syntax_tree_node* node, vector<syntax_tree_node*>& vec){
+  if(!strcmp(node->children[0]->name, "&&")){
+    cut_tree_node(node->children[0], vec);
+    vec.push_back(node->children[1]);
+  } else {
+    vec.push_back(node->children[0]);
+    vec.push_back(node->children[1]);
   }
 }
 
