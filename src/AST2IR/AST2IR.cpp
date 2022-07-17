@@ -1,5 +1,10 @@
 #include "AST2IR.h"
 
+int lastStmtsBBIdx;
+//int lastEndBBIdx;
+
+br_cmd* ifBrCmdPtr;
+
 int types_get(char* name){
   if(!strcmp(name, "void")){
     return 0;
@@ -154,23 +159,84 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
     local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
 
-    int stmtBBIdx = func->basic_blocks->size();
-    BasicBlock* stmtBB=new BasicBlock;
-    func->basic_blocks->push_back(stmtBB);
-    basic_blocks_gen(func,stmtBB,node->children[1]);
-    int endBBIdx = func->basic_blocks->size();
+    if(strcmp(node->children[1],"stmts"))
+    {
+        int stmtBBIdx = func->basic_blocks->size();
 
-    br_cmd* ifbrcmd = new br_cmd;
-    ifbrcmd->is_cond = true;
-    ifbrcmd->cond_val = brcond;
-    ifbrcmd->br_label_1 = stmtBBIdx;
-    ifbrcmd->br_label_2 = endBBIdx;
-    
+        lastStmtsBBIdx = stmtBBIdx;     //更新全局变量
 
-    command* brbbcmd = new command;
-    brbbcmd->cmd_type = br;
-    brbbcmd->cmd_ptr = (void*) ifbrcmd;
-    ifBB->command->push_back(brbbcmd);
+        BasicBlock* stmtBB=new BasicBlock;
+        func->basic_blocks->push_back(stmtBB);
+        basic_blocks_gen(func,stmtBB,node->children[1]);
+        int endBBIdx = func->basic_blocks->size();
+
+
+        br_cmd* ifbrcmd = new br_cmd;
+        ifbrcmd->is_cond = true;
+        ifbrcmd->cond_val = brcond;
+        ifbrcmd->br_label_1 = stmtBBIdx;
+        ifbrcmd->br_label_2 = endBBIdx;
+        
+        ifBrCmdPtr = ifbrcmd;
+
+        command* brbbcmd = new command;
+        brbbcmd->cmd_type = br;
+        brbbcmd->cmd_ptr = (void*) ifbrcmd;
+        ifBB->command->push_back(brbbcmd);
+    }
+
+    else if(strcmp(node->children[1],"goto"))
+    {
+        br_cmd* ifbrcmd = new br_cmd;
+        ifbrcmd->is_cond = true;
+        ifbrcmd->cond_val = brcond;
+        ifbrcmd->br_label_1 = lastStmtsBBIdx;
+        int endBBIdx = func->basic_blocks->size();
+        ifbrcmd->br_label_2 = endBBIdx;
+        
+        ifBrCmdPtr->br_label_2 = endBBIdx;        
+
+        command* brbbcmd = new command;
+        brbbcmd->cmd_type = br;
+        brbbcmd->cmd_ptr = (void*) ifbrcmd;
+        ifBB->command->push_back(brbbcmd);
+
+
+        //std::reverse_iterator<std::vector<BasicBlock*>::iterator it(func->basic_blocks->end());
+/*        bool inflag=0;
+        {
+            if(inflag==1)
+            {
+                break;
+            }
+            for(itcmd:itbb->command)//反向迭代当前基本块中的命令
+            {
+                if(itcmd->cmd_type!=br)
+                {
+                    continue;
+                }
+                br_cmd* itbr = (br_cmd*) itcmd->cmd_ptr;
+
+                if(itbr->br_label_2==lastEndBBIdx)
+                {
+                    itbr->br_label_2+=1;
+                }
+                else
+                {
+                    inflag = 1;
+                    break;
+                }
+            }
+        }
+        lastEndBBIdx += 1;*/
+    }
+
+    else
+    {
+        // TODO : ?
+    }
+
+
     return ;
 };
 
