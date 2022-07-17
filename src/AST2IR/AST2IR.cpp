@@ -4,6 +4,10 @@ int lastStmtsBBIdx;
 //int lastEndBBIdx;
 
 br_cmd* ifBrCmdPtr;
+BasicBlock* currBB;
+int currBBIdx;
+
+br_cmd* unCondBrCmdPtr;
 
 int types_get(char* name){
   if(!strcmp(name, "void")){
@@ -40,6 +44,23 @@ int isCompLogSta(char* name)
     return -1;
 }
 
+//添加无条件跳转命令
+void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
+{
+    br_cmd* recmd = new br_cmd;
+    recmd->is_cond = false;
+    recmd->br_label_1 = tolabel;
+
+    command* cmd1  =new command;
+    cmd1->cmd_type = br;
+    cmd1->cmd_ptr = (void*) recmd;
+    bb->command->push_back(cmd1);
+
+    if(f)
+    {
+        unCondBrCmdPtr = recmd;
+    }
+}
 
 //TODO: 所有可能出现在逻辑运算符左右的表达式，包含变量与常量，其值为变量表最后一个
 void expression_value(Function* func, BasicBlock* bb, syntax_tree_node* node)
@@ -126,28 +147,61 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
     local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
 
-    int stmtBBIdx = func->basic_blocks->size();
-    BasicBlock* stmtBB=new BasicBlock;
-    func->basic_blocks->push_back(stmtBB);
-    basic_blocks_gen(func,stmtBB,node->children[1]);
+    if(strcmp(node->children[1],"stmts"))
+    {
+        int stmtBBIdx = func->basic_blocks->size();
+        BasicBlock* stmtBB=new BasicBlock;
+        func->basic_blocks->push_back(stmtBB);
+        basic_blocks_gen(func,stmtBB,node->children[1]);
+        stmtBB = func->basic_blocks[func->basic_blocks->size()-1];
 
-    int elseBBidx = func->basic_blocks->size();
-    BasicBlock* elseBB=new BasicBlock;
-    func->basic_blocks->push_back(elseBB);
+        int elseBBidx = func->basic_blocks->size();
+        BasicBlock* elseBB=new BasicBlock;
+        func->basic_blocks->push_back(elseBB);
+        basic_blocks_gen(func,elseBB,node->children[2]);
+        elseBB = func->basic_blocks[func->basic_blocks->size()-1];
+
+        //给前面的bb添加跳转
+        int nextBBIdx = func->basic_blocks->size();
+        addUnCondBr(stmtBB,nextBBIdx);
+        addUnCondBr(elseBB,nextBBIdx);
 
 
-    br_cmd* ifbrcmd = new br_cmd;
-    ifbrcmd->is_cond = true;
-    ifbrcmd->cond_val = brcond;
-    ifbrcmd->br_label_1 = stmtBBIdx;
-    ifbrcmd->br_label_2 = elseBBidx;
-    
+        br_cmd* ifbrcmd = new br_cmd;
+        ifbrcmd->is_cond = true;
+        ifbrcmd->cond_val = brcond;
+        ifbrcmd->br_label_1 = stmtBBIdx;
+        ifbrcmd->br_label_2 = elseBBidx;
+        
+        command* brbbcmd = new command;
+        brbbcmd->cmd_type = br;
+        brbbcmd->cmd_ptr = (void*) ifbrcmd;
+        ifBB->command->push_back(brbbcmd);
+        return ;
+    }
+    else if(strcmp(node->children[1],"goto"))
+    {
+        int elseBBidx = func->basic_blocks->size();
+        BasicBlock* elseBB=new BasicBlock;
+        func->basic_blocks->push_back(elseBB);
+        basic_blocks_gen(func,elseBB,node->children[2]);
 
-    command* brbbcmd = new command;
-    brbbcmd->cmd_type = br;
-    brbbcmd->cmd_ptr = (void*) ifbrcmd;
-    ifBB->command->push_back(brbbcmd);
-    return ;
+        br_cmd* ifbrcmd = new br_cmd;
+        ifbrcmd->is_cond = true;
+        ifbrcmd->cond_val = brcond;
+        ifbrcmd->br_label_1 = stmtBBIdx;
+        ifbrcmd->br_label_2 = elseBBidx;
+        
+        ifBrCmdPtr->br_label_2 = endBBIdx;
+        unCondBrCmdPtr->br_label_1 = endBBIdx;
+
+        command* brbbcmd = new command;
+        brbbcmd->cmd_type = br;
+        brbbcmd->cmd_ptr = (void*) ifbrcmd;
+        ifBB->command->push_back(brbbcmd);
+        return ;
+    }
+
 };
 
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
@@ -170,13 +224,16 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         basic_blocks_gen(func,stmtBB,node->children[1]);
         int endBBIdx = func->basic_blocks->size();
 
+        stmtBB = func->basic_blocks[endBBIdx-1];
+        addUnCondBr(stmtBB,nextBBIdx,true);
 
         br_cmd* ifbrcmd = new br_cmd;
         ifbrcmd->is_cond = true;
         ifbrcmd->cond_val = brcond;
-        ifbrcmd->br_label_1 = stmtBBIdx;
+        ifbrcmd->br_label_1 = lastStmtsBBIdx;
         ifbrcmd->br_label_2 = endBBIdx;
-        
+
+        int endBBIdx = func->basic_blocks->size();
         ifBrCmdPtr = ifbrcmd;
 
         command* brbbcmd = new command;
@@ -194,7 +251,8 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         int endBBIdx = func->basic_blocks->size();
         ifbrcmd->br_label_2 = endBBIdx;
         
-        ifBrCmdPtr->br_label_2 = endBBIdx;        
+        ifBrCmdPtr->br_label_2 = endBBIdx;    
+        unCondBrCmdPtr->br_label_1 = endBBIdx;    
 
         command* brbbcmd = new command;
         brbbcmd->cmd_type = br;
