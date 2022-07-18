@@ -58,6 +58,7 @@ void const_declartion_assignment_gen(Function* func, BasicBlock* bb, syntax_tree
 /*****************************************/
 
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
+void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //if和while类似，下面给出if的操作，while同理
 //if传入了一个基本块(bb) if首先需要往bb里增加终止语句 就是条件跳转语句(注意if和if-else有区别)

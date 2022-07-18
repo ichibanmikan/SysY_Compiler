@@ -55,7 +55,7 @@ void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
     command* cmd1  =new command;
     cmd1->cmd_type = br;
     cmd1->cmd_ptr = (void*) recmd;
-    bb->command->push_back(cmd1);
+    bb->cmds->push_back(cmd1);
 
     if(f)    //更新全局变量
     {
@@ -63,7 +63,7 @@ void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
     }
 }
 
-void addCondBr(BasicBlock* bb,int label1,int label2,local_var* brcond,bool f=false)
+void addCondBr(BasicBlock* bb,int label1,int label2,int brcond,bool f=false)
 {
     br_cmd* ifbrcmd = new br_cmd;
     ifbrcmd->is_cond = true;
@@ -75,7 +75,7 @@ void addCondBr(BasicBlock* bb,int label1,int label2,local_var* brcond,bool f=fal
     command* brbbcmd = new command;
     brbbcmd->cmd_type = br;
     brbbcmd->cmd_ptr = (void*) ifbrcmd;
-    bb->command->push_back(brbbcmd);
+    bb->cmds->push_back(brbbcmd);
 }
 
 
@@ -150,8 +150,8 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     logic_expressions_gen(func,ifBB,node->children[0]);
 
     local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
-
-    if(!strcmp(node->children[1],"stmts"))
+    int brcondIdx = func->local_var_table->size()-1;
+    if(!strcmp(node->children[1]->name,"stmts"))
     {
         int stmtBBIdx = func->basic_blocks->size();
         BasicBlock* stmtBB=new BasicBlock;
@@ -173,28 +173,29 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
         br_cmd* ifbrcmd = new br_cmd;
         ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcond;
+        ifbrcmd->cond_val = brcondIdx;
         ifbrcmd->br_label_1 = stmtBBIdx;
         ifbrcmd->br_label_2 = elseBBidx;
         
         command* brbbcmd = new command;
         brbbcmd->cmd_type = br;
         brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->command->push_back(brbbcmd);
+        ifBB->cmds->push_back(brbbcmd);
         return ;
     }
-    else if(!strcmp(node->children[1],"goto"))
+    else if(!strcmp(node->children[1]->name,"goto"))
     {
-        int elseBBidx = func->basic_blocks->size();
+        int elseBBIdx = func->basic_blocks->size();
         BasicBlock* elseBB=new BasicBlock;
         func->basic_blocks->push_back(elseBB);
         basic_cmds_gen(func,elseBB,node->children[2]);
+        int endBBIdx = func->basic_blocks->size();
 
         br_cmd* ifbrcmd = new br_cmd;
         ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcond;
-        ifbrcmd->br_label_1 = stmtBBIdx;
-        ifbrcmd->br_label_2 = elseBBidx;
+        ifbrcmd->cond_val = brcondIdx;
+        ifbrcmd->br_label_1 = lastStmtsBBIdx;
+        ifbrcmd->br_label_2 = elseBBIdx;
         
         //ifBrCmdPtr->br_label_2 = endBBIdx;
         unCondBrCmdPtr->br_label_1 = endBBIdx;
@@ -202,7 +203,7 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         command* brbbcmd = new command;
         brbbcmd->cmd_type = br;
         brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->command->push_back(brbbcmd);
+        ifBB->cmds->push_back(brbbcmd);
         return ;
     }
 
@@ -217,8 +218,9 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     logic_expressions_gen(func,ifBB,node->children[0]);
 
     local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+    int brcondIdx=func->local_var_table->size()-1;
 
-    if(!strcmp(node->children[1],"stmts"))
+    if(!strcmp(node->children[1]->name,"stmts"))
     {
         int stmtBBIdx = func->basic_blocks->size();
 
@@ -230,11 +232,11 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         lastStmtsBBIdx = stmtBBIdx;     //更新全局变量,处理嵌套的if之后更新，应该没问题吧
 
         stmtBB = func->basic_blocks[endBBIdx-1];
-        addUnCondBr(stmtBB,nextBBIdx,true);
+        addUnCondBr(stmtBB,endBBIdx,true);  //这里是暂时让stmt跳转到下一个，但是保存了这个跳转命令
 
         br_cmd* ifbrcmd = new br_cmd;
         ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcond;
+        ifbrcmd->cond_val = brcondIdx;
         ifbrcmd->br_label_1 = lastStmtsBBIdx;
         ifbrcmd->br_label_2 = endBBIdx;
 
@@ -244,14 +246,14 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         command* brbbcmd = new command;
         brbbcmd->cmd_type = br;
         brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->command->push_back(brbbcmd);
+        ifBB->cmds->push_back(brbbcmd);
     }
 
-    else if(!strcmp(node->children[1],"goto"))
+    else if(!strcmp(node->children[1]->name,"goto"))
     {
         br_cmd* ifbrcmd = new br_cmd;
         ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcond;
+        ifbrcmd->cond_val = brcondIdx;
         ifbrcmd->br_label_1 = lastStmtsBBIdx;
         int endBBIdx = func->basic_blocks->size();
         ifbrcmd->br_label_2 = endBBIdx;
@@ -262,7 +264,7 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         command* brbbcmd = new command;
         brbbcmd->cmd_type = br;
         brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->command->push_back(brbbcmd);
+        ifBB->cmds->push_back(brbbcmd);
 
 
         //std::reverse_iterator<std::vector<BasicBlock*>::iterator it(func->basic_blocks->end());
@@ -272,7 +274,7 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
             {
                 break;
             }
-            for(itcmd:itbb->command)//反向迭代当前基本块中的命令
+            for(itcmd:itbb->cmds)//反向迭代当前基本块中的命令
             {
                 if(itcmd->cmd_type!=br)
                 {
@@ -311,13 +313,13 @@ void whileAnd(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBI
         // TODO:满足跳转到下一个，不满足跳出去
         // 不用添加基本块
         // 最后一个满足，就跳到stmt
-        logic_expressions_gen(func,condBB,node->children[i]);
-        local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
-        addCondBr(condBB,nextBBIdx,-1,brcond);
+        logic_expressions_gen(func,bb,node->children[i]);
+        //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+        addCondBr(bb,nextBBIdx,-1,func->local_var_table->size()-1);
     }
-    logic_expressions_gen(func,condBB,node->children[node->children_num-1]);
-    local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
-    addCondBr(condBB,stmtBBIdx,nextBBIdx,brcond);
+    logic_expressions_gen(func,bb,node->children[node->children_num-1]);
+    //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+    addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
 
 }
 
@@ -350,9 +352,9 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
             BasicBlock* condBB = new BasicBlock;
             func->basic_blocks->push_back(condBB);
             logic_expressions_gen(func,condBB,node->children[i]);
-            local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+            //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
             int nextBBIdx = func->basic_blocks->size();
-            addCondBr(condBB,stmtBBIdx,nextBBIdx,brcond);
+            addCondBr(condBB,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
             // TODO:满足跳转到stmt，不满足跳转到下一个条件
             // 需要新基本块
         }
@@ -383,7 +385,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     command* cmd1  =new command;
     cmd1->cmd_type = br;
     cmd1->cmd_ptr = (void*) recmd;
-    stmtBB->command->push_back(cmd1);
+    stmtBB->cmds->push_back(cmd1);
 
     int endBBIdx = func->basic_blocks->size();
 
@@ -396,12 +398,12 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     command* brbbcmd = new command;
     brbbcmd->cmd_type = br;
     brbbcmd->cmd_ptr = (void*) whilebrcmd;
-    whileBB->command->push_back(brbbcmd);
+    whileBB->cmds->push_back(brbbcmd);
     return ;*/
 };
 
 void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-  int returnIDx = algo_expressions_gen(bb->command,func,node->children[0]);
+  int returnIDx = algo_expressions_gen(bb->cmds,func,node->children[0]);
   local_var* returnVar = func->local_var_table[returnIDx];
   ret_cmd* recmd = new ret_cmd;
   //recmd->ret_type = 函数的返回
@@ -410,9 +412,9 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   recmd->ret_value=returnVar;
 
   command* fanhui = new command;
-  command->cmd_ptr=(void*)recmd;
-  command->cmd_type=ret;
-  bb->push_back(fanhui);
+  fanhui->cmd_ptr=(void*)recmd;
+  fanhui->cmd_type=ret;
+  bb->cmds->push_back(fanhui);
   return ;
 };
 void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
@@ -457,11 +459,11 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
 
         */
 
-        int leftIdx = algo_expressions_gen(bb->command,func,node->children[0]);
+        int leftIdx = algo_expressions_gen(bb->cmds,func,node->children[0]);
 		local_var* leftVar;
-        leftvar = func->local_var_table[leftIdx];
+        leftVar = func->local_var_table[leftIdx];
         local_var* rightVar;
-        int rightIdx = algo_expressions_gen(bb->command,func,node->children[1]);
+        int rightIdx = algo_expressions_gen(bb->cmds,func,node->children[1]);
         rightVar = func->local_var_table[rightIdx];
 
         local_var* cmpValue = new local_var;
@@ -508,8 +510,8 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
         else if(rightVar->local_var_type->val_type == float_type)
         {
             fcmp_cmd* fcmd = new fcmp_cmd;
-            fcmd->src_val_1 = leftIdx;
-            fcmd->src_val_2 = rightIdx;
+            fcmd->src_val_1 = leftVar;
+            fcmd->src_val_2 = rightVar;
             if(!strcmp(node->name, "=="))
             {
                 fcmd->cmp_st = oeq;
@@ -546,17 +548,17 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
         {
             printf("data type error\n");
         }
-        bb->command->push_back(bbcmp);
+        bb->cmds->push_back(bbcmp);
     }
     else if(logic_type == 2)
     {
     	logic_expressions_gen(func,bb,node->children[1]);
         local_var* srcVar = new local_var;
-        int dstValIdx = func->local_var_table->size();
-        srcVar = func->local_var_table[dst_val-1];
+        int dstVarIdx = func->local_var_table->size();
+        srcVar = func->local_var_table[dstVarIdx-1];
         un_cmd* unCmd = new un_cmd;
         local_var* dstVar = new local_var;
-        func->local_var_table[dstValIdx] = dstVar;
+        func->local_var_table[dstVarIdx] = dstVar;
         unCmd->dst_val=dstVarIdx;
         unCmd->src_val=srcVar;
         unCmd->src_type=srcVar->local_var_type->val_type;
@@ -565,13 +567,13 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
         qufan->cmd_type=un;
         qufan->cmd_ptr=(void*) unCmd;
 
-        bb->command->push_back(qufan);
+        bb->cmds->push_back(qufan);
 
     }
     else if(logic_type == 3)
     {
         printf("这句话不该出现，有bug\n");
-        logic_expressions_gen(func,bb,node->children[0]);
+        /*logic_expressions_gen(func,bb,node->children[0]);
         local_var* leftLeVar = new local_var;
         int leftLeIdx = func->local_var_table->size()-1;
         leftLeVar = func->local_var_table[leftLeIdx];
@@ -598,7 +600,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
             orcmd->dst_val = lorValue;
             bbcmp->cmd_type = lor;
             bbcmp->cmd_ptr = (void*) orcmd;
-            bb->command->push_back(bbcmp);
+            bb->cmds->push_back(bbcmp);
         }
         else if(!strcmp(node->name, "&&"))
         {
@@ -609,12 +611,12 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
             andcmd->dst_val = landValue;
             bbcmp->cmd_type = land;
             bbcmp->cmd_ptr = (void*) andcmd;
-            bb->command->push_back(bbcmp);
-        }
+            bb->cmds->push_back(bbcmp);
+        }*/
     }
     else
     {
-        int midIdx = algo_expressions_gen(bb->command,func,node);
+        int midIdx = algo_expressions_gen(bb->cmds,func,node);
         local_var* midVar = new local_var;
         midVar = func->local_var_table[midIdx];
         bitcast_cmd* toBool = new bitcast_cmd;
@@ -624,7 +626,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
 
         toBool->dst_val = toboolIdx;
         toBool->dst_type = i1;
-        toBool->src_val = midVar;
+        toBool->src_val = midIdx;
         toBool->src_type = midVar->local_var_type->val_type;
         toBool->is_glo_val = false;
 
@@ -632,7 +634,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
         cmd2->cmd_type = bitcast;
         cmd2->cmd_ptr = (void*) toBool;
 
-        bb->command->push_back(cmd2);
+        bb->cmds->push_back(cmd2);
 
     }
     return ;
