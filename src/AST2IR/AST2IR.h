@@ -59,6 +59,7 @@ void const_declartion_assignment_gen(Function* func, BasicBlock* bb, syntax_tree
 /*****************************************/
 
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
+void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //if和while类似，下面给出if的操作，while同理
 //if传入了一个基本块(bb) if首先需要往bb里增加终止语句 就是条件跳转语句(注意if和if-else有区别)
@@ -76,7 +77,7 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //return 语句的生成
 //注意它可以作为基本块的结束语句
 
-void logic_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node);
+void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //逻辑运算函数 读入的是逻辑运算符
 //把逻辑运算放在这里就是要考虑短路计算的
 
@@ -93,6 +94,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 //算数运算函数 读入的是几个运算符
 //两个运算函数要考虑
 
+
+
 void AST2IR(syntax_tree* tree);
 
 void set_sc_tree(syntax_tree_node* node);
@@ -100,6 +103,5 @@ void while_cut_tree_node(syntax_tree_node* node);
 void if_else_cut_tree_node(syntax_tree_node* node);
 void while_set_sc_node(syntax_tree_node* node, int pos);
 void cut_tree_node(syntax_tree_node* node, vector<syntax_tree_node*>& vec);
-
 
 #endif

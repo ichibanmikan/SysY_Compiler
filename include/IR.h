@@ -81,7 +81,11 @@ enum cmdTypes{
     fptosi=18,
     call=19,
     br=20,
-    ret=21
+    ret=21,
+    phi=22,
+    lor=23,
+    land=24,
+    un=25
 };
 
 enum logic_state{
@@ -164,6 +168,13 @@ struct type{
   }
 };
 
+struct un_cmd{
+  int dst_val;
+
+  int src_type;
+  value src_val;
+};
+
 // alloca指令
 struct alloca_cmd{
   type alloca_type; //需要给变量分配的类型
@@ -184,7 +195,7 @@ struct store_cmd{
   int src_type; //a的类型。a必然是寄存器值，所以不可能是数组
 
   bool is_val; // 是变量吗
-  value src_val; // 可能是浮点数常量，整型常量或者寄存器变量
+  value src_val; // 可能是浮b点数常量，整型常量或者寄存器变量
 
   int dst_type; // 是内存中的一个地址，因此不可能是数组类型，而且必是那几个数组类型(ptr)，但指向的有可能是局部变量和全局变量
 
@@ -309,6 +320,30 @@ struct add_cmd{
       cout << src_val_1 << ", %" << src_val_2 << endl;
     }
   }
+};
+
+struct and_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
+};
+
+struct or_cmd{
+  int dst_val;
+
+  int src_type;
+
+  bool is_val_1;
+  int src_val_1;
+
+  bool is_val_2;
+  int src_val_2;
 };
 
 struct fadd_cmd{
@@ -780,9 +815,6 @@ struct __local_var_index{
     store_index=-1;
     reg_index=-1;
   }
-
- //根据当前变量对应的内存值返回寄存器值，防止多次load。
- //如果得到了-1的结果，说明当前变量还未被用过，就需要新load一次
 };
 //两个int都指代变量号
 //初代版本
