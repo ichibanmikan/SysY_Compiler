@@ -73,7 +73,8 @@ enum cmdTypes{
     ret=21,
     phi=22,
     lor=23,
-    land=24
+    land=24,
+    un=25
 };
 
 enum logic_state{
@@ -129,6 +130,13 @@ struct type{
     val_type=valType;
   }
   type(){}
+};
+
+struct un_cmd{
+  int dst_val;
+
+  int src_type;
+  value src_val;
 };
 
 // alloca指令
