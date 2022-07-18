@@ -79,9 +79,23 @@ void addCondBr(BasicBlock* bb,int label1,int label2,int brcond,bool f=false)
 }
 
 
-void local_var_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
+void forAnds(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBIdx)
 {
-};
+    int nextBBIdx = func->basic_blocks->size();
+    for(int i=0;i<node->children_num-1; i++)
+    {
+        // TODO:满足跳转到下一个，不满足跳出去
+        // 不用添加基本块
+        // 最后一个满足，就跳到stmt
+        logic_expressions_gen(func,bb,node->children[i]);
+        //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+        addCondBr(bb,nextBBIdx,-1,func->local_var_table->size()-1);
+    }
+    logic_expressions_gen(func,bb,node->children[node->children_num-1]);
+    //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+    addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
+
+}
 
 void functions_gen(syntax_tree_node* node){
   Function* func_ptr=new Function;
@@ -141,7 +155,56 @@ void const_val_gen(syntax_tree_node* node){
   return ;
 };
 
+
+
 void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
+{
+    // 先生成stmt，最后在stmt后添加跳转
+    // 记得给continue和break维护全局变量
+    int stmtBBIdx = func->basic_blocks->size();
+    BasicBlock* stmtBB = new BasicBlock;
+    func->basic_blocks->push_back(stmtBB);
+    basic_cmds_gen(func,node->children[node->children_num-2]);
+    stmtBB = func->basic_blocks[func->basic_blocks->size()-1];
+
+    int condBBIdx = func->basic_blocks->size();
+    addUnCondBr(bb,condBBIdx); //非常重要
+
+    //BasicBlock* condBB = new BasicBlock;
+    //func->basic_blocks->push_back(condBB);
+    for(int i=0; i<node->children_num-1; i++)
+    {
+        if(!strcmp(node->children[i]->name,"&&"))
+        {
+            BasicBlock* condBB = new BasicBlock;
+            func->basic_blocks->push_back(condBB);
+            forAnds(func,condBB,node->children[i],stmtBBIdx);
+        }
+        else
+        {
+            BasicBlock* condBB = new BasicBlock;
+            func->basic_blocks->push_back(condBB);
+            logic_expressions_gen(func,condBB,node->children[i]);
+            //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+            int nextBBIdx = func->basic_blocks->size();
+            addCondBr(condBB,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
+            // TODO:满足跳转到stmt，不满足跳转到下一个条件
+            // 需要新基本块
+        }
+    }
+    int elseBBIdx = func->basic_blocks->size();
+    BasicBlock* elseBB = new BasicBlock;
+    func->basic_blocks->push_back(elseBB);
+    basic_cmds_gen(func,node->children[node->children_num-2]);
+    elseBB = func->basic_blocks[func->basic_blocks->size()-1];
+
+
+    int nextBBIdx = func->basic_blocks->size();
+    addUnCondBr(elseBB,nextBBIdx);
+    addUnCondBr(stmtBB,nextBBIdx);
+    //给stmt添加跳转
+}
+/*void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
     //BasicBlock* ifBB=new BasicBlock;
     ifBB = bb;
@@ -206,10 +269,47 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         ifBB->cmds->push_back(brbbcmd);
         return ;
     }
-
-};
-
+};*/
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
+{
+    // 先生成stmt，最后在stmt后添加跳转
+    // 记得给continue和break维护全局变量
+    int stmtBBIdx = func->basic_blocks->size();
+    BasicBlock* stmtBB = new BasicBlock;
+    func->basic_blocks->push_back(stmtBB);
+    basic_cmds_gen(func,node->children[node->children_num-1]);
+    stmtBB = func->basic_blocks[func->basic_blocks->size()-1];
+
+    int condBBIdx = func->basic_blocks->size();
+    addUnCondBr(bb,condBBIdx); //非常重要
+
+    //BasicBlock* condBB = new BasicBlock;
+    //func->basic_blocks->push_back(condBB);
+    for(int i=0; i<node->children_num-1; i++)
+    {
+        if(!strcmp(node->children[i]->name,"&&"))
+        {
+            BasicBlock* condBB = new BasicBlock;
+            func->basic_blocks->push_back(condBB);
+            forAnds(func,condBB,node->children[i],stmtBBIdx);
+        }
+        else
+        {
+            BasicBlock* condBB = new BasicBlock;
+            func->basic_blocks->push_back(condBB);
+            logic_expressions_gen(func,condBB,node->children[i]);
+            //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
+            int nextBBIdx = func->basic_blocks->size();
+            addCondBr(condBB,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
+            // TODO:满足跳转到stmt，不满足跳转到下一个条件
+            // 需要新基本块
+        }
+    }
+    int nextBBIdx = func->basic_blocks->size();
+    addUnCondBr(stmtBB,nextBBIdx);
+    //给stmt添加跳转
+}
+/*void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
     //BasicBlock* ifBB=new BasicBlock;
     ifBB = bb;
@@ -268,32 +368,6 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
 
         //std::reverse_iterator<std::vector<BasicBlock*>::iterator it(func->basic_blocks->end());
-/*        bool inflag=0;
-        {
-            if(inflag==1)
-            {
-                break;
-            }
-            for(itcmd:itbb->cmds)//反向迭代当前基本块中的命令
-            {
-                if(itcmd->cmd_type!=br)
-                {
-                    continue;
-                }
-                br_cmd* itbr = (br_cmd*) itcmd->cmd_ptr;
-
-                if(itbr->br_label_2==lastEndBBIdx)
-                {
-                    itbr->br_label_2+=1;
-                }
-                else
-                {
-                    inflag = 1;
-                    break;
-                }
-            }
-        }
-        lastEndBBIdx += 1;*/
     }
 
     else
@@ -303,25 +377,8 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
 
     return ;
-};
+};*/
 
-void whileAnd(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBIdx)
-{
-    int nextBBIdx = func->basic_blocks->size();
-    for(int i=0;i<node->children_num-1; i++)
-    {
-        // TODO:满足跳转到下一个，不满足跳出去
-        // 不用添加基本块
-        // 最后一个满足，就跳到stmt
-        logic_expressions_gen(func,bb,node->children[i]);
-        //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
-        addCondBr(bb,nextBBIdx,-1,func->local_var_table->size()-1);
-    }
-    logic_expressions_gen(func,bb,node->children[node->children_num-1]);
-    //local_var* brcond = func->local_var_table[func->local_var_table->size()-1];
-    addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
-
-}
 
 
 void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
@@ -345,7 +402,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         {
             BasicBlock* condBB = new BasicBlock;
             func->basic_blocks->push_back(condBB);
-            whileAnd(func,condBB,node->children[i],stmtBBIdx);
+            forAnds(func,condBB,node->children[i],stmtBBIdx);
         }
         else
         {
@@ -361,7 +418,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     }
     int nextBBIdx = func->basic_blocks->size();
     break2BBIdx = nextBBIdx;
-    addUnCondBr(stmtBB,nextBBIdx);
+    addUnCondBr(stmtBB,condBBIdx);
     //给stmt添加跳转
 
 
