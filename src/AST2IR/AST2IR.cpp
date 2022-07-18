@@ -337,7 +337,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     continue2BBIdx = condBBIdx;
     //BasicBlock* condBB = new BasicBlock;
     //func->basic_blocks->push_back(condBB);
-    for(int i=0;i<int i=0; i<node->children_num-1; i++)
+    for(int i=0; i<node->children_num-1; i++)
     {
         if(!strcmp(node->children[i]->name,"&&"))
         {
