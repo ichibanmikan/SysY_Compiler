@@ -44,7 +44,7 @@ void basic_cmds_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void global_val_gen(syntax_tree_node* node);
 //全局变量表生成，读取的是每个全局变量声明节点
 
-void const_val_gen(syntax_tree_node* node);
+void global_const_val_gen(syntax_tree_node* node);
 //全局常量生成
 
 // void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);

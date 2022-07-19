@@ -26,7 +26,7 @@ void printHelp(){
   }
 
   for(map<string, const_var*>::iterator iter=const_var_table.begin(); iter!=const_var_table.end(); iter++){
-    cout << '@' << iter->first << " = " << "dso_local global ";
+    cout << '@' << iter->first << " = " << "dso_local constant ";
     iter->second->printHelp();
     cout << endl;
   }
@@ -393,6 +393,9 @@ void global_val_gen(syntax_tree_node* node){
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
     // alloc
+    // command* cmd=new command;
+    // cmd->cmd_type=alloca_c;
+    // alloca_cmd* ac=new alloca_cmd;
 
     // store
     __global_var_value varValue_;// init as 0
@@ -412,7 +415,11 @@ void global_val_gen(syntax_tree_node* node){
     }
     global_var *gvar=new global_var(varTypeWrapped,varValue_);
     global_var_table.insert(pair<string, global_var*>(varName_,gvar));
-  }  
+
+    // ac->dst_val = idx;//index
+    // ac->align_len = getTypeSize(node->children[0]->name);
+    // cmd->cmd_ptr = ac;
+  }
   return ;
 };
 /*
@@ -453,7 +460,7 @@ const int e=a;//may be initialized with global,const,local var
 |  |  |  >--* a
 
 */
-void const_val_gen(syntax_tree_node* node){
+void global_const_val_gen(syntax_tree_node* node){
   int varType_ = types_get(node->children[0]->name);
   bool isInt=(varType_==4);
   bool isFloat=(varType_==9);
@@ -462,6 +469,9 @@ void const_val_gen(syntax_tree_node* node){
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
     // alloc
+    // command* cmd=new command;
+    // cmd->cmd_type=alloca_c;
+    // alloca_cmd* ac=new alloca_cmd;
 
     // store
     __global_var_value varValue_;// init as 0
@@ -481,6 +491,10 @@ void const_val_gen(syntax_tree_node* node){
     }
     const_var *cvar=new const_var(varTypeWrapped,varValue_);
     const_var_table.insert(pair<string, const_var*>(varName_,cvar));
+
+    // ac->dst_val = idx;//index
+    // ac->align_len = getTypeSize(node->children[0]->name);
+    // cmd->cmd_ptr = ac;
   }
   return ;
 };
@@ -545,6 +559,22 @@ const int d=1,e=2;
 |  |  |  |  |  |  >--* e
 |  |  |  |  |  |  >--* 2
 */
+int getTypeSize(char* name){
+
+  if(!strcmp(name, "int")){
+    return 4;
+  }
+  if(!strcmp(name, "float")){
+    return 4;
+  }
+  // if(!strcmp(name, "void*")){
+  //   return 4;
+  // }
+  // system("pause");
+  cerr << "type error !!!" << endl;
+  return -1;
+}
+
 void const_declartion_assignment_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
   int varType_ = types_get(node->children[0]->name);
@@ -555,6 +585,10 @@ void const_declartion_assignment_gen
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
     // alloc
+    command* cmd=new command;
+    cmd->cmd_type=alloca_c;
+    alloca_cmd* ac=new alloca_cmd;
+
 
     // store
     __global_var_value varValue_;// init as 0
@@ -567,6 +601,7 @@ void const_declartion_assignment_gen
     if(!strcmp(node->children[1]->children[i]->name, "=")){
       varName_ = node->children[1]->children[i]->children[0]->name;
       if(isInt){
+        //expression
         varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
       }else if(isFloat){
         varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
@@ -574,6 +609,12 @@ void const_declartion_assignment_gen
     }
     const_var *cvar=new const_var(varTypeWrapped,varValue_);
     int idx=func->add_new_local_const_var_store(cvar,varName_);
+
+
+    // ac->dst_val = idx;//index
+    ac->align_len = getTypeSize(node->children[0]->name);
+    cmd->cmd_ptr = ac;
+    bb->cmds->push_back(cmd);
   }
   return ;
 };
@@ -607,6 +648,9 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
     // alloc
+    command* cmd=new command;
+    cmd->cmd_type=alloca_c;
+    alloca_cmd* ac=new alloca_cmd;
 
     // store
     __local_var_value varValue_;// init as 0
@@ -625,7 +669,12 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
       }
     }
     local_var *lv=new local_var(varTypeWrapped,varValue_);
-    func->add_new_local_var_store(lv,varName_);
+    int idx=func->add_new_local_var_store(lv,varName_);
+
+    ac->dst_val = idx;//index
+    //ac->align_len = getTypeSize(node->children[0]->name);
+    cmd->cmd_ptr = ac;
+    bb->cmds->push_back(cmd);
   }  
   return ;
 };
@@ -647,7 +696,7 @@ void algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_no
 void AST2IR(syntax_tree* tree){
   for(int i=0; i<tree->root->children_num; i++){
     if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
-      const_val_gen(tree->root->children[i]);
+      global_const_val_gen(tree->root->children[i]);
     } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
       global_val_gen(tree->root->children[i]);
     } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){
