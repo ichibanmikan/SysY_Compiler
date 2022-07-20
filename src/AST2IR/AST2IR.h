@@ -6,13 +6,18 @@ extern "C"{
 }
 
 #include "../../include/IR.h"
-#include <iostream>
-#include <string.h>
 
 using std::cerr;
 using std::endl;
 
 extern syntax_tree* tree;
+
+// Scope scope;
+// void init_scope();
+//set up scope for a program
+
+void printHelp();
+//打印测试的
 
 int types_get(char* name);
 //types_get函数读入抽象树中的类型字符串比如"int"，返回enum valTypes中的值
@@ -39,9 +44,10 @@ void basic_cmds_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void global_val_gen(syntax_tree_node* node);
 //全局变量表生成，读取的是每个全局变量声明节点
 
-void const_val_gen(syntax_tree_node* node);
+void global_const_val_gen(syntax_tree_node* node);
 //全局常量生成
 
+// void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //赋值语句，读入的是'='结点
 
@@ -85,10 +91,11 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
 void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node);
 //函数调用语句
 
-void array_offset_gen(syntax_tree_node* node);
+int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* node,int key,type src_type);
 //数组偏移函数，也就是getelementptr指令的生成
 
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node);
+int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node, int &has_f );
 //算数运算函数 读入的是几个运算符
 //两个运算函数要考虑
 
@@ -96,5 +103,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
 void AST2IR(syntax_tree* tree);
 
+void set_sc_tree(syntax_tree_node* node);
+void while_cut_tree_node(syntax_tree_node* node);
+void if_else_cut_tree_node(syntax_tree_node* node);
+void while_set_sc_node(syntax_tree_node* node, int pos);
+void cut_tree_node(syntax_tree_node* node, vector<syntax_tree_node*>& vec);
 
 #endif

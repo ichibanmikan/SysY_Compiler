@@ -1,6 +1,7 @@
 %{
 #include "SysY_Yacc.h"
 
+//在lex.yy.c里定义，会被yyparse()调用。在此声明消除编译和链接错误。
 extern int yylex();
 extern FILE* yyin;
 extern int lines;
@@ -11,18 +12,20 @@ extern void yyrestart  (FILE * input_file );
 
 syntax_tree *gt;
 
+// 该函数在y.tab.c里会被调用，需要在此定义,函数yyerror()在YACC发现一个错误的时候被调用
 void yyerror(const char *s);
 
 syntax_tree_node *node(const char *node_name, int children_num, ...);
 %}
 
-
+//yylval类型
 %union {
     syntax_tree_node* node;
 }
 
 %left NOT
 %start program
+//获取union node部分的标识符
 %token <node> ADD SUB MUL DIV LT LTE GT GTE EQ NEQ AND OR NOT MOD ASSIGN SEMICOLON COMMA LPARENTHESE RPARENTHESE LBRACKET RBRACKET LBRACE RBRACE ELSE IF INT FLOAT RETURN VOID WHILE IDENTIFIER INTEGER FLOATPOINT LETTER EOL COMMENT BLANK ERROR CONTINUE BREAK CONST COMMENTONELINE GETINT GETCH GETFLOAT GETARRAY GETFARRAY PUTINT PUTCH PUTFLOAT PUTARRAY PUTFARRAY PUTF STARTTIME STOPTIME CONTROLSTRING
 %type <node> program
 %type <node> type_specifier relop addop mulop
@@ -180,13 +183,55 @@ expression_stmt : expression SEMICOLON {
 
                 }
 selection_stmt : IF LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("if_stmt", 2, $3, $5);
+                    syntax_tree_node* stn;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";")))){
+                      $$ = node("if_stmt", 2, $3, stn);
+                    } else {
+                      $$ = NULL;
+                    }
                 }
                 |IF LPARENTHESE logic_expression RPARENTHESE statement ELSE statement {
-                    $$ = node("if_else_stmt", 3, $3, $5, $7);
+                    syntax_tree_node* stn;
+                    syntax_tree_node* stn7;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    if(!strcmp($7->name, "stmts")){
+                      stn7=$7;
+                    } else {
+                      stn7=new_syntax_tree_node("stmts");
+                      syntax_tree_add_child(stn7, $7);
+                    }
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";"))) && !(stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";"))) ){
+                      $$ = node("if_else_stmt", 3, $3, stn, stn7);
+                    } else if((stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";"))) && (stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";")))){
+                      $$ = NULL;
+                    } else if((stn7->children_num==0 || (stn7->children_num==1 && !strcmp(stn7->children[0]->name, ";")))){
+                      $$ = node("if_stmt", 2, $3, stn);
+                    }
                 }
 iteration_stmt : WHILE LPARENTHESE logic_expression RPARENTHESE statement {
-                    $$ = node("while_stmt", 2, $3, $5);
+                    syntax_tree_node* stn;
+                    if(!strcmp($5->name, "stmts")){
+                      stn = $5;
+                    } else {
+                     stn=new_syntax_tree_node("stmts");
+                     syntax_tree_add_child(stn, $5);
+                    }
+                    if(!(stn->children_num==0 || (stn->children_num==1 && !strcmp(stn->children[0]->name, ";")))){
+                      $$ = node("while_stmt", 2, $3, stn);
+                    } else {
+                      $$ = NULL;
+                    }
                 }
 return_stmt : RETURN SEMICOLON {
                 $$ = node("return_stmt", 0);

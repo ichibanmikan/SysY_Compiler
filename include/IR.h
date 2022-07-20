@@ -8,6 +8,8 @@
 #include <variant>
 #include <stack>
 #include <bits/stdint-intn.h>
+#include <iostream>
+#include <string.h>
 
 using std::string;
 using std::vector;
@@ -15,6 +17,11 @@ using std::map;
 using std::variant;
 using std::pair;
 using std::stack;
+using std::cerr;
+using std::endl;
+using std::cout;
+using std::get;
+using std::get_if;
 
 // 联合体value表示当前变量名或者常量
 // 举个例子: store i32 5, i32* %1
@@ -39,17 +46,21 @@ using std::stack;
 // };
 
 //对于value我们使用一个和上面联合体等价的variant，方便操作
-typedef variant<int, float, string> value;
+// typedef variant<int, float, string> value;
 
 //这个local_var_value是局部变量的值
-typedef variant<bool, int8_t, int16_t, int32_t, float, bool*, int8_t*, int16_t*, int32_t*> __local_var_value;
+typedef variant<int32_t, float, string, int32_t*, float*, bool, bool*, int8_t, int16_t, int8_t*, int16_t*> __local_var_value;
 
 //全局变量的值
-typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+// typedef variant<int32_t, float, int32_t*, float*> __global_var_value;
+typedef __local_var_value __global_var_value;
+typedef __local_var_value value;
+
+void value_printHelp(value v);
 
 // cmdTypes枚举类型表示所有的命令
 enum cmdTypes{
-    alloca_cmd=0,
+    alloca_c=0,
     store=1,
     load=2,
     getelementptr=3,
@@ -58,7 +69,7 @@ enum cmdTypes{
     fadd=6,
     sub=7,
     fsub=8,
-    div_cmd=9,
+    div_c=9,
     fdiv=10,
     mul=11,
     fmul=12,
@@ -94,6 +105,7 @@ enum logic_state{
   une=13
 };
 
+string getCompStateStr(int compState);
 // valTypes表示当前是哪种类型的
 enum valTypes{
   void_type=0,
@@ -109,6 +121,8 @@ enum valTypes{
   float_ptr=10,
   array_ptr=11
 };
+
+string getTypeStr(int val_type);
 
 // struct arrayType{
 //   int array_type;
@@ -130,6 +144,28 @@ struct type{
     val_type=valType;
   }
   type(){}
+
+  void printHelp(){
+    string typeStr=getTypeStr(val_type);
+    if(dimension_size.size()==0){
+      cout << typeStr;
+    } else {
+      for(int i=dimension_size.size()-1; i>=0; i--){
+          string strTemp=typeStr;
+          typeStr = (dimension_size[i]+'0');
+          typeStr += " x ";
+          bool b=(i!=dimension_size.size()-1);
+          if(b){
+              typeStr += '[';
+          }
+          typeStr += strTemp;
+          if(b){
+              typeStr += ']';
+          }
+      }
+      cout << '[' << typeStr << ']';
+    }
+  }
 };
 
 struct un_cmd{
@@ -145,9 +181,16 @@ struct alloca_cmd{
 
   int dst_val; //被使用alloca分配的变量只有可能是局部变量，所以直接用int值表示
   int align_len; //注意这里，每个命令都留有一个保留字，代指对齐方式
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "alloca" << ' ';
+    alloca_type.printHelp();
+    cout << endl;
+  }
 };
 
 //store指令，假设把a存到b
+// class Function;
+
 struct store_cmd{
   int src_type; //a的类型。a必然是寄存器值，所以不可能是数组
 
@@ -158,6 +201,31 @@ struct store_cmd{
 
   bool is_glo_val; // 是全局变量吗
   value dst_val; // 变量名，由is_glo_val指示是否是全局变量
+  void printHelp(){
+    string src_type_str=getTypeStr(src_type);
+    string dst_type_str=getTypeStr(dst_type);
+    if(is_val&&is_glo_val){
+      cout << "store" << ' ' << src_type_str << " %";
+      cout << get<0>(src_val);
+      cout << ", " << dst_type_str << " @";
+      cout << get<2>(dst_val) << endl;
+    } else if(!is_val&&is_glo_val){
+      cout << "store" << ' ' << src_type_str << ' ';
+      value_printHelp(src_val);
+      cout << ", " << dst_type_str << " @";
+      cout << get<2>(dst_val) << endl;
+    } else if(is_val&&!is_glo_val){
+      cout << "store" << ' ' << src_type_str << " %";
+      cout << get<0>(src_val);
+      cout << ", " << dst_type_str << " %";
+      cout << get<0>(dst_val) << endl;
+    } else {
+      cout << "store" << ' ' << src_type_str << ' ';
+      value_printHelp(src_val);
+      cout << ", " << dst_type_str << " %";
+      cout << get<0>(dst_val) << endl;
+    }
+  }
 };
 
 struct load_cmd{
@@ -167,12 +235,27 @@ struct load_cmd{
   int src_type;
   bool is_glo_val;
   value src_val;
+
+  void printHelp(){
+    string dst_type_str=getTypeStr(dst_type);
+    string src_type_str=getTypeStr(src_type);
+    if(is_glo_val){
+      cout << '%' << dst_val << " = " << "load ";
+      cout << dst_type_str << ", " << src_type_str;
+      cout << " @" << get<2>(src_val) << endl;
+    } else {
+      cout << '%' << dst_val << " = " << "load ";
+      cout << dst_type_str << ", " << src_type_str;
+      cout << " %" << get<0>(src_val);
+    }
+  }
 };
 
 struct getelementptr_cmd{
   int dst_val;
 
-  int src_type;
+  type src_type;
+  bool is_global_val;
   value src_val;
 
   int offset_type;
@@ -180,16 +263,37 @@ struct getelementptr_cmd{
   getelementptr_cmd(){
     offset_type=i32;
   }
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "getelementptr inbounds";
+    src_type.printHelp();
+    cout << ", ";
+    src_type.printHelp();
+    cout << "* ";
+    if(is_global_val){
+      cout << '@' << get<2>(src_val);
+    } else{
+      cout << '%' << get<0>(src_val);
+    }
+    string str=getTypeStr(offset_type);
+    cout << ", " << str << " 0, " << str << ' ' << offset << endl;
+  }
 };
 
 struct bitcast_cmd{
   int dst_val;
 
   type src_type;
-  bool is_glo_val;
   int src_val;
 
   type dst_type;
+  void printHelp(){
+    cout << '%' << dst_val << " = ";
+    cout << "bitcast ";
+    src_type.printHelp();
+    cout << "* " << '%' << src_val << " to ";
+    dst_type.printHelp();
+    cout << endl;
+  }
 };
 
 struct add_cmd{
@@ -202,6 +306,20 @@ struct add_cmd{
 
   bool is_val_2;
   int src_val_2;
+
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "add";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct and_cmd{
@@ -238,6 +356,20 @@ struct fadd_cmd{
 
   bool is_val_2;
   value src_val_2;
+
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fadd ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct sub_cmd{
@@ -250,6 +382,19 @@ struct sub_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "sub";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fsub_cmd{
@@ -262,6 +407,19 @@ struct fsub_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fsub ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct mul_cmd{
@@ -274,6 +432,19 @@ struct mul_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "mul";
+    cout << " nsw " << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fmul_cmd{
@@ -286,6 +457,19 @@ struct fmul_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fmul ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct div_cmd{
@@ -298,6 +482,19 @@ struct div_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "sdiv ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fdiv_cmd{
@@ -310,6 +507,19 @@ struct fdiv_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "fdiv ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct mod_cmd{
@@ -322,6 +532,19 @@ struct mod_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    cout << '%' << dst_val << " = " << "srem ";
+    cout << getTypeStr(src_type) << ' ';
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2<< endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2<< endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fmod_cmd{
@@ -335,6 +558,7 @@ struct fmod_cmd{
   bool is_val_2;
   value src_val_2;
 };
+//可能用不到fmod指令
 
 struct icmp_cmd{
   int dst_val; //比较结果只能是局部变量
@@ -346,6 +570,20 @@ struct icmp_cmd{
 
   bool is_val_2;
   int src_val_2;
+  void printHelp(){
+    string cmp_st_str=getCompStateStr(cmp_st);
+    cout << '%' << dst_val << " = " << "icmp ";
+    cout << cmp_st_str << " i32 ";
+    if(is_val_1&&is_val_2){
+      cout << '%' << src_val_1 << ", %" << src_val_2 << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << src_val_1 << ", " << src_val_2 << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << src_val_1 << ", " << src_val_2 << endl;
+    } else {
+      cout << src_val_1 << ", %" << src_val_2 << endl;
+    }
+  }
 };
 
 struct fcmp_cmd{
@@ -358,20 +596,43 @@ struct fcmp_cmd{
 
   bool is_val_2;
   value src_val_2;
+  void printHelp(){
+    string cmp_st_str=getCompStateStr(cmp_st);
+    cout << '%' << dst_val << " = " << "fcmp ";
+    cout << cmp_st_str << " float ";
+    if(is_val_1&&is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    } else if(is_val_1&&!is_val_2){
+      cout << '%' << get<0>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else if(!is_val_1&&!is_val_2){
+      cout << get<1>(src_val_1) << ", " << get<1>(src_val_2) << endl;
+    } else {
+      cout << get<1>(src_val_1) << ", %" << get<0>(src_val_2) << endl;
+    }
+  }
 };
 
 struct sitofp_cmd{
   int dst_val; //一定是寄存器变量
 
-  bool is_val;
-  int src_val;
+  // bool is_val;
+  int src_val; //一定是变量
+
+  void printHelp(){
+    cout << '%' << dst_val << " = sitofp i32 %";
+    cout << src_val << " to float" << endl;
+  }
 };
 
 struct fptosi_cmd{
   int dst_val;
 
-  bool is_val;
-  value src_val;
+  // bool is_val;
+  int src_val;
+  void printHelp(){
+    cout << '%' << dst_val << " = fptosi float %";
+    cout << src_val << " to i32" << endl;
+  }
 };
 
 struct param{
@@ -379,6 +640,12 @@ struct param{
   bool is_local_val;
   bool is_global_val;
   value param_value;
+
+  void printHelp(){
+    param_type.printHelp();
+    cout << ' ';
+    value_printHelp(param_value);
+  }
 };
 
 struct call_cmd{
@@ -387,6 +654,18 @@ struct call_cmd{
 
   string func_name;
   vector<param> params;
+
+  void printHelp(){
+    cout << '%' << ret_value << " = call ";
+    ret_type.printHelp();
+    cout << '@' << func_name << " (";
+    for(int i=0; i<params.size()-1; i++){
+      params[i].printHelp();
+      cout << ", ";
+    }
+    params[params.size()-1].printHelp();
+    cout << ')' << endl;
+  }
 };
 
 struct br_cmd{
@@ -397,12 +676,28 @@ struct br_cmd{
   int br_label_1; //如果有条件那么条件为真时 或 无条件时 跳转到的基本块号
 
   int br_label_2; //如果有条件那么条件为假时跳转到的基本块号
+
+  void printHelp(){
+    cout << "br ";
+    if(is_cond){
+      cout << "i1 %" << cond_val << ", label %";
+      cout << br_label_1 << ", label %" << br_label_2 << endl;
+    } else {
+      cout << "label %" << br_label_1 << endl;
+    }
+  }
 };
 
 struct ret_cmd{
   type ret_type;
 
   value ret_value;
+  void printHelp(){
+    cout << "ret ";
+    ret_type.printHelp();
+    value_printHelp(ret_value);
+    cout << endl;
+  }
 };
 
 struct phi_cmd{
@@ -429,15 +724,71 @@ struct command{
   void* cmd_ptr;
 };
 
+void cmd_printHelp(command* cmd);
+
 struct local_var{
   type local_var_type;
   __local_var_value local_var_value;
   pair<int, int> live_span; //存活时间，方便后续进行常量替换等优化
+
+  local_var(){}
+
+  local_var(type varType_,__local_var_value v){
+    local_var_type=varType_;
+    local_var_value=v;
+  }
 };
 
 struct global_var{
-  type global_value;
+  type global_var_type;
   __global_var_value global_var_value;
+
+  global_var(){}
+  global_var(type varType_,__global_var_value varValue_)
+  {
+    global_var_type=varType_;
+    global_var_value=varValue_;
+  }
+
+  void printHelp(){
+    global_var_type.printHelp();
+    cout << ' ';
+    if(global_var_type.dimension_size.size()==0){
+      if(get_if<0>(&global_var_value)){
+        cout << get<0>(global_var_value);
+      } else if(get_if<1>(&global_var_value)){
+        cout << get<1>(global_var_value);
+      } else {
+        cerr << "global var value error 1!!!";
+      }
+    } else {
+      cout << '[';
+      int temp=1;
+      for(int i=0; i<global_var_type.dimension_size.size(); i++){
+        temp*=global_var_type.dimension_size[i];
+      }
+      if(get_if<3>(&global_var_value)){
+        int32_t* glo_int_arr=get<3>(global_var_value);
+        cout << '[';
+        for(int i=0; i<temp-1; i++){
+          cout << glo_int_arr[i] << ", " << endl;
+        }
+        cout << glo_int_arr[temp-1];
+        cout << "] ";
+      } else if(get_if<4>(&global_var_value)){
+        float* glo_float_arr=get<4>(global_var_value);
+        cout << '[';
+        for(int i=0; i<temp-1; i++){
+          cout << glo_float_arr[i] << ", " << endl;
+        }
+        cout << glo_float_arr[temp-1];
+        cout << "] ";
+      } else {
+        cerr << "global var value error 2!!!";
+      }
+      cout << "] ";
+    }
+  }
 };
 
 typedef map<int, local_var*> __local_var_table; //每个函数块一个局部变量表，不同基本块表不同
@@ -445,7 +796,8 @@ typedef global_var const_var;
 typedef map<int, const_var*> __local_const_var_table;
 
 struct __local_var_index{
-  stack<int> store_index;
+  // stack<int> store_index;
+  int store_index;
   //栈顶元素代表当前的内存变量号
   //局部变量可以没有内存表示
   /*
@@ -458,15 +810,25 @@ struct __local_var_index{
  //每新store一次就要压入新的store_index
  //压入内容为local_var_table.size()
  int reg_index;
- // 从内存地址中load出来的寄存器变量的变量号
- // 每新load一次就要替换掉reg_index
- // 同一时间只能有一个
- // 替换内容为local_var_table.size()
+ //key代指内存形式的变量号
+ //value代指被load出来的寄存器形式的变量号
 
- __local_var_index(){
-  store_index.push(-1);
-  reg_index=-1;
- }
+//  int find_reg_index(int key){
+//   if(reg_index.find(key)==reg_index.end()){
+//     return -1;
+//   } else {
+//     return reg_index[key];
+//   }
+//  }
+
+  int find_reg_index(){
+    return reg_index;
+  }
+
+  __local_var_index(){
+    store_index=-1;
+    reg_index=-1;
+  }
 };
 //两个int都指代变量号
 //初代版本
@@ -480,7 +842,8 @@ class Function{
     __local_var_table* local_var_table;
     __local_const_var_table* local_const_var_table;
     vector<BasicBlock*>* basic_blocks;
-    map<string, __local_var_index> local_var_index;
+    map<string, __local_var_index>* local_var_index;
+    // map<int, bool>* is_used_var;
 
     //local_var_index和local_var_table的联系
     //大约是 变量名-变量号-变量值 的关系
@@ -489,23 +852,83 @@ class Function{
     //l_v_i在现阶段用不太着，但是也要填
 
     int getVarNumStore(string str){
-      return local_var_index[str].store_index.top();
+      // return (*local_var_index)[str].store_index.top();
+      return (*local_var_index)[str].store_index;
     } //根据变量名获取当前变量的内存变量的变量号
 
     int getVarNumLoad(string str){
-      return local_var_index[str].reg_index;
+      return (*local_var_index)[str].reg_index;
+      // return (*local_var_index)[str].find_reg_index((*local_var_index)[str].store_index.top());
     } //根据变量名获取当前变量的寄存器变量的变量号
+
+    int add_new_var_store(local_var* lv, string var_name){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
+      __local_var_index lvi;
+      lvi.store_index=local_var_table->size()+local_const_var_table->size();
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      // (*is_used_var)[local_var_table->size()]=false;
+      return local_var_table->size()+local_const_var_table->size();
+    }
+    int add_new_local_var_store(local_var* lv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_var_table->insert(pair<int, local_var*>(idx, lv));
+      __local_var_index lvi;
+      lvi.store_index=idx;
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      // (*is_used_var)[local_var_table->size()]=false;
+      return idx;
+    }
+
+    int add_new_local_const_var_store(const_var* lcv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_const_var_table->insert(pair<int, const_var*>(idx, lcv));
+      __local_var_index lvi;
+      lvi.store_index=idx;
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      return idx;
+    }
+
+    bool is_loaded(string var_name){
+      int temp=(*local_var_index)[var_name].find_reg_index();
+      if(temp==-1){
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+    int add_new_var_load(local_var* lv, string var_name){
+      int temp=(*local_var_index)[var_name].find_reg_index();
+      // (*is_used_var)[(*local_var_index)[var_name].store_index.top()]=true;
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
+      (*local_var_index)[var_name].reg_index=local_var_table->size()+local_const_var_table->size();
+      return local_var_table->size()+local_const_var_table->size();
+    }
+
+    int add_new_var_load(local_var* lv){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
+      return local_var_table->size()+local_const_var_table->size();
+    }
 
     Function(){
       func_params=new vector<valTypes>;
       local_var_table=new __local_var_table;
       basic_blocks=new vector<BasicBlock*>;
+      local_const_var_table=new __local_const_var_table;
+      local_var_index=new map<string, __local_var_index>;
+      // is_used_var=new map<int, bool>;
     }
     ~Function(){
       delete func_params;
       delete local_var_table;
       delete basic_blocks;
+      delete local_const_var_table;
+      delete local_var_index;
+      // delete is_used_var;
     }
+
+    void printHelp();
+    void local_var_printHelp();
 };
 
 extern map<string, global_var*> global_var_table;
@@ -531,8 +954,23 @@ class BasicBlock : public Function{
     }
     ~BasicBlock(){
       delete cmds;
+      delete changed_vars;
+    }
+
+    BasicBlock(int a){
+      this->block_label=a;
+      cmds=new vector<command*>;
+    }
+
+    void printHelp(){
+      for(int i=0; i<cmds->size(); i++){
+        cout << "  ";
+        cmd_printHelp((*cmds)[i]);
+      }
     }
 
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
+
+
 
 #endif

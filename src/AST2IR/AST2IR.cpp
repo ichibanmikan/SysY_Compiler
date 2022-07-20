@@ -149,6 +149,7 @@ void forAndsBB(Function* func, BasicBlock* condBB, syntax_tree_node* node,int st
         addCondBr(condBB,nextBBIdx,andEndIdx,func->local_var_table->size()-1);
 
         BasicBlock* bb = new BasicBlock;
+        bb->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         condBB = bb;
         func->basic_blocks->push_back(condBB);
     }
@@ -338,7 +339,7 @@ void basic_blocks_gen
   set_sc_tree(node);
   BasicBlock* thisBB=new BasicBlock;
   func->basic_blocks->push_back(thisBB);
-  thisBB->block_label=func->local_var_table->size();
+  thisBB->block_label=func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
   basic_cmds_gen(func, thisBB, node); //读入的是{...}，node就是AST中的stmts
 } //basic_block_gen和basic_cmds_gen读取到的都是stmts结点
 
@@ -410,11 +411,13 @@ void basic_cmds_gen
     if(!strcmp(node->children[i]->name, "if_stmt")){
         if_stmt_gen(func, bb, node->children[i]);
         BasicBlock* tmpBB = new BasicBlock;
+        tmpBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         func->basic_blocks->push_back(tmpBB);
         bb = tmpBB;
     } else if(!strcmp(node->children[i]->name, "while_stmt")){
         while_stmt_gen(func, bb, node->children[i]);
         BasicBlock* tmpBB = new BasicBlock;
+        tmpBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         func->basic_blocks->push_back(tmpBB);
         bb = tmpBB;
     } else if(!strcmp(node->children[i]->name, "return_stmt")) {
@@ -432,6 +435,7 @@ void basic_cmds_gen
     } else if(!strcmp(node->children[i]->name, "if_else_stmt")){
         if_else_stmt_gen(func, bb, node->children[i]);
         BasicBlock* tmpBB = new BasicBlock;
+        tmpBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         func->basic_blocks->push_back(tmpBB);
         bb = tmpBB;
     } else {
@@ -591,6 +595,7 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     // 记得给continue和break维护全局变量
     int stmtBBIdx = func->basic_blocks->size();
     BasicBlock* stmtBB = new BasicBlock;
+    stmtBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
     func->basic_blocks->push_back(stmtBB);
     basic_cmds_gen(func,stmtBB,node->children[node->children_num-2]);
     stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
@@ -605,12 +610,14 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         if(!strcmp(node->children[i]->name,"&&"))
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             forAnds(func,condBB,node->children[i],stmtBBIdx);
         }
         else
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             logic_expressions_gen(func,condBB,node->children[i]);
             //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
@@ -622,6 +629,7 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     }
     int elseBBIdx = func->basic_blocks->size();
     BasicBlock* elseBB = new BasicBlock;
+    elseBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
     func->basic_blocks->push_back(elseBB);
     basic_cmds_gen(func,elseBB,node->children[node->children_num-2]);
     elseBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
@@ -704,6 +712,7 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     // 记得给continue和break维护全局变量
     int stmtBBIdx = func->basic_blocks->size();
     BasicBlock* stmtBB = new BasicBlock;
+    stmtBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
     func->basic_blocks->push_back(stmtBB);
     basic_cmds_gen(func,stmtBB,node->children[node->children_num-1]);
     stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
@@ -718,12 +727,14 @@ void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         if(!strcmp(node->children[i]->name,"&&"))
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             forAnds(func,condBB,node->children[i],stmtBBIdx);
         }
         else
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             logic_expressions_gen(func,condBB,node->children[i]);
             //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
@@ -815,6 +826,7 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     // 记得给continue和break维护全局变量
     int stmtBBIdx = func->basic_blocks->size();
     BasicBlock* stmtBB = new BasicBlock;
+    stmtBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
     func->basic_blocks->push_back(stmtBB);
     basic_cmds_gen(func,stmtBB,node->children[node->children_num-1]);
     stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
@@ -834,12 +846,14 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         if(!strcmp(node->children[i]->name,"&&"))
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             forAnds(func,condBB,node->children[i],stmtBBIdx);
         }
         else
         {
             BasicBlock* condBB = new BasicBlock;
+            condBB->block_label = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
             func->basic_blocks->push_back(condBB);
             logic_expressions_gen(func,condBB,node->children[i]);
             //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];

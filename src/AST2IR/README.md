@@ -1330,18 +1330,140 @@ l_v_i是根据变量名索引得到变量号
 l_v_t是根据变量号索引得到变量值
 l_v_i在现阶段用不太着，但是也要填
 
+local_var_index的详情在下一个部分
+
 类中两个函数负责根据变量名索引变量号
 
 ```c++
 int getVarNumStore(string str){
- return local_var_index[str].store_index;
+    return local_var_index[str].store_index.top();
 } //根据变量名获取当前变量的内存变量的变量号
 
 int getVarNumLoad(string str){
- return local_var_index[str].reg_index;
+    return local_var_index[str].find_reg_index();
 } //根据变量名获取当前变量的寄存器变量的变量号
 ```
 
 对于phi我们日后再考虑吧
 
 后续可能会进行相关优化
+
+## 关于SSA
+
+```cpp
+//根据变量名索引出来的变量号结构如下所示
+
+struct __local_var_index{
+  int
+  //栈顶元素代表当前的内存变量号
+  //局部变量可以没有内存表示
+  /*
+    比如
+      %8 = icmp ne i32 %7, 0
+      br i1 %8, label %9, label %12
+    %8就没有
+  */
+ //没有就用-1表示
+ //每新store一次就要压入新的store_index
+ //压入内容为local_var_table.size()
+ map<int, int> reg_index;
+ //key代指内存形式的变量号
+ //value代指被load出来的寄存器形式的变量号
+
+ int find_reg_index(int key){
+  if(reg_index.find(key)==reg_index.end()){
+    return -1;
+  } else {
+    return reg_index[key];
+  }
+ }
+ //根据当前变量对应的内存值返回寄存器值，防止多次load。
+ //如果得到了-1的结果，说明当前变量还未被用过，就需要新load一次
+};
+
+//所有变量的u-d链就很明确了，store_index存的是所有的d，reg_index存的是u对应的d
+
+//根据SSA格式，每次定义一个变量，都需要重新引入一个内存格式的变量号
+
+//比如
+int b;
+//在这里固定将0存入b，算作第一次定义
+int a=1;
+a=2;
+b=a;
+c=a;
+
+//SSA IR为
+%1 = alloca i32
+store i32 0, i32* %1
+%2 = alloca i32
+store i32 1, i32* %2
+    //我们分别把变量号1和2压入a和b对应的栈store_index中
+    //此时，Function里的local_var_index["a"]->store_index.top()应该返回1
+    //local_var_index["b"]->store_index.top()应该返回2
+    //而因为还未被使用，所以find_reg_index(1)和find_reg_index(2)返回值都为-1
+    //把值0赋给%1
+    //把值1赋给%2
+%3 = alloca i32
+store i32 2, i32* %3
+    //新建变量%3，将2赋值给%3
+%4 = load i32, i32* %3
+    //将%3加载出来到%4
+%5 = alloca i32
+store i32 %4, i32* %5
+    //把%4赋值给b，也就是%5
+```
+
+从上面可以看出，我们把alloca和store绑定起来了。这必然会导致很多没意义的store，这好办。之后优化的时候遍历命令，发现alloca了，用is_used_var判断alloca的变量是否被使用过就行了
+
+Function类里有这两个函数，前者增加一个内存中的变量，后者增加一个寄存器变量，返回变量号，可以直接调用。**我们选择加载为寄存器变量的那个内存变量总是栈顶变量号**，这里会不会有错误呢
+
+```c++
+    int add_new_var_store(local_var* lv, string var_name){
+      local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+        //在变量表中增加一个变量，假如说是int a;
+
+      if(local_var_index->find(var_name)==local_var_index->end()){
+        __local_var_index lvi;
+        lvi.store_index.push(local_var_table->size());
+        local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      } else {
+        (*local_var_index)[var_name].store_index.push(local_var_table->size());
+      }//如果说这个a被定义过了(仅声明的时候也赋值为0, 所以也算)，那就将新的变量号压栈
+
+      (*is_used_var)[local_var_table->size()]=false;
+      return local_var_table->size();
+    }
+
+    int add_new_var_load(local_var* lv, string var_name){
+      int temp=(*local_var_index)[var_name].find_reg_index((*local_var_index)[var_name].store_index.top());
+      if(temp!=-1){
+        return temp;
+      } else {
+        (*is_used_var)[(*local_var_index)[var_name].store_index.top()]=true;
+        local_var_table->insert(pair<int, local_var*>(local_var_table->size(), lv));
+        (*local_var_index)[var_name].reg_index.insert(pair<int, int>((*local_var_index)[var_name].store_index.top(), local_var_table->size()));
+        return local_var_table->size();
+      }
+    }
+```
+
+未能解决的问题：
+
+<img src="https://s2.loli.net/2022/07/05/gZk5iHPr6hjqcOm.png">
+
+if基本块对a做了重新定义，else对a也做了定义，而在b中需要考虑与区分给他赋值的a究竟是哪个a(是1还是2)。
+
+这里在SSA中用phi函数进行区分。
+
+问题在于我们每次定义只是重建一个内存形式的变量然后压入栈store_index，怎么表示这个b需要使用phi函数了呢？
+
+换句话说，另一种情况：同一个基本块中
+
+a=1;
+
+a=2;
+
+b=a;
+
+这很明显b是不需要用phi的，只需要取栈顶变量号load就行，怎样修改设计使IR能区分这两种情况呢

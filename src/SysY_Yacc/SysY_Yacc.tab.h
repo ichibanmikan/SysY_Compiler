@@ -112,7 +112,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "SysY_Yacc.y"
+#line 22 "SysY_Yacc.y"
 
     syntax_tree_node* node;
 
