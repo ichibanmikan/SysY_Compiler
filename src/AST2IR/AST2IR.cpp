@@ -14,6 +14,10 @@ void Function::local_var_printHelp(){
   }
 }
 
+// void init_scope(){
+//   scope.enter();//create an empty scope
+// }
+
 void printHelp(){
   for(map<string, global_var*>::iterator iter=global_var_table.begin(); iter!=global_var_table.end(); iter++){
     cout << '@' << iter->first << " = " << "dso_local global ";
@@ -22,7 +26,7 @@ void printHelp(){
   }
 
   for(map<string, const_var*>::iterator iter=const_var_table.begin(); iter!=const_var_table.end(); iter++){
-    cout << '@' << iter->first << " = " << "dso_local global ";
+    cout << '@' << iter->first << " = " << "dso_local constant ";
     iter->second->printHelp();
     cout << endl;
   }
@@ -131,6 +135,9 @@ void forAnds(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBId
 }
 
 void functions_gen(syntax_tree_node* node){
+  // scope.push(node->name);//全局作用域内存放函数
+  // scope.enter();//进入函数的作用域
+
   Function* func_ptr=new Function;
   func_ptr->ret_type=types_get(node->children[0]->name);
 
@@ -139,6 +146,8 @@ void functions_gen(syntax_tree_node* node){
   basic_blocks_gen(func_ptr, node->children[3]);
 
   functions_table.insert(pair<string, Function*>(node->children[1]->name, func_ptr));
+
+  // scope.exit();
 }
 
 void cmd_printHelp(command* cmd){
@@ -542,15 +551,6 @@ void params_gen(Function* func, syntax_tree_node* node){
     }
   }
 }
-
-void global_val_gen(syntax_tree_node* node){
-  return ;
-}
-
-void const_val_gen(syntax_tree_node* node){
-  return ;
-};
-
 
 void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
@@ -1067,14 +1067,321 @@ void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
     addUnCondBr(bb,break2BBIdx);
   return ;
 }
+/*
+int a=1;
+int b;
+int c,d=2;
+>--+ declarations
+|  >--+ var_declaration
+|  |  >--* int
+|  |  >--+ idenfiers
+|  |  |  >--+ =
+|  |  |  |  >--* a
+|  |  |  |  >--* 1
+|  >--+ var_declaration
+|  |  >--* int
+|  |  >--+ idenfiers
+|  |  |  >--* b
+|  >--+ var_declaration
+|  |  >--* int
+|  |  >--+ idenfiers
+|  |  |  >--* c
+|  |  |  >--+ =
+|  |  |  |  >--* d
+|  |  |  |  >--* 2
+*/
+void global_val_gen(syntax_tree_node* node){
+  int varType_ = types_get(node->children[0]->name);
+  bool isInt=(varType_==4);
+  bool isFloat=(varType_==9);
+  type varTypeWrapped(varType_);
+
+  // loops: BType VarDef {, VarDef, ...}
+  for(int i=0; i<node->children[1]->children_num; i++){
+    // alloc
+    // command* cmd=new command;
+    // cmd->cmd_type=alloca_c;
+    // alloca_cmd* ac=new alloca_cmd;
+
+    // store
+    __global_var_value varValue_;// init as 0
+    if(isInt){
+      varValue_=(int)0;
+    }else if(isFloat){
+      varValue_=(float)0;
+    }
+    string varName_ = node->children[1]->children[i]->name;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(isInt){
+        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+      }else if(isFloat){
+        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      }
+    }
+    global_var *gvar=new global_var(varTypeWrapped,varValue_);
+    global_var_table.insert(pair<string, global_var*>(varName_,gvar));
+
+    // ac->dst_val = idx;//index
+    // ac->align_len = getTypeSize(node->children[0]->name);
+    // cmd->cmd_ptr = ac;
+  }
+  return ;
+};
+/*
+****************************************
+ConstDecl     → 'const' BType ConstDef { ',' ConstDef } ';'
+ConstDef      → Ident { '[' ConstExp ']' } '=' ConstInitVal
+ConstInitVal  → ConstExp
+              | '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
+****************************************
+
+const int a=1;
+>--+ const_declartion_assignment
+|  >--* int
+|  >--+ declartion_assignments
+|  |  >--+ =
+|  |  |  >--* a
+|  |  |  >--* 1
+
+const int b=2,c=3;
+>--+ const_declartion_assignment
+|  >--* int
+|  >--+ declartion_assignments
+|  |  >--+ =
+|  |  |  >--* b
+|  |  |  >--* 2
+|  |  >--+ =
+|  |  |  >--* c
+|  |  |  >--* 3
+
+// const int d;
+
+const int e=a;//may be initialized with global,const,local var
+>--+ const_declartion_assignment
+|  >--* int
+|  >--+ declartion_assignments
+|  |  >--+ =
+|  |  |  >--* e
+|  |  |  >--* a
+
+*/
+void global_const_val_gen(syntax_tree_node* node){
+  int varType_ = types_get(node->children[0]->name);
+  bool isInt=(varType_==4);
+  bool isFloat=(varType_==9);
+  type varTypeWrapped(varType_);
+
+  // loops: BType VarDef {, VarDef, ...}
+  for(int i=0; i<node->children[1]->children_num; i++){
+    // alloc
+    // command* cmd=new command;
+    // cmd->cmd_type=alloca_c;
+    // alloca_cmd* ac=new alloca_cmd;
+
+    // store
+    __global_var_value varValue_;// init as 0
+    if(isInt){
+      varValue_=(int)0;
+    }else if(isFloat){
+      varValue_=(float)0;
+    }
+    string varName_ = node->children[1]->children[i]->name;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(isInt){
+        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+      }else if(isFloat){
+        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      }
+    }
+    const_var *cvar=new const_var(varTypeWrapped,varValue_);
+    const_var_table.insert(pair<string, const_var*>(varName_,cvar));
+
+    // ac->dst_val = idx;//index
+    // ac->align_len = getTypeSize(node->children[0]->name);
+    // cmd->cmd_ptr = ac;
+  }
+  return ;
+};
+/*
+****************************************
+Stmt    → LVal = Exp;
+        | [Exp];
+        | Block
+Exp     ->  AddExp
+VarDef  ->  Ident {[ConstExp]} = InitVal
+****************************************
+int b,c=2;
+c=3;
+|  >--+ var_declaration
+|  |  >--* int
+|  |  >--+ idenfiers
+|  |  |  >--* b
+|  |  |  >--+ =
+|  |  |  |  >--* c
+|  |  |  |  >--* 2
+|  >--+ =
+|  |  >--* c
+|  |  >--* 3
+
+int b,c=2;
+//c=3,b=4;
+*/
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
+  string varName_=node->children[0]->name;
+
+  int store_index = func->getVarNumStore(varName_);// if haven't declare...
+  map<int ,local_var*> ::iterator it=func->local_var_table->find(store_index);
+  if(it==func->local_var_table->end()){
+    cerr<<"assign undefined variable!"<<endl;
+    return;
+  }
+  type varType_=(*it).second->local_var_type;
+  bool isInt=(varType_.val_type==4);
+  bool isFloat=(varType_.val_type==9);
+
+  __local_var_value varValue_;
+  if(isInt){
+    varValue_ = std::stoi(node->children[1]->name);
+  }else if(isFloat){
+    varValue_ = std::stof(node->children[1]->name);
+  }
+
+  // global value ?
+  local_var *lv=new local_var(varType_,varValue_);
+  func->add_new_local_var_store(lv,varName_);
   return ;
+};
+/*
+const int d=1,e=2;
+|  |  |  >--+ const_declartion_assignment
+|  |  |  |  >--* int
+|  |  |  |  >--+ declartion_assignments
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* d
+|  |  |  |  |  |  >--* 1
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* e
+|  |  |  |  |  |  >--* 2
+*/
+int getTypeSize(char* name){
+
+  if(!strcmp(name, "int")){
+    return 4;
+  }
+  if(!strcmp(name, "float")){
+    return 4;
+  }
+  // if(!strcmp(name, "void*")){
+  //   return 4;
+  // }
+  // system("pause");
+  cerr << "type error !!!" << endl;
+  return -1;
 }
-void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-  return ;
-}
+
 void const_declartion_assignment_gen
 (Function* func, BasicBlock* bb, syntax_tree_node* node){
+  int varType_ = types_get(node->children[0]->name);
+  bool isInt=(varType_==4);
+  bool isFloat=(varType_==9);
+  type varTypeWrapped(varType_);
+
+  // loops: BType VarDef {, VarDef, ...}
+  for(int i=0; i<node->children[1]->children_num; i++){
+    // alloc
+    command* cmd=new command;
+    cmd->cmd_type=alloca_c;
+    alloca_cmd* ac=new alloca_cmd;
+
+
+    // store
+    __global_var_value varValue_;// init as 0
+    if(isInt){
+      varValue_=(int)0;
+    }else if(isFloat){
+      varValue_=(float)0;
+    }
+    string varName_ = node->children[1]->children[i]->name;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(isInt){
+        //expression
+        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+      }else if(isFloat){
+        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      }
+    }
+    const_var *cvar=new const_var(varTypeWrapped,varValue_);
+    int idx=func->add_new_local_const_var_store(cvar,varName_);
+
+
+    // ac->dst_val = idx;//index
+    ac->align_len = getTypeSize(node->children[0]->name);
+    cmd->cmd_ptr = ac;
+    bb->cmds->push_back(cmd);
+  }
+  return ;
+};
+/*
+*****************************************
+VarDecl ->  BType VarDef {, VarDef};
+VarDef  ->  Ident {[ConstExp]}
+        |   Ident {[ConstExp]} = InitVal
+InitVal ->  Exp
+        |   { [InitVal {,InitVal}] }
+Exp     ->  AddExp
+AddExp  ->
+******************************************
+
+int b,c=2;
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--* b
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* c
+|  |  |  |  |  |  >--* 2
+*/
+// update local var table\global var table
+void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
+  int varType_ = types_get(node->children[0]->name);
+  bool isInt=(varType_==4);
+  bool isFloat=(varType_==9);
+  type varTypeWrapped(varType_);
+
+  // loops: BType VarDef {, VarDef, ...}
+  for(int i=0; i<node->children[1]->children_num; i++){
+    // alloc
+    command* cmd=new command;
+    cmd->cmd_type=alloca_c;
+    alloca_cmd* ac=new alloca_cmd;
+
+    // store
+    __local_var_value varValue_;// init as 0
+    if(isInt){
+      varValue_=(int)0;
+    }else if(isFloat){
+      varValue_=(float)0;
+    }
+    string varName_ = node->children[1]->children[i]->name;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(isInt){
+        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+      }else if(isFloat){
+        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      }
+    }
+    local_var *lv=new local_var(varTypeWrapped,varValue_);
+    int idx=func->add_new_local_var_store(lv,varName_);
+
+    ac->dst_val = idx;//index
+    //ac->align_len = getTypeSize(node->children[0]->name);
+    cmd->cmd_ptr = ac;
+    bb->cmds->push_back(cmd);
+  }
   return ;
 }
 
@@ -1730,7 +2037,7 @@ void logic_expressions_gen(Function* func, BasicBlock* bb, syntax_tree_node* nod
 void AST2IR(syntax_tree* tree){
   for(int i=0; i<tree->root->children_num; i++){
     if(!strcmp(tree->root->children[i]->name, "const_declartion_assignment")){
-      const_val_gen(tree->root->children[i]);
+      global_const_val_gen(tree->root->children[i]);
     } else if (!strcmp(tree->root->children[i]->name, "var_declaration")){
       global_val_gen(tree->root->children[i]);
     } else if (!strcmp(tree->root->children[i]->name, "func_declaration")){

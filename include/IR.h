@@ -730,11 +730,25 @@ struct local_var{
   type local_var_type;
   __local_var_value local_var_value;
   pair<int, int> live_span; //存活时间，方便后续进行常量替换等优化
+
+  local_var(){}
+
+  local_var(type varType_,__local_var_value v){
+    local_var_type=varType_;
+    local_var_value=v;
+  }
 };
 
 struct global_var{
   type global_var_type;
   __global_var_value global_var_value;
+
+  global_var(){}
+  global_var(type varType_,__global_var_value varValue_)
+  {
+    global_var_type=varType_;
+    global_var_value=varValue_;
+  }
 
   void printHelp(){
     global_var_type.printHelp();
@@ -855,6 +869,24 @@ class Function{
       // (*is_used_var)[local_var_table->size()]=false;
       return local_var_table->size()+local_const_var_table->size();
     }
+    int add_new_local_var_store(local_var* lv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_var_table->insert(pair<int, local_var*>(idx, lv));
+      __local_var_index lvi;
+      lvi.store_index=idx;
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      // (*is_used_var)[local_var_table->size()]=false;
+      return idx;
+    }
+
+    int add_new_local_const_var_store(const_var* lcv, string var_name){
+      int idx=local_var_table->size()+ local_const_var_table->size();
+      local_const_var_table->insert(pair<int, const_var*>(idx, lcv));
+      __local_var_index lvi;
+      lvi.store_index=idx;
+      local_var_index->insert(pair<string, __local_var_index>(var_name, lvi));
+      return idx;
+    }
 
     bool is_loaded(string var_name){
       int temp=(*local_var_index)[var_name].find_reg_index();
@@ -937,4 +969,7 @@ class BasicBlock : public Function{
     }
 
 }; //之所以设置成类是方便我们后续进行机器无关优化，这些优化直接放置到基本块内部
+
+
+
 #endif
