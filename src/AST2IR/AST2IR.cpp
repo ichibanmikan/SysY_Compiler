@@ -97,6 +97,28 @@ void forAnds(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBId
 
 }
 
+void forAndsBB(Function* func, BasicBlock* condBB, syntax_tree_node* node,int stmtBBIdx)
+{
+    int nextBBIdx = func->basic_blocks->size();
+    int andEndIdx = nextBBIdx+node->children_num-1;
+    for(int i=0;i<node->children_num-1; i++)
+    {
+        // TODO:满足跳到下一个，不满足end
+        // 最后一个满足，就跳到stmt
+        logic_expressions_gen(func,condBB,node->children[i]);
+        //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
+        addCondBr(bb,nextBBIdx,andEndIdx,func->local_var_table->size()-1);
+
+        BasicBlock* condBB = new BasicBlock;
+        func->basic_blocks->push_back(condBB);
+    }
+    nextBBIdx = func->basic_blocks->size();
+    logic_expressions_gen(func,bb,node->children[node->children_num-1]);
+    //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
+    addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
+
+}
+
 void functions_gen(syntax_tree_node* node){
   Function* func_ptr=new Function;
   func_ptr->ret_type=types_get(node->children[0]->name);
