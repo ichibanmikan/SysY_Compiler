@@ -2,7 +2,7 @@
 
 void Function::printHelp(){
   for(int i=0; i<basic_blocks->size(); i++){
-    cout << (*basic_blocks)[i]->block_label << ':' << endl;
+    cout << i << ':' << endl;
     (*basic_blocks)[i]->printHelp();
   }
 }
@@ -868,7 +868,7 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     else
     {
         bitcast_cmd* changeCmd = new bitcast_cmd;
-        int dstVarIdx = func->local_var_table->size();
+        int dstVarIdx = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         local_var* dstVar = new local_var;
         (*func->local_var_table)[dstVarIdx] = dstVar;
         changeCmd->dst_val = dstVarIdx;
@@ -1247,7 +1247,6 @@ void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
   }else if(isFloat){
     varValue_ = std::stof(node->children[1]->name);
   }
-
   // global value ?
   local_var *lv=new local_var(varType_,varValue_);
   func->add_new_local_var_store(lv,varName_);
@@ -1376,6 +1375,7 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     }
     local_var *lv=new local_var(varTypeWrapped,varValue_);
     int idx=func->add_new_local_var_store(lv,varName_);
+    //bb->cmds->insert(store_cmd)
 
     ac->dst_val = idx;//index
     //ac->align_len = getTypeSize(node->children[0]->name);

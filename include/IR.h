@@ -693,7 +693,7 @@ struct ret_cmd{
 
   value ret_value;
   void printHelp(){
-    cout << "ret";
+    cout << "ret ";
     ret_type.printHelp();
     value_printHelp(ret_value);
     cout << endl;
@@ -964,6 +964,7 @@ class BasicBlock : public Function{
 
     void printHelp(){
       for(int i=0; i<cmds->size(); i++){
+        cout << "  ";
         cmd_printHelp((*cmds)[i]);
       }
     }
