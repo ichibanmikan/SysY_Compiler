@@ -1,14 +1,13 @@
 #include "AST2IR.h"
 
-int lastStmtsBBIdx; //第一个if
-//int lastEndBBIdx;
+//int break2BBIdx;
+//int continue2BBIdx;
 
-int break2BBIdx;
-int continue2BBIdx;
+br_cmd* breakCmdPtr;
+br_cmd* continueCmdPtr;
 
-br_cmd* ifBrCmdPtr;
-
-br_cmd* unCondBrCmdPtr;
+bool ifBreak = false;
+bool ifContinue = false;
 
 int types_get(char* name){
   if(!strcmp(name, "void")){
@@ -46,7 +45,7 @@ int isCompLogSta(char* name)
 }
 
 //添加无条件跳转命令
-void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
+void addUnCondBr(BasicBlock* bb,int tolabel,int f=0)
 {
     br_cmd* recmd = new br_cmd;
     recmd->is_cond = false;
@@ -57,9 +56,13 @@ void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
     cmd1->cmd_ptr = (void*) recmd;
     bb->cmds->push_back(cmd1);
 
-    if(f)    //更新全局变量
+    if(f==1)    //更新全局变量
     {
-        unCondBrCmdPtr = recmd;
+        breakCmdPtr = recmd;
+    }
+    else if(f==2)
+    {
+        continueCmdPtr = recmd;
     }
 }
 
@@ -107,16 +110,16 @@ void forAndsBB(Function* func, BasicBlock* condBB, syntax_tree_node* node,int st
         // 最后一个满足，就跳到stmt
         logic_expressions_gen(func,condBB,node->children[i]);
         //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
-        addCondBr(bb,nextBBIdx,andEndIdx,func->local_var_table->size()-1);
+        addCondBr(condBB,nextBBIdx,andEndIdx,func->local_var_table->size()-1);
 
-        BasicBlock* condBB = new BasicBlock;
+        BasicBlock* bb = new BasicBlock;
+        condBB = bb;
         func->basic_blocks->push_back(condBB);
     }
     nextBBIdx = func->basic_blocks->size();
-    logic_expressions_gen(func,bb,node->children[node->children_num-1]);
+    logic_expressions_gen(func,condBB,node->children[node->children_num-1]);
     //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
-    addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
-
+    addCondBr(condBB,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
 }
 
 void functions_gen(syntax_tree_node* node){
@@ -412,10 +415,15 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     func->basic_blocks->push_back(stmtBB);
     basic_cmds_gen(func,stmtBB,node->children[node->children_num-1]);
     stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
-
+    
     int condBBIdx = func->basic_blocks->size();
-    addUnCondBr(bb,condBBIdx); //非常重要
-    continue2BBIdx = condBBIdx;
+    //addUnCondBr(bb,condBBIdx); //非常重要
+    if(ifContinue)
+    {
+        ifContinue=false;
+        continueCmdPtr->br_label_1 = condBBIdx;
+    }
+    //continue2BBIdx = condBBIdx;
     //BasicBlock* condBB = new BasicBlock;
     //func->basic_blocks->push_back(condBB);
     for(int i=0; i<node->children_num-1; i++)
@@ -439,8 +447,13 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         }
     }
     int nextBBIdx = func->basic_blocks->size();
-    break2BBIdx = nextBBIdx;
-    addUnCondBr(stmtBB,condBBIdx);
+    //break2BBIdx = nextBBIdx;
+    //addUnCondBr(stmtBB,condBBIdx);
+    if(ifBreak)
+    {
+        ifBreak=false;
+        breakCmdPtr->br_label_1 = nextBBIdx;
+    }
     //给stmt添加跳转
 
 
@@ -521,7 +534,8 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
   return ;
 };
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-    addUnCondBr(bb,break2BBIdx);
+    ifBreak = true;
+    addUnCondBr(bb,break2BBIdx,1);
   return ;
 };
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
@@ -536,7 +550,8 @@ void const_declartion_assignment_gen
 };
 
 void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-    addUnCondBr(bb,continue2BBIdx);
+    ifContinue = true;
+    addUnCondBr(bb,continue2BBIdx,2);
   return ;
 };
 
