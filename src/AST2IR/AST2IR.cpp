@@ -1,4 +1,5 @@
 #include "AST2IR.h"
+#include <regex>
 
 void Function::printHelp(){
   for(int i=0; i<basic_blocks->size(); i++){
@@ -500,7 +501,7 @@ void params_gen(Function* func, syntax_tree_node* node){
     int key;
 
     for(int i=0;i<param_num;i++){
-      local_var* lval_;
+      local_var* lval_=new local_var;
       valTypes val_;
 
       t=node->children[i];
@@ -599,72 +600,7 @@ void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     addUnCondBr(stmtBB,nextBBIdx);
     //给stmt添加跳转
 }
-/*void if_else_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
-{
-    //BasicBlock* ifBB=new BasicBlock;
-    ifBB = bb;
-    int ifBBIdx = func->basic_blocks->size();
-    //func->basic_blocks->push_back(ifBB);
-    logic_expressions_gen(func,ifBB,node->children[0]);
 
-    local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
-    int brcondIdx = func->local_var_table->size()-1;
-    if(!strcmp(node->children[1]->name,"stmts"))
-    {
-        int stmtBBIdx = func->basic_blocks->size();
-        BasicBlock* stmtBB=new BasicBlock;
-        func->basic_blocks->push_back(stmtBB);
-        basic_cmds_gen(func,stmtBB,node->children[1]);
-        stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
-
-        int elseBBidx = func->basic_blocks->size();
-        BasicBlock* elseBB=new BasicBlock;
-        func->basic_blocks->push_back(elseBB);
-        basic_cmds_gen(func,elseBB,node->children[2]);
-        elseBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
-
-        //给前面的bb添加跳转
-        int nextBBIdx = func->basic_blocks->size();
-        addUnCondBr(stmtBB,nextBBIdx);
-        addUnCondBr(elseBB,nextBBIdx);
-
-
-        br_cmd* ifbrcmd = new br_cmd;
-        ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcondIdx;
-        ifbrcmd->br_label_1 = stmtBBIdx;
-        ifbrcmd->br_label_2 = elseBBidx;
-
-        command* brbbcmd = new command;
-        brbbcmd->cmd_type = br;
-        brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->cmds->push_back(brbbcmd);
-        return ;
-    }
-    else if(!strcmp(node->children[1]->name,"goto"))
-    {
-        int elseBBIdx = func->basic_blocks->size();
-        BasicBlock* elseBB=new BasicBlock;
-        func->basic_blocks->push_back(elseBB);
-        basic_cmds_gen(func,elseBB,node->children[2]);
-        int endBBIdx = func->basic_blocks->size();
-
-        br_cmd* ifbrcmd = new br_cmd;
-        ifbrcmd->is_cond = true;
-        ifbrcmd->cond_val = brcondIdx;
-        ifbrcmd->br_label_1 = lastStmtsBBIdx;
-        ifbrcmd->br_label_2 = elseBBIdx;
-
-        //ifBrCmdPtr->br_label_2 = endBBIdx;
-        unCondBrCmdPtr->br_label_1 = endBBIdx;
-
-        command* brbbcmd = new command;
-        brbbcmd->cmd_type = br;
-        brbbcmd->cmd_ptr = (void*) ifbrcmd;
-        ifBB->cmds->push_back(brbbcmd);
-        return ;
-    }
-};*/
 void if_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
     // 先生成stmt，最后在stmt后添加跳转
@@ -856,17 +792,30 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
 void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 {
+    
+    // cout<<"rtmt:"<<node->children[0]->name;//+
+    
     int returnIDx = algo_expressions_gen(bb->cmds,func,node->children[0]);
+    // cout<<"returnIDx:"<<returnIDx<<endl;
+    
+    // %3=add $1,$2
     local_var* returnVar = (*func->local_var_table)[returnIDx];
+    // cout<<"returnVar::"<<returnVar;
     ret_cmd* recmd = new ret_cmd;
     //recmd->ret_type = 函数的返回
-
+    // int tttt=returnVar->local_var_type.val_type==func->ret_type;
+    // cout<<"111:"<<returnVar->local_var_type.val_type;
+    // exit(0);
     if(returnVar->local_var_type.val_type==func->ret_type)
     {
+        cout<<"r1";
+    // exit(0);
         recmd->ret_value=returnIDx;
     }
     else
     {
+      cout<<"r2";
+    // exit(0);
         bitcast_cmd* changeCmd = new bitcast_cmd;
         int dstVarIdx = func->local_var_table->size();
         local_var* dstVar = new local_var;
@@ -881,6 +830,8 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         zhuanhuan->cmd_ptr = (void*) changeCmd;
         zhuanhuan->cmd_type = bitcast;
     }
+
+    
 
     // TODO:返回值的类型？把returnVar转换成func->ret_type?
 
@@ -967,8 +918,8 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 
         }
         else{
-          printf("error(AST2IR.438):找不到实参\n");
-          exit(0);
+          printf("error(AST2IR.906):找不到实参\n");
+          // exit(0);
         }
         call_->params.push_back(arg_);
       }
@@ -1041,8 +992,8 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 
         }
         else{
-          printf("error(AST2IR.135):找不到实参\n");
-          exit(0);
+          printf("error(AST2IR.980):找不到实参\n");
+          // exit(0);
         }
         call_->params.push_back(arg_);
         }
@@ -1056,7 +1007,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 
   }
 
-  command* callcmd;
+  command* callcmd=new command;
   callcmd->cmd_type=19;
   callcmd->cmd_ptr=call_;
   bb->cmds->push_back(callcmd);
@@ -1464,24 +1415,48 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   int __imp_name__=0;
   return algo_expressions_gen(vcmd, func, node, __imp_name__);
 }
-
+/*
++
+a
+b
+*/
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f ){
+  
+  
   char arg_name[30],arg_name2[30],op_name[30];
   strcpy(arg_name,node->name);
+  // cout<<arg_name<<endl;
   int key1,key2;
 
   if(strcmp(arg_name,"+")==0||strcmp(arg_name,"-")==0||strcmp(arg_name,"/")==0||strcmp(arg_name,"*")==0){
     strcpy(op_name,arg_name);
-    // strcpy(arg_name,node->name);
+    // cout<<op_name<<endl;
+    // exit(0);
     int has_float=0,has_float2=0;
-
+    cout<<endl<<"l:"<<node->children[0]->name<<endl;
+    
     key1=algo_expressions_gen(vcmd, func, node->children[0],has_float);
+    
     strcpy(arg_name2,node->children[1]->name);
+    cout<<endl<<"r:"<<arg_name2<<endl;//b
+    if(regex_match(arg_name2,std::regex("[0-9]+"))){
+      key2=-2;
+      // return key_1;
+    }
+    if(key2==-2){
+      // 不作处理
+    }
+    else{
     if(func->is_loaded(arg_name2)){
-      key2=func->getVarNumLoad(arg_name2);
+      // cout<<"h1";
+        key2=func->getVarNumLoad(arg_name2);
     }
     else {
+      // cout<<"h2";
+
       key2=func->getVarNumStore(arg_name2);
+      // cout<<key2<<endl;//0
+      // exit(0);
     // load
 
     __local_var_value t2;
@@ -1492,11 +1467,16 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           it = func->local_var_table->find(key2);
           ty2=it->second->local_var_type;
           t2=it->second->local_var_value;
+          cout<<"1.."<<endl;
+          cout<<"r type:"<<ty2.val_type<<endl;
+          // exit(0);
         }
     else if(func->local_const_var_table->find(key2)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key2);
           ty2=it2->second->global_var_type;
           t2=it2->second->global_var_value;
+          cout<<"2.."<<endl;
+          // exit(0);
 
         }
     else if(global_var_table.find(arg_name2)!=global_var_table.end()){//若实参为全局变量
@@ -1504,23 +1484,29 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
           ty2=it3->second->global_var_type;
           t2=it3->second->global_var_value;
-
+          cout<<"3.."<<endl;
+          // exit(0);
 
         }
     else if(const_var_table.find(arg_name2)!=const_var_table.end()){//若实参为全局常变量
           it4=const_var_table.find(arg_name2);
           ty2=it4->second->global_var_type;
           t2=it4->second->global_var_value;
+          cout<<"4.."<<endl;
+          // exit(0);
 
         }
     else{
-          printf("error(AST2IR.1210):找不到实参\n");
-          exit(0);
+          printf("error(AST2IR.1453):找不到实参\n");
+          // exit(0);
     }
     //若为数组，load取出值
     if(ty2.val_type==i32_ptr){
+    cout<<"====12..";
+
+
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
-    load_cmd* loadcmd;
+      load_cmd* loadcmd=new load_cmd;
       // loadcmd->dst_val=ptr1+1;
       local_var* loaddst=new local_var;
       type loaddst_type;
@@ -1538,11 +1524,16 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       vcmd->push_back(cmd);
 
       key2=loadcmd->dst_val;
+      cout<<"11..";
+      // exit(0);
     }
     else if(ty2.val_type==float_ptr){
+    cout<<"====13..";
+
+
      has_float2=1;
     int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
-      load_cmd* loadcmd;
+      load_cmd* loadcmd=new load_cmd;;
       local_var* loaddst=new local_var;
       type loaddst_type;
       loaddst_type.val_type=float_type;
@@ -1554,83 +1545,141 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
       loadcmd->src_type=10;
-      command* cmd;
+      command* cmd=new command;
       cmd->cmd_type=2;
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
       key2=loadcmd->dst_val;
+      cout<<"12..";
+      // exit(0);
 
     }
+    else if(ty2.val_type==9){
+      has_float2=1;
+    }
   }
-
+  }
+// cout<<"has_float:"<<has_float<<" has_float2:"<<has_float2<<endl;
+      // exit(0);
     //浮点数和整型一起运算时，整型值需要进行类型提升，转换成浮点数类型
+
+    // cout<<"h1";
+    if(key1==-2){
+      has_float=has_float2;
+    }
+    else if(key2==-2){
+      has_float2=has_float;
+    }
+
     if(has_float==0&&has_float2==0){
+      
       local_var* loaddst=new local_var;
       type loaddst_type;
       loaddst_type.val_type=i32;
       loaddst->local_var_type=loaddst_type;
 
       if(strcmp(op_name,"+")==0){
+
+        
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
 
       add_cmd* add=new add_cmd;
-      add->dst_val=func->add_new_var_load(loaddst);
-      add->is_val_1=1;
-      add->is_val_2=1;
-      add->src_type=9;
-      add->src_val_1=key1;
-      add->src_val_2=key2;
 
+      add->dst_val=func->add_new_var_load(loaddst);
+      if(key1==-2){
+        add->is_val_1=0;
+        add->src_val_1=atoi(arg_name);
+      }
+      else {
+        add->is_val_1=1;
+        add->src_val_1=key1;
+      }
+
+      if(key2==-2){
+        add->is_val_2=0;
+        add->src_val_2=atoi(arg_name2);
+      }
+      else {
+        add->is_val_2=1;
+        add->src_val_2=key2;
+      }
+      add->src_type=4;
       command* addcmd=new command;
         addcmd->cmd_type=5;
         addcmd->cmd_ptr=add;
         vcmd->push_back(addcmd);
+        
         return add->dst_val;
     }
     else if(strcmp(op_name,"-")==0){
-      sub_cmd* sub;
-      sub->dst_val=func->add_new_var_load(loaddst);
-      sub->is_val_1=1;
-      sub->is_val_2=1;
-      sub->src_type=9;
-      sub->src_val_1=key1;
-      sub->src_val_2=key2;
+       cout<<"132..";
 
-      command* subcmd;
+      sub_cmd* sub=new sub_cmd;
+      sub->dst_val=func->add_new_var_load(loaddst);
+      if(key1==-2){
+        sub->is_val_1=0;
+        sub->src_val_1=atoi(arg_name);
+      }
+      else {
+        sub->is_val_1=1;
+        sub->src_val_1=key1;
+      }
+      sub->src_type=4;
+      
+      command* subcmd=new command;
         subcmd->cmd_type=7;
         subcmd->cmd_ptr=sub;
         vcmd->push_back(subcmd);
+
+        
+
         return sub->dst_val;
     }
     else if(strcmp(op_name,"*")==0){
-      mul_cmd* mul;
+      mul_cmd* mul=new mul_cmd;
       mul->dst_val=func->add_new_var_load(loaddst);
-      mul->is_val_1=1;
-      mul->is_val_2=1;
-      mul->src_type=9;
-      mul->src_val_1=key1;
-      mul->src_val_2=key2;
+      if(key1==-2){
+        mul->is_val_1=0;
+        mul->src_val_1=atoi(arg_name);
+      }
+      else {
+        mul->is_val_1=1;
+        mul->src_val_1=key1;
+      }
+      mul->src_type=4;
+      
 
-      command* mulcmd;
+      command* mulcmd=new command;
         mulcmd->cmd_type=11;
         mulcmd->cmd_ptr=mul;
         vcmd->push_back(mulcmd);
+        
+        
+        
         return mul->dst_val;
     }
     else {
-      div_cmd* div;
+      div_cmd* div=new div_cmd;
       div->dst_val=func->add_new_var_load(loaddst);
-      div->is_val_1=1;
-      div->is_val_2=1;
-      div->src_type=9;
-      div->src_val_1=key1;
-      div->src_val_2=key2;
+      if(key1==-2){
+        div->is_val_1=0;
+        div->src_val_1=atoi(arg_name);
+      }
+      else {
+        div->is_val_1=1;
+        div->src_val_1=key1;
+      }
+      div->src_type=4;
+      
 
-      command* divcmd;
+      command* divcmd=new command;
         divcmd->cmd_type=9;
         divcmd->cmd_ptr=div;
         vcmd->push_back(divcmd);
+        
+        
+        
         return div->dst_val;
     }
     }
@@ -1647,10 +1696,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         loaddst2->local_var_type=loaddst_type2;
 
         // int key2_f=func->local_var_table->size();
-        sitofp_cmd* itof;
+        sitofp_cmd* itof=new sitofp_cmd;
         itof->dst_val=func->add_new_var_load(loaddst2);
         itof->src_val=key2;
-        command* itofcmd;
+        command* itofcmd=new command;
         itofcmd->cmd_type=17;
         itofcmd->cmd_ptr=itof;
         vcmd->push_back(itofcmd);
@@ -1664,10 +1713,10 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         loaddst2->local_var_type=loaddst_type2;
 
         // int key1_f=func->local_var_table->size();
-        sitofp_cmd* itof;
+        sitofp_cmd* itof=new sitofp_cmd;
         itof->dst_val=func->add_new_var_load(loaddst2);
         itof->src_val=key1;
-        command* itofcmd;
+        command* itofcmd=new command;
         itofcmd->cmd_type=17;
         itofcmd->cmd_ptr=itof;
         vcmd->push_back(itofcmd);
@@ -1676,77 +1725,111 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     if(strcmp(op_name,"+")==0){
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
-      fadd_cmd* fadd;
+      fadd_cmd* fadd=new fadd_cmd;
       fadd->dst_val=func->add_new_var_load(loaddst);
-      fadd->is_val_1=1;
-      fadd->is_val_2=1;
+      if(key1==-2){
+        fadd->is_val_1=0;
+        fadd->src_val_1=atoi(arg_name);
+      }
+      else {
+        fadd->is_val_1=1;
+        fadd->src_val_1=key1;
+      }
       fadd->src_type=9;
-      fadd->src_val_1=key1;
-      fadd->src_val_2=key2;
+      
 
-      command* faddcmd;
+      command* faddcmd=new command;
         faddcmd->cmd_type=6;
         faddcmd->cmd_ptr=fadd;
         vcmd->push_back(faddcmd);
+
+        // func->add_new_var_load(loaddst);
         return fadd->dst_val;
     }
     else if(strcmp(op_name,"-")==0){
-      fsub_cmd* fsub;
+      fsub_cmd* fsub=new fsub_cmd;
       fsub->dst_val=func->add_new_var_load(loaddst);
-      fsub->is_val_1=1;
-      fsub->is_val_2=1;
+      if(key1==-2){
+        fsub->is_val_1=0;
+        fsub->src_val_1=atoi(arg_name);
+      }
+      else {
+        fsub->is_val_1=1;
+        fsub->src_val_1=key1;
+      }
       fsub->src_type=9;
-      fsub->src_val_1=key1;
-      fsub->src_val_2=key2;
+      
 
-      command* fsubcmd;
+      command* fsubcmd=new command;
         fsubcmd->cmd_type=8;
         fsubcmd->cmd_ptr=fsub;
         vcmd->push_back(fsubcmd);
+
+        // func->add_new_var_load(loaddst);
         return fsub->dst_val;
     }
     else if(strcmp(op_name,"*")==0){
-      fmul_cmd* fmul;
+      fmul_cmd* fmul=new fmul_cmd;
       fmul->dst_val=func->add_new_var_load(loaddst);
-      fmul->is_val_1=1;
-      fmul->is_val_2=1;
+      if(key1==-2){
+        fmul->is_val_1=0;
+        fmul->src_val_1=atoi(arg_name);
+      }
+      else {
+        fmul->is_val_1=1;
+        fmul->src_val_1=key1;
+      }
       fmul->src_type=9;
-      fmul->src_val_1=key1;
-      fmul->src_val_2=key2;
 
-      command* fmulcmd;
+
+      command* fmulcmd=new command;
         fmulcmd->cmd_type=12;
         fmulcmd->cmd_ptr=fmul;
         vcmd->push_back(fmulcmd);
+
+        // func->add_new_var_load(loaddst);
         return fmul->dst_val;
     }
     else {
-      fdiv_cmd* fdiv;
+      fdiv_cmd* fdiv=new fdiv_cmd;
       fdiv->dst_val=func->add_new_var_load(loaddst);
-      fdiv->is_val_1=1;
-      fdiv->is_val_2=1;
+      if(key1==-2){
+        fdiv->is_val_1=0;
+        fdiv->src_val_1=atoi(arg_name);
+      }
+      else {
+        fdiv->is_val_1=1;
+        fdiv->src_val_1=key1;
+      }
       fdiv->src_type=9;
-      fdiv->src_val_1=key1;
-      fdiv->src_val_2=key2;
+    
 
-      command* fdivcmd;
+      command* fdivcmd=new command;
         fdivcmd->cmd_type=10;
         fdivcmd->cmd_ptr=fdiv;
         vcmd->push_back(fdivcmd);
+
+        // func->add_new_var_load(loaddst);
         return fdiv->dst_val;
     }
 
     }
 
-
+  
   }
   else{
 
     int key_1;
-    if(func->is_loaded(arg_name)){
+    // smatch results;
+    if(regex_match(arg_name,std::regex("[0-9]+"))){
+      key_1=-2;
+      return key_1;
+    }
+    else if(func->is_loaded(arg_name)){
       key_1=func->getVarNumLoad(arg_name);
     }
     else {
+
       key_1=func->getVarNumStore(arg_name);
     // load
 
@@ -1780,13 +1863,14 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
         }
     else{
-          printf("error(AST2IR.810):找不到实参\n");
-          exit(0);
+          printf("error(AST2IR.1719):找不到实参\n");
+          // exit(0);
     }
     //若为数组，load取出值
+    
     if(ty1.val_type==i32_ptr){
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key_1,ty1);
-    load_cmd* loadcmd;
+    load_cmd* loadcmd=new load_cmd;
       // loadcmd->dst_val=ptr1+1;
       local_var* loaddst=new local_var;
       type loaddst_type;
@@ -1808,7 +1892,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     else if(ty1.val_type==float_ptr){
      has_f=1;
     int ptr1= array_offset_gen(func,vcmd,node->children[0],key_1,ty1);
-      load_cmd* loadcmd;
+      load_cmd* loadcmd=new load_cmd;
       local_var* loaddst=new local_var;
       type loaddst_type;
       loaddst_type.val_type=float_type;
@@ -1820,12 +1904,15 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       loadcmd->is_glo_val=0;
       loadcmd->src_val=ptr1;
       loadcmd->src_type=10;
-      command* cmd;
+      command* cmd=new command;
       cmd->cmd_type=2;
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
       key_1=loadcmd->dst_val;
 
+    }
+    else if(ty1.val_type==9){
+      has_f=1;
     }
   }
     return key_1;
