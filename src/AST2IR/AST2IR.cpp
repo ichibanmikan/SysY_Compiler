@@ -535,7 +535,7 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 };
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
     ifBreak = true;
-    addUnCondBr(bb,break2BBIdx,1);
+    addUnCondBr(bb,0,1);
   return ;
 };
 void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
@@ -551,7 +551,7 @@ void const_declartion_assignment_gen
 
 void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
     ifContinue = true;
-    addUnCondBr(bb,continue2BBIdx,2);
+    addUnCondBr(bb,0,2);
   return ;
 };
 
