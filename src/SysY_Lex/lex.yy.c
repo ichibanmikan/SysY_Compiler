@@ -1185,7 +1185,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 86 "SysY_Lex.l"
+#line 87 "SysY_Lex.l"
 {
   pos_start = pos_end; pos_end += strlen(yytext);
   char* str=(char *)malloc(sizeof(char*)*20);
@@ -1196,7 +1196,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 93 "SysY_Lex.l"
+#line 94 "SysY_Lex.l"
 {
   pos_start = pos_end; pos_end += strlen(yytext);
   yylval.node = new_syntax_tree_node(yytext);
@@ -1205,7 +1205,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 98 "SysY_Lex.l"
+#line 99 "SysY_Lex.l"
 {
   pos_start = pos_end; pos_end += strlen(yytext);
   char* str=(char *)malloc(sizeof(char*)*20);
@@ -1216,7 +1216,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 106 "SysY_Lex.l"
+#line 107 "SysY_Lex.l"
 {
   pos_start = pos_end;
   pos_end += strlen(yytext);
@@ -1226,7 +1226,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 113 "SysY_Lex.l"
+#line 114 "SysY_Lex.l"
 {
   pos_start = pos_end;
   pos_end += strlen(yytext);
@@ -1237,29 +1237,29 @@ YY_RULE_SETUP
 case 53:
 /* rule 53 can match eol */
 YY_RULE_SETUP
-#line 120 "SysY_Lex.l"
+#line 121 "SysY_Lex.l"
 {lines++; pos_start = 1; pos_end = 1;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 121 "SysY_Lex.l"
+#line 122 "SysY_Lex.l"
 {pos_start = pos_end; pos_end += 1;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 122 "SysY_Lex.l"
-{ yylval.node = new_syntax_tree_node(yytext);}
+#line 123 "SysY_Lex.l"
+{ yylval.node = new_syntax_tree_node(yytext);}  //?
 	YY_BREAK
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
-#line 123 "SysY_Lex.l"
-{pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}
+#line 125 "SysY_Lex.l"
+{pos_start = pos_end; pos_end += strlen(yytext); yylval.node = new_syntax_tree_node(yytext); return CONTROLSTRING;}//限制字符串
 	YY_BREAK
 case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
-#line 125 "SysY_Lex.l"
+#line 127 "SysY_Lex.l"
 {
     pos_start = pos_end;
     int num = count_num_enter(yytext);
@@ -1273,12 +1273,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 136 "SysY_Lex.l"
+#line 138 "SysY_Lex.l"
 {return ERROR;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 138 "SysY_Lex.l"
+#line 140 "SysY_Lex.l"
 ECHO;
 	YY_BREAK
 #line 1285 "lex.yy.c"
@@ -2286,7 +2286,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 138 "SysY_Lex.l"
+#line 140 "SysY_Lex.l"
 
 
 /*
@@ -2423,7 +2423,7 @@ int OcttoDec(char* text){
 
 
 const char* InttoString(int num){
-  char *str;
+  char str[128];
 	int i = 0;
 	if(num<0){
 		num = -num;
