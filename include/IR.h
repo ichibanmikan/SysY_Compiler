@@ -907,7 +907,7 @@ class Function{
 
     int add_new_var_load(local_var* lv){
       local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
-      return local_var_table->size()+local_const_var_table->size();
+      return local_var_table->size()+local_const_var_table->size()-1;
     }
 
     Function(){
