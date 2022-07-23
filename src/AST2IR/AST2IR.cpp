@@ -1358,12 +1358,15 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
     last_type.val_type=i32;
   }
   else last_type.val_type=float_type;
-
+  
+  
   for(int i=0;i<size_;i++){
-
+  cout<<arr_type.dimension_size.size();//0
   vector<int>::iterator k = arr_type.dimension_size.begin();
 
-  arr_type.dimension_size.erase(k);
+  // arr_type.dimension_size.erase(k);
+  // cout<<"kkk";
+  exit(0);
 
   getelementptr_cmd* gcmd=new getelementptr_cmd;
   local_var* gcmddst=new local_var;
@@ -1500,10 +1503,14 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           printf("error(AST2IR.1453):找不到实参\n");
           // exit(0);
     }
+
+   
+    ty2.val_type=8;
     //若为数组，load取出值
     if(ty2.val_type==i32_ptr){
-    cout<<"====12..";
-
+    
+      // cout<<"====12..";
+      // exit(0);
 
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
       load_cmd* loadcmd=new load_cmd;
