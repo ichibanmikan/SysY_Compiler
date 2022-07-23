@@ -1,0 +1,1 @@
+/usr/bin/clang++     CMakeFiles/Test.dir/main_test.cpp.o  -o ../../Test  ../../lib/libSysY_Lex.a ../../lib/libSysY_Yacc.a ../../lib/libAST2IR.a 

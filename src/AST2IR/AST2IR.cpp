@@ -3,7 +3,7 @@
 
 void Function::printHelp(){
   for(int i=0; i<basic_blocks->size(); i++){
-    cout << (*basic_blocks)[i]->block_label << ':' << endl;
+    cout << i << ':' << endl;
     (*basic_blocks)[i]->printHelp();
   }
 }
@@ -39,15 +39,13 @@ void printHelp(){
     cout << '}' << endl;
   }
 }
-int lastStmtsBBIdx; //第一个if
 //int lastEndBBIdx;
 
-int break2BBIdx;
-int continue2BBIdx;
+br_cmd* breakCmdPtr;
+br_cmd* continueCmdPtr;
 
-br_cmd* ifBrCmdPtr;
-
-br_cmd* unCondBrCmdPtr;
+bool ifBreak = false;
+bool ifContinue = false;
 
 int types_get(char* name){
   if(!strcmp(name, "void")){
@@ -84,7 +82,7 @@ int isCompLogSta(char* name)
 }
 
 //添加无条件跳转命令
-void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
+void addUnCondBr(BasicBlock* bb,int tolabel,int f=0)
 {
     br_cmd* recmd = new br_cmd;
     recmd->is_cond = false;
@@ -95,9 +93,13 @@ void addUnCondBr(BasicBlock* bb,int tolabel,bool f=false)
     cmd1->cmd_ptr = (void*) recmd;
     bb->cmds->push_back(cmd1);
 
-    if(f)    //更新全局变量
+    if(f==1)    //更新全局变量
     {
-        unCondBrCmdPtr = recmd;
+        breakCmdPtr = recmd;
+    }
+    else if(f==2)
+    {
+        continueCmdPtr = recmd;
     }
 }
 
@@ -133,6 +135,28 @@ void forAnds(Function* func, BasicBlock* bb, syntax_tree_node* node,int stmtBBId
     //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
     addCondBr(bb,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
 
+}
+
+void forAndsBB(Function* func, BasicBlock* condBB, syntax_tree_node* node,int stmtBBIdx)
+{
+    int nextBBIdx = func->basic_blocks->size();
+    int andEndIdx = nextBBIdx+node->children_num-1;
+    for(int i=0;i<node->children_num-1; i++)
+    {
+        // TODO:满足跳到下一个，不满足end
+        // 最后一个满足，就跳到stmt
+        logic_expressions_gen(func,condBB,node->children[i]);
+        //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
+        addCondBr(condBB,nextBBIdx,andEndIdx,func->local_var_table->size()-1);
+
+        BasicBlock* bb = new BasicBlock;
+        condBB = bb;
+        func->basic_blocks->push_back(condBB);
+    }
+    nextBBIdx = func->basic_blocks->size();
+    logic_expressions_gen(func,condBB,node->children[node->children_num-1]);
+    //local_var* brcond = (*func->local_var_table)[func->local_var_table->size()-1];
+    addCondBr(condBB,stmtBBIdx,nextBBIdx,func->local_var_table->size()-1);
 }
 
 void functions_gen(syntax_tree_node* node){
@@ -723,8 +747,13 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     stmtBB = (*func->basic_blocks)[func->basic_blocks->size()-1];
 
     int condBBIdx = func->basic_blocks->size();
-    addUnCondBr(bb,condBBIdx); //非常重要
-    continue2BBIdx = condBBIdx;
+    //addUnCondBr(bb,condBBIdx); //非常重要
+    if(ifContinue)
+    {
+        ifContinue=false;
+        continueCmdPtr->br_label_1 = condBBIdx;
+    }
+    //continue2BBIdx = condBBIdx;
     //BasicBlock* condBB = new BasicBlock;
     //func->basic_blocks->push_back(condBB);
     for(int i=0; i<node->children_num-1; i++)
@@ -748,8 +777,13 @@ void while_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
         }
     }
     int nextBBIdx = func->basic_blocks->size();
-    break2BBIdx = nextBBIdx;
-    addUnCondBr(stmtBB,condBBIdx);
+    //break2BBIdx = nextBBIdx;
+    //addUnCondBr(stmtBB,condBBIdx);
+    if(ifBreak)
+    {
+        ifBreak=false;
+        breakCmdPtr->br_label_1 = nextBBIdx;
+    }
     //给stmt添加跳转
 
 
@@ -817,7 +851,7 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
       cout<<"r2";
     // exit(0);
         bitcast_cmd* changeCmd = new bitcast_cmd;
-        int dstVarIdx = func->local_var_table->size();
+        int dstVarIdx = func->local_var_table->size()+func->local_const_var_table->size()+func->basic_blocks->size();
         local_var* dstVar = new local_var;
         (*func->local_var_table)[dstVarIdx] = dstVar;
         changeCmd->dst_val = dstVarIdx;
@@ -1015,7 +1049,8 @@ void call_func_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
 }
 
 void break_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-    addUnCondBr(bb,break2BBIdx);
+    ifBreak = true;
+    addUnCondBr(bb,0,1);
   return ;
 }
 /*
@@ -1198,7 +1233,6 @@ void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
   }else if(isFloat){
     varValue_ = std::stof(node->children[1]->name);
   }
-
   // global value ?
   local_var *lv=new local_var(varType_,varValue_);
   func->add_new_local_var_store(lv,varName_);
@@ -1327,6 +1361,7 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     }
     local_var *lv=new local_var(varTypeWrapped,varValue_);
     int idx=func->add_new_local_var_store(lv,varName_);
+    //bb->cmds->insert(store_cmd)
 
     ac->dst_val = idx;//index
     //ac->align_len = getTypeSize(node->children[0]->name);
@@ -1337,7 +1372,8 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 }
 
 void continue_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node){
-    addUnCondBr(bb,continue2BBIdx);
+    ifContinue = true;
+    addUnCondBr(bb,0,2);
   return ;
 }
 
@@ -1436,12 +1472,14 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     // cout<<op_name<<endl;
     // exit(0);
     int has_float=0,has_float2=0;
-    cout<<endl<<"l:"<<node->children[0]->name<<endl;
+
+    // cout<<endl<<"l:"<<node->children[0]->name<<endl;
     
     key1=algo_expressions_gen(vcmd, func, node->children[0],has_float);
     
     strcpy(arg_name2,node->children[1]->name);
-    cout<<endl<<"r:"<<arg_name2<<endl;//b
+
+    // cout<<endl<<"r:"<<arg_name2<<endl;//b
     if(regex_match(arg_name2,std::regex("[0-9]+"))){
       key2=-2;
       // return key_1;
@@ -1470,15 +1508,17 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           it = func->local_var_table->find(key2);
           ty2=it->second->local_var_type;
           t2=it->second->local_var_value;
-          cout<<"1.."<<endl;
-          cout<<"r type:"<<ty2.val_type<<endl;
+
+        //   cout<<"1.."<<endl;
+        //   cout<<"r type:"<<ty2.val_type<<endl;
           // exit(0);
         }
     else if(func->local_const_var_table->find(key2)!=func->local_const_var_table->end()){//若实参为局部常变量
           it2=func->local_const_var_table->find(key2);
           ty2=it2->second->global_var_type;
           t2=it2->second->global_var_value;
-          cout<<"2.."<<endl;
+
+        //   cout<<"2.."<<endl;
           // exit(0);
 
         }
@@ -1487,7 +1527,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
           ty2=it3->second->global_var_type;
           t2=it3->second->global_var_value;
-          cout<<"3.."<<endl;
+
+        //   cout<<"3.."<<endl;
           // exit(0);
 
         }
@@ -1495,7 +1536,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           it4=const_var_table.find(arg_name2);
           ty2=it4->second->global_var_type;
           t2=it4->second->global_var_value;
-          cout<<"4.."<<endl;
+
+        //   cout<<"4.."<<endl;
           // exit(0);
 
         }
@@ -1508,9 +1550,9 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     ty2.val_type=8;
     //若为数组，load取出值
     if(ty2.val_type==i32_ptr){
-    
-      // cout<<"====12..";
-      // exit(0);
+
+    // cout<<"====12..";
+
 
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key2,ty2);
       load_cmd* loadcmd=new load_cmd;
@@ -1531,11 +1573,12 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       vcmd->push_back(cmd);
 
       key2=loadcmd->dst_val;
-      cout<<"11..";
+
+    //   cout<<"11..";
       // exit(0);
     }
     else if(ty2.val_type==float_ptr){
-    cout<<"====13..";
+    // cout<<"====13..";
 
 
      has_float2=1;
@@ -1557,7 +1600,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
       cmd->cmd_ptr=loadcmd;
       vcmd->push_back(cmd);
       key2=loadcmd->dst_val;
-      cout<<"12..";
+
+    //   cout<<"12..";
       // exit(0);
 
     }
@@ -1620,7 +1664,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         return add->dst_val;
     }
     else if(strcmp(op_name,"-")==0){
-       cout<<"132..";
+
+    //   cout<<"132..";
 
       sub_cmd* sub=new sub_cmd;
       sub->dst_val=func->add_new_var_load(loaddst);
@@ -1926,6 +1971,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   }
 
 }
+
 
 
 

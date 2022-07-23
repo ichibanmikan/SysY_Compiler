@@ -1,0 +1,39 @@
+
+l:a
+
+r:a
+1..
+r type:4
+====12..r1>--+ declarations
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* main
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--+ a
+|  |  |  |  |  |  >--+ array_size
+|  |  |  |  |  |  |  >--* 10
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* b
+|  |  |  |  |  |  >--* 1
+|  |  |  >--+ return_stmt
+|  |  |  |  >--+ +
+|  |  |  |  |  >--+ a
+|  |  |  |  |  |  >--+ array_size
+|  |  |  |  |  |  |  >--* 0
+|  |  |  |  |  >--+ a
+|  |  |  |  |  |  >--+ array_size
+|  |  |  |  |  |  |  >--* b
+define dso_local i32 @main() #0{
+0:
+%0 = alloca void
+%1 = alloca void
+%2 = add nsw i32 %0, %0
+retvoid
+}

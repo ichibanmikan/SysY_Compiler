@@ -1,0 +1,14 @@
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/CMakeFiles/Test.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Lex/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Lex/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Lex/CMakeFiles/SysY_Lex.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Yacc/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Yacc/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/AST2IR.dir

@@ -1,0 +1,44 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/createTree.h
+stdio.h
+-
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/SysY_Lex/SysY_Lex.h
+stdio.h
+-
+stdlib.h
+-
+stdbool.h
+-
+ctype.h
+-
+../../include/createTree.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/createTree.h
+../SysY_Yacc/SysY_Yacc.tab.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/SysY_Yacc/SysY_Yacc.tab.h
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/SysY_Lex/lex.yy.c
+stdio.h
+-
+string.h
+-
+errno.h
+-
+stdlib.h
+-
+inttypes.h
+-
+SysY_Lex.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/SysY_Lex/SysY_Lex.h
+unistd.h
+-
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/SysY_Yacc/SysY_Yacc.tab.h
+
