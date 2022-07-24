@@ -6,6 +6,7 @@ extern "C"{
 }
 
 #include "../../include/IR.h"
+#include <regex>
 
 using std::cerr;
 using std::endl;
