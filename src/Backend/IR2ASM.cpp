@@ -44,31 +44,65 @@ void IR2ASM(){
 
   }
 
+  int funcNum=0;
   for(auto iter=functions_table.begin(); iter!=functions_table.end(); iter++){
     outfile << iter->first << ':' << endl;
-    Function2ASM(iter->second);
+    funcNum++;
+    Function2ASM(iter->second, funcNum);
   }
 }
 
-void Function2ASM(Function* func){
+void Function2ASM(Function* func, int funcNum){
   // outfile << "  sub   sp, sp, #" << func->func_params->size()*4 << endl;
+  map<int, string>* varMM=new map<int, string>;
   int sum=func->func_params->size();
+  int num=0;
   for(auto iter=func->local_var_index->begin(); iter!=func->local_var_index->end(); iter++){
     if(iter->second.store_index!=-1){
-      sum++;
+      string varPos="[sp, #";
+      varPos+=to_string(num*4);
+      varPos+=']';
+      varMM->insert(pair<int, string>(iter->second.store_index, varPos));
+      num++;
     }
   }
+  sum+=num;
   outfile << "  sub   sp, sp, #" << (sum-1)*4 << endl;
   if(func->func_params->size()<=4){
     for(int i=0; i<func->func_params->size(); i++){
       outfile << "  str r" << i << " [sp, #" << (sum-i-1)*4 << endl;
     }
   }
-  Cmds2ASM(func);
+  Blocks2ASM(func, varMM, funcNum);
 }
 
-void Cmds2ASM(Function* func){
+void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum){
+  map<int, int>* regVar=new map<int, int>;
+  cmds2ASM((*func->basic_blocks)[0], varMM, regVar, funcNum);
+  for(int i=1; i<func->basic_blocks->size(); i++){
+    outfile << "LBB" << funcNum << '_' << i << endl;
+    cmds2ASM((*func->basic_blocks)[i], varMM, regVar, funcNum);
+  }
+}
 
+void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum){
+  for(int i=0; i<thisBB->cmds->size(); i++){
+    switch((*thisBB->cmds)[i]->cmd_type){
+      case 1:
+        return ;
+      case 2:
+        return ;
+    }
+  }
+}
+
+int getReg(int varNum, map<int, int>* regVar){
+  for(auto iter=regVar->begin(); iter!=regVar->end(); iter++){
+    if(iter->second==varNum){
+      return iter->first;
+    }
+  }
+  return -1;
 }
 
 /*
