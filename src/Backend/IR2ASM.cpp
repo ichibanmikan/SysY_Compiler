@@ -7,7 +7,7 @@ extern map<string, Function*> functions_table; //函数表，这里实在想不�
 */
 
 void IR2ASM(){
-  outfile << "  .global main"
+  outfile << "  .global main";
   for(auto iter=global_var_table.begin(); iter!=global_var_table.end(); iter++){
     outfile << iter->first << ':' << endl;
 
@@ -44,9 +44,31 @@ void IR2ASM(){
 
   }
 
-  for(auto iter=functions_table.begin(); iter!=functions_table->size(); iter++){
+  for(auto iter=functions_table.begin(); iter!=functions_table.end(); iter++){
     outfile << iter->first << ':' << endl;
+    Function2ASM(iter->second);
   }
+}
+
+void Function2ASM(Function* func){
+  // outfile << "  sub   sp, sp, #" << func->func_params->size()*4 << endl;
+  int sum=func->func_params->size();
+  for(auto iter=func->local_var_index->begin(); iter!=func->local_var_index->end(); iter++){
+    if(iter->second.store_index!=-1){
+      sum++;
+    }
+  }
+  outfile << "  sub   sp, sp, #" << (sum-1)*4 << endl;
+  if(func->func_params->size()<=4){
+    for(int i=0; i<func->func_params->size(); i++){
+      outfile << "  str r" << i << " [sp, #" << (sum-i-1)*4 << endl;
+    }
+  }
+  Cmds2ASM(func);
+}
+
+void Cmds2ASM(Function* func){
+
 }
 
 /*

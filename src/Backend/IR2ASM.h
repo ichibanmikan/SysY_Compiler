@@ -10,3 +10,7 @@ extern map<string, const_var*> const_var_table;//全局常量表
 extern map<string, Function*> functions_table; //函数表，这里实在想不出来表示方法了
 
 std::ofstream outfile("out.s");
+
+void IR2ASM();
+void Cmds2ASM(Function* func);
+void Function2ASM(Function* func);
