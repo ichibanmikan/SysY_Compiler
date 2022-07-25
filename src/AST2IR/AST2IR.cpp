@@ -498,6 +498,12 @@ string getCompStateStr(int compState){
 }
 
 void value_printHelp(value v){
+  if(get_if<0>(&v)){
+    cout << get<0>(v);
+  }
+  if(get_if<1>(&v)){
+    cout << get<1>(v);
+  }
   if(get_if<3>(&v)){
     cout << get<3>(v);
   }
@@ -1133,33 +1139,59 @@ void global_val_gen(syntax_tree_node* node){
 
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
+    // type
+    bool isArr=( (node->children[1]->children[i]->children_num>0) && !strcmp(node->children[1]->children[i]->children[0]->name,"array_size"));
+    type tmp_varTypeWrapped(varType_);
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=8;//i32_ptr
+        // tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=10;//float_ptr
+      }
+      // dimension of array size
+      // int len=1;//compress array into 1 dimension
+      for(int j=0;j<node->children[1]->children[i]->children[0]->children_num;j++){
+        int len=std::stoi(node->children[1]->children[i]->children[0]->children[j]->name);//len is a var?
+        tmp_varTypeWrapped.dimension_size.push_back(len);
+      }
+      
+    }
+
     // alloc
-    // command* cmd=new command;
-    // cmd->cmd_type=alloca_c;
-    // alloca_cmd* ac=new alloca_cmd;
 
     // store
     __global_var_value varValue_;// init as 0
-    if(isInt){
-      varValue_=(int)0;
-    }else if(isFloat){
-      varValue_=(float)0;
+    if(!isArr){
+      if(isInt){
+        varValue_=(int)0;
+      }else if(isFloat){
+        varValue_=(float)0;
+      }
     }
     string varName_ = node->children[1]->children[i]->name;
+    bool hasExpression=false;
+    int expresion_store_idx=0;
     if(!strcmp(node->children[1]->children[i]->name, "=")){
       varName_ = node->children[1]->children[i]->children[0]->name;
-      if(isInt){
-        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
-      }else if(isFloat){
-        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      if(!isArr){
+        if(regex_match(node->children[1]->children[i]->children[1]->name,std::regex("[0-9]+"))){
+          if(isInt){
+            varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+          }else if(isFloat){
+            varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+          }
+        }else{
+          hasExpression=true;
+          // "+" node
+          // expresion_store_idx = algo_expressions_gen(bb->cmds,func,node->children[1]->children[i]->children[1]);
+        }
       }
+      // else : init_vals
     }
     global_var *gvar=new global_var(varTypeWrapped,varValue_);
     global_var_table.insert(pair<string, global_var*>(varName_,gvar));
 
-    // ac->dst_val = idx;//index
-    // ac->align_len = getTypeSize(node->children[0]->name);
-    // cmd->cmd_ptr = ac;
   }
   return ;
 };
@@ -1209,26 +1241,55 @@ void global_const_val_gen(syntax_tree_node* node){
 
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
+    // type
+    bool isArr=( (node->children[1]->children[i]->children_num>0) && !strcmp(node->children[1]->children[i]->children[0]->name,"array_size"));
+    type tmp_varTypeWrapped(varType_);
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=8;//i32_ptr
+        // tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=10;//float_ptr
+      }
+      // dimension of array size
+      // int len=1;//compress array into 1 dimension
+      for(int j=0;j<node->children[1]->children[i]->children[0]->children_num;j++){
+        int len=std::stoi(node->children[1]->children[i]->children[0]->children[j]->name);//len is a var?
+        tmp_varTypeWrapped.dimension_size.push_back(len);
+      }
+      
+    }
+
     // alloc
-    // command* cmd=new command;
-    // cmd->cmd_type=alloca_c;
-    // alloca_cmd* ac=new alloca_cmd;
 
     // store
     __global_var_value varValue_;// init as 0
-    if(isInt){
-      varValue_=(int)0;
-    }else if(isFloat){
-      varValue_=(float)0;
+    if(!isArr){
+      if(isInt){
+        varValue_=(int)0;
+      }else if(isFloat){
+        varValue_=(float)0;
+      }
     }
     string varName_ = node->children[1]->children[i]->name;
+    bool hasExpression=false;
+    int expresion_store_idx=0;
     if(!strcmp(node->children[1]->children[i]->name, "=")){
       varName_ = node->children[1]->children[i]->children[0]->name;
-      if(isInt){
-        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
-      }else if(isFloat){
-        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+      if(!isArr){
+        if(regex_match(node->children[1]->children[i]->children[1]->name,std::regex("[0-9]+"))){
+          if(isInt){
+            varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+          }else if(isFloat){
+            varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+          }
+        }else{
+          hasExpression=true;
+          // "+" node ?????
+          // expresion_store_idx = algo_expressions_gen(bb->cmds,func,node->children[1]->children[i]->children[1]);
+        }
       }
+      // else : init_vals
     }
     const_var *cvar=new const_var(varTypeWrapped,varValue_);
     const_var_table.insert(pair<string, const_var*>(varName_,cvar));
@@ -1277,14 +1338,56 @@ void assignment_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
   bool isFloat=(varType_.val_type==9);
 
   __local_var_value varValue_;
-  if(isInt){
-    varValue_ = std::stoi(node->children[1]->name);
-  }else if(isFloat){
-    varValue_ = std::stof(node->children[1]->name);
+  bool hasExpression=false;
+  int expresion_store_idx=0;
+  if(regex_match(node->children[1]->name,std::regex("[0-9]+"))){
+    if(isInt){
+      varValue_ = std::stoi(node->children[1]->name);
+    }else if(isFloat){
+      varValue_ = std::stof(node->children[1]->name);
+    }
+  }else{
+    hasExpression=true;
+    // "+" node
+    expresion_store_idx = algo_expressions_gen(bb->cmds,func,node->children[1]);
   }
-  // global value ?
+
+  // new alloc ?
   local_var *lv=new local_var(varType_,varValue_);
-  func->add_new_local_var_store(lv,varName_);
+  // int idx=func->add_new_local_var_store(lv,varName_);
+  int idx=func->local_var_index->at(varName_).store_index;
+  // alloca_cmd *ac=new alloca_cmd;
+  
+  // store_cmd
+  command *cmd2=new command;
+  cmd2->cmd_type=1;//store
+  store_cmd *sc=new store_cmd;
+  // type check ?
+  if(isInt){
+    sc->src_type=4;//i32
+    sc->dst_type=8;//i32_ptr
+  }else if(isFloat){
+    sc->src_type=9;//float_type
+    sc->dst_type=10;//float_ptr
+  }else{
+    sc->src_type=0;//void_type
+    sc->dst_type=0;
+  }
+
+  if(!hasExpression){
+    sc->is_val=false;//???
+    sc->is_glo_val=false;
+    sc->src_val=(value)varValue_;
+    sc->dst_val=(value)idx;
+  }else{// store i32 %x, i32* %y
+    sc->is_val=true;// ? always true
+    sc->is_glo_val=false;
+    sc->src_val=(value)expresion_store_idx;
+    sc->dst_val=(value)idx;
+  }
+  cmd2->cmd_ptr = sc;
+  bb->cmds->push_back(cmd2);
+  
   return ;
 };
 /*
@@ -1324,37 +1427,118 @@ void const_declartion_assignment_gen
 
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
-    // alloc
-    command* cmd=new command;
-    cmd->cmd_type=alloca_c;
-    alloca_cmd* ac=new alloca_cmd;
+    // type
+    bool isArr=( (node->children[1]->children[i]->children_num>0) && !strcmp(node->children[1]->children[i]->children[0]->name,"array_size"));
+    type tmp_varTypeWrapped(varType_);
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=8;//i32_ptr
+        // tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=10;//float_ptr
+      }
+      // dimension of array size
+      // int len=1;//compress array into 1 dimension
+      for(int j=0;j<node->children[1]->children[i]->children[0]->children_num;j++){
+        int len=std::stoi(node->children[1]->children[i]->children[0]->children[j]->name);//len is a var?
+        tmp_varTypeWrapped.dimension_size.push_back(len);
+      }
+      
+    }
 
+    // alloc
 
     // store
     __global_var_value varValue_;// init as 0
-    if(isInt){
-      varValue_=(int)0;
-    }else if(isFloat){
-      varValue_=(float)0;
-    }
-    string varName_ = node->children[1]->children[i]->name;
-    if(!strcmp(node->children[1]->children[i]->name, "=")){
-      varName_ = node->children[1]->children[i]->children[0]->name;
+    if(!isArr){
       if(isInt){
-        //expression
-        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+        varValue_=(int)0;
       }else if(isFloat){
-        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+        varValue_=(float)0;
       }
     }
-    const_var *cvar=new const_var(varTypeWrapped,varValue_);
+    string varName_ = node->children[1]->children[i]->name;
+    bool hasExpression=false;
+    int expresion_store_idx=0;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(!isArr){
+        if(regex_match(node->children[1]->children[i]->children[1]->name,std::regex("[0-9]+"))){
+          if(isInt){
+            varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+          }else if(isFloat){
+            varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+          }
+        }else{
+          hasExpression=true;
+          // "+" node
+          expresion_store_idx = algo_expressions_gen(bb->cmds,func,node->children[1]->children[i]->children[1]);
+        }
+      }
+      // else : init_vals
+    }
+    const_var *cvar;
+    if(isArr){
+      cvar=new const_var(tmp_varTypeWrapped,varValue_);
+    }else{
+      cvar=new const_var(varTypeWrapped,varValue_);
+    }
     int idx=func->add_new_local_const_var_store(cvar,varName_);
 
 
-    // ac->dst_val = idx;//index
+    // alloca_cmd
+    command *cmd1=new command;
+    cmd1->cmd_type=0;//alloca_c
+    alloca_cmd *ac=new alloca_cmd;
+    ac->dst_val = idx;//index
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=9;//float
+      }
+      ac->alloca_type=tmp_varTypeWrapped;
+    }else{
+      ac->alloca_type=varTypeWrapped;
+    }
     ac->align_len = getTypeSize(node->children[0]->name);
-    cmd->cmd_ptr = ac;
-    bb->cmds->push_back(cmd);
+    cmd1->cmd_ptr = ac;
+    bb->cmds->push_back(cmd1);
+
+    // store_cmd
+    if(!isArr){
+      command *cmd2=new command;
+      cmd2->cmd_type=1;//store
+      store_cmd *sc=new store_cmd;
+      // type check ?
+      if(isInt){
+        sc->src_type=4;//i32
+        sc->dst_type=8;//i32_ptr
+      }else if(isFloat){
+        sc->src_type=9;//float_type
+        sc->dst_type=10;//float_ptr
+      }else{
+        sc->src_type=0;//void_type
+        sc->dst_type=0;
+      }
+
+      if(!hasExpression){
+        sc->is_val=false;//???
+        sc->is_glo_val=false;
+        sc->src_val=(value)varValue_;
+        sc->dst_val=(value)idx;
+      }else{// store i32 %x, i32* %y
+        sc->is_val=true;// ? always true
+        sc->is_glo_val=false;
+        sc->src_val=(value)expresion_store_idx;
+        sc->dst_val=(value)idx;
+      }
+      cmd2->cmd_ptr = sc;
+      bb->cmds->push_back(cmd2);
+    }else{// array initval
+      
+    }
+
   }
   return ;
 };
@@ -1387,35 +1571,121 @@ void var_declaration_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
 
   // loops: BType VarDef {, VarDef, ...}
   for(int i=0; i<node->children[1]->children_num; i++){
+    
+    // type
+    bool isArr=( (node->children[1]->children[i]->children_num>0) && !strcmp(node->children[1]->children[i]->children[0]->name,"array_size"));
+    type tmp_varTypeWrapped(varType_);
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=8;//i32_ptr
+        // tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=10;//float_ptr
+      }
+      // dimension of array size
+      // int len=1;//compress array into 1 dimension
+      for(int j=0;j<node->children[1]->children[i]->children[0]->children_num;j++){
+        int len=std::stoi(node->children[1]->children[i]->children[0]->children[j]->name);//len is a var?
+        tmp_varTypeWrapped.dimension_size.push_back(len);
+      }
+      
+    }
+
     // alloc
-    command* cmd=new command;
-    cmd->cmd_type=alloca_c;
-    alloca_cmd* ac=new alloca_cmd;
 
     // store
     __local_var_value varValue_;// init as 0
-    if(isInt){
-      varValue_=(int)0;
-    }else if(isFloat){
-      varValue_=(float)0;
-    }
-    string varName_ = node->children[1]->children[i]->name;
-    if(!strcmp(node->children[1]->children[i]->name, "=")){
-      varName_ = node->children[1]->children[i]->children[0]->name;
+    if(!isArr){
       if(isInt){
-        varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+        varValue_=(int)0;
       }else if(isFloat){
-        varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+        varValue_=(float)0;
       }
     }
-    local_var *lv=new local_var(varTypeWrapped,varValue_);
+    string varName_ = node->children[1]->children[i]->name;
+    bool hasExpression=false;
+    int expresion_store_idx=0;
+    if(!strcmp(node->children[1]->children[i]->name, "=")){
+      varName_ = node->children[1]->children[i]->children[0]->name;
+      if(!isArr){
+        if(regex_match(node->children[1]->children[i]->children[1]->name,std::regex("[0-9]+"))){
+          if(isInt){
+            varValue_ = std::stoi(node->children[1]->children[i]->children[1]->name);
+          }else if(isFloat){
+            varValue_ = std::stof(node->children[1]->children[i]->children[1]->name);
+          }
+        }else{
+          hasExpression=true;
+          // "+" node
+          expresion_store_idx = algo_expressions_gen(bb->cmds,func,node->children[1]->children[i]->children[1]);
+        }
+      }
+      // else : init_vals
+    }
+
+    local_var *lv;
+    if(isArr){
+      lv=new local_var(tmp_varTypeWrapped,varValue_);
+    }else{
+      lv=new local_var(varTypeWrapped,varValue_);
+    }
     int idx=func->add_new_local_var_store(lv,varName_);
     //bb->cmds->insert(store_cmd)
 
+    // alloca_cmd
+    command *cmd1=new command;
+    cmd1->cmd_type=0;//alloca_c
+    alloca_cmd *ac=new alloca_cmd;
     ac->dst_val = idx;//index
-    //ac->align_len = getTypeSize(node->children[0]->name);
-    cmd->cmd_ptr = ac;
-    bb->cmds->push_back(cmd);
+    if(isArr){
+      if(isInt){
+        tmp_varTypeWrapped.val_type=4;//i32
+      }else if(isFloat){
+        tmp_varTypeWrapped.val_type=9;//float
+      }
+      ac->alloca_type=tmp_varTypeWrapped;
+    }else{
+      ac->alloca_type=varTypeWrapped;
+    }
+    ac->align_len = getTypeSize(node->children[0]->name);
+    cmd1->cmd_ptr = ac;
+    bb->cmds->push_back(cmd1);
+
+
+    // store_cmd
+    if(!isArr){
+      command *cmd2=new command;
+      cmd2->cmd_type=1;//store
+      store_cmd *sc=new store_cmd;
+      // type check ?
+      if(isInt){
+        sc->src_type=4;//i32
+        sc->dst_type=8;//i32_ptr
+      }else if(isFloat){
+        sc->src_type=9;//float_type
+        sc->dst_type=10;//float_ptr
+      }else{
+        sc->src_type=0;//void_type
+        sc->dst_type=0;
+      }
+
+      if(!hasExpression){
+        sc->is_val=false;//???
+        sc->is_glo_val=false;
+        sc->src_val=(value)varValue_;
+        sc->dst_val=(value)idx;
+      }else{// store i32 %x, i32* %y
+        sc->is_val=true;// ? always true
+        sc->is_glo_val=false;
+        sc->src_val=(value)expresion_store_idx;
+        sc->dst_val=(value)idx;
+      }
+      cmd2->cmd_ptr = sc;
+      bb->cmds->push_back(cmd2);
+    }else{// array initval
+      
+    }
+
   }
   return ;
 }
