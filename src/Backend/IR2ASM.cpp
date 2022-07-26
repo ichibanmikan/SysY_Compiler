@@ -126,27 +126,97 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
             cerr << "IR2ASM const num error" << endl;
           }
         }
+        break;
       }
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-      case 8:
-      case 9:
-      case 10:
-      case 11:
-      case 12:
-      case 13:
-      case 14:
-      case 15:
-      case 16:
-      case 17:
-      case 18:
-      case 19:
-      case 20:
-      case 21:
+      case 2:{
+        load_cmd* lc=(load_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int regNum=getReg(lc->dst_val, regVar);
+        if(lc->is_glo_val){
+          outfile << "  ldr r" << regNum << ", " << get<2>(lc->src_val) << endl;
+        } else {
+          outfile << "  ldr, r" << regNum << ", " << (*varMM)[get<0>(lc->src_val)] << endl;
+        }
+      }
+      case 3:{
+        getelementptr_cmd* gc=(getelementptr_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int regNum=getReg(gc->dst_val, regVar);
+        if(gc->is_var){
+          int offsetRegNum=getReg(gc->offset, regVar);
+          outfile << "  mov r" << regNum << ", r" << offsetRegNum << ", LSL #2" << endl;
+        } else {
+          int offsetRegNum=IntsetReg(gc->offset, regVar);
+          outfile << "  mov r" << regNum << ", r" << offsetRegNum << ", LSL #2" << endl;
+        }
+      }
+      case 4:{
+        bitcast_cmd* bc=(bitcast_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+
+      }
+      case 5:{
+        add_cmd* ac=(add_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(ac->dst_val, regVar);
+        if(ac->is_val_1){
+          var_1_regNum=getReg(ac->src_val_1, regVar);
+        } else {
+          var_1_regNum=IntsetReg(ac->src_val_1, regVar);
+        }
+        if(ac->is_val_2){
+          var_2_regNum=getReg(ac->src_val_2, regVar);
+        } else {
+          var_2_regNum=IntsetReg(ac->src_val_2, regVar);
+        }
+        outfile << "  add r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
+      }
+      case 6:{
+        fadd_cmd* fac=(fadd_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 7:{
+        sub_cmd* subc=(sub_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 8:{
+        fsub_cmd* ac=(fsub_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 9:{
+        div_cmd* ac=(div_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 10:{
+        fdiv_cmd* ac=(fdiv_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 11:{
+        mul_cmd* ac=(mul_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 12:{
+        fmul_cmd* ac=(fmul_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 13:{
+        mod_cmd* ac=(mod_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 14:{
+        fmod_cmd* ac=(fmod_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 15:{
+        icmp_cmd* ac=(icmp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 16:{
+        fcmp_cmd* ac=(fcmp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 17:{
+        sitofp_cmd* ac=(sitofp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 18:{
+        fptosi_cmd* ac=(fptosi_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 19:{
+        call_cmd* ac=(call_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 20:{
+        br_cmd* ac=(br_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
+      case 21:{
+        ret_cmd* ac=(ret_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+      }
       default:
         cerr << "IR2ASM cmd Type error!!!" << endl;
     }
