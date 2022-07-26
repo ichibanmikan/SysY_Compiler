@@ -84,12 +84,13 @@ void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum){
   regVar->insert(pair<int, int>(3, -2));
   cmds2ASM((*func->basic_blocks)[0], varMM, regVar, funcNum);
   for(int i=1; i<func->basic_blocks->size(); i++){
-    outfile << "LBB" << funcNum << '_' << i << ':' << endl;
+    outfile << "LBB" << funcNum << '_' << (*func->basic_blocks)[i]->block_label << ':' << endl;
     cmds2ASM((*func->basic_blocks)[i], varMM, regVar, funcNum);
   }
 }
 
 void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum){
+  int endCond=-1; //-1代表无条件, -2代表浮点数比较, 其他代表整数条件
   for(int i=0; i<thisBB->cmds->size(); i++){
     switch((*thisBB->cmds)[i]->cmd_type){
       case 0:{
@@ -251,7 +252,7 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
         } else {
           FloatsetSpiReg(get<1>(ac->src_val_2), 1, regVar);
         }
-        outfile << "  bl      __aeabi_idiv" << endl;
+        outfile << "  bl      __aeabi_fdiv" << endl;
         VarSetSpiReg(ac->dst_val, 0, regVar);
       }
       case 11:{
@@ -290,30 +291,146 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
       }
       case 13:{
         mod_cmd* ac=(mod_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        if(ac->is_val_1){
+          int var_1_regNum=getReg(ac->src_val_1, regVar);
+          outfile << "  mov r0, " << var_1_regNum;
+        } else {
+          IntsetSpiReg(ac->src_val_1, 0, regVar);
+        }
+        if(ac->is_val_2){
+          int var_2_regNum=getReg(ac->src_val_2, regVar);
+          outfile << "  mov r1, " << var_2_regNum;
+        } else {
+          IntsetSpiReg(ac->src_val_2, 1, regVar);
+        }
+        outfile << "  bl      __aeabi_idivmod" << endl;
+        VarSetSpiReg(ac->dst_val, 1, regVar);
       }
       case 14:{
         fmod_cmd* ac=(fmod_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        cerr << "IR2ASM fmod error" << endl;
       }
       case 15:{
         icmp_cmd* ac=(icmp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        if(ac->is_val_1){
+          var_1_regNum=getReg(ac->src_val_1, regVar);
+        } else {
+          var_1_regNum=IntsetReg(ac->src_val_1, regVar);
+        }
+        if(ac->is_val_2){
+          var_2_regNum=getReg(ac->src_val_2, regVar);
+        } else {
+          var_2_regNum=IntsetReg(ac->src_val_2, regVar);
+        }
+        outfile << "  cmp r" << var_1_regNum << ", r" << var_2_regNum << endl;
+        endCond=ac->cmp_st;
       }
       case 16:{
         fcmp_cmd* ac=(fcmp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        if(ac->is_val_1){
+          int var_1_regNum=getReg(get<0>(ac->src_val_1), regVar);
+          outfile << "  mov r0, r" << var_1_regNum;
+        } else {
+          IntsetSpiReg(get<1>(ac->src_val_1), 0, regVar);
+        }
+        if(ac->is_val_2){
+          int var_2_regNum=getReg(get<0>(ac->src_val_2), regVar);
+          outfile << "  mov r1, r" << var_2_regNum;
+        } else {
+          IntsetSpiReg(get<1>(ac->src_val_2), 1, regVar);
+        }
+        string strCond;
+        switch(ac->cmp_st){
+          case 8:
+            strCond="eq";
+          case 9:
+            strCond="gt";
+          case 10:
+            strCond="ge";
+          case 11:
+            strCond="lt";
+          case 12:
+            strCond="le";
+          default:
+            cerr << "IR2ASM fcmp cmp_st error" << endl;
+        }
+        outfile << "  bl      __aeabi_fcmp" << strCond << endl;
+        endCond=-2;
       }
       case 17:{
         sitofp_cmd* ac=(sitofp_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int reg_src=getReg(ac->src_val, regVar);
+        VarSetSpiReg(ac->src_val, 0, regVar);
+        outfile << "  mov r0, r" << reg_src << endl;
+        outfile << "  bl      __aeabi_i2f" << endl;
+        VarSetSpiReg(ac->dst_val, 0, regVar);
       }
       case 18:{
         fptosi_cmd* ac=(fptosi_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int reg_src=getReg(ac->src_val, regVar);
+        VarSetSpiReg(ac->src_val, 0, regVar);
+        outfile << "  mov r0, r" << reg_src << endl;
+        outfile << "  bl      __aeabi_f2iz" << endl;
+        VarSetSpiReg(ac->dst_val, 0, regVar);
       }
       case 19:{
         call_cmd* ac=(call_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+
       }
       case 20:{
         br_cmd* ac=(br_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        switch(endCond){
+          case -1:{
+            outfile << "  b " << "LBB" << funcNum << '_' << thisBB->block_label << endl;
+          }
+          case -2:{
+            outfile << "  cmp r0, #0" << endl;
+            outfile << "  beq " << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+          }
+          case 0:{
+            outfile << "  beq " << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+          }
+          case 1:{
+            outfile << "  beq " << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+          }
+          case 2:{
+            outfile << "  bgt " << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+          }
+          case 3:{
+            outfile << "  blt " << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+          }
+          case 4:{
+            outfile << "  blt " << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+          }
+          case 5:{
+            outfile << "  bgt " << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+          }
+          case 6:{
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_1 << endl;
+          }
+          case 7:{
+            outfile << "  b" << "LBB" << funcNum << '_' << ac->br_label_2 << endl;
+          }
+          default:
+            cerr << "IR2ISM br cmd error" << endl;
+        }
       }
       case 21:{
         ret_cmd* ac=(ret_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        // if(ac->ret_type->val_type==0){
+
+        // }
+        // ac->ret_type->val_type==4
+        // ac->ret_type->val_type==10
       }
       default:
         cerr << "IR2ASM cmd Type error!!!" << endl;
