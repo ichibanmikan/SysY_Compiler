@@ -27,3 +27,6 @@ int getReg(int varNum, map<int, int>* regVar);
 int IntsetReg(int num, map<int, int>* regVar);
 int FloatsetReg(float num, map<int, int>* regVar);
 int VarSetNewReg(int varNum, map<int, int>* regVar);
+void VarSetSpiReg(int varNum, int regNum, map<int, int>* regVar);
+void IntsetSpiReg(int num, int regNum, map<int, int>* regVar);
+void FloatsetSpiReg(float num, int regNum, map<int, int>* regVar);

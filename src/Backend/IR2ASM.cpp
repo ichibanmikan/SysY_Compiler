@@ -171,24 +171,122 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
       }
       case 6:{
         fadd_cmd* fac=(fadd_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(fac->dst_val, regVar);
+        if(fac->is_val_1){
+          var_1_regNum=getReg(get<0>(fac->src_val_1), regVar);
+        } else {
+          var_1_regNum=FloatsetReg(get<1>(fac->src_val_1), regVar);
+        }
+        if(fac->is_val_2){
+          var_2_regNum=getReg(get<0>(fac->src_val_2), regVar);
+        } else {
+          var_2_regNum=FloatsetReg(get<1>(fac->src_val_2), regVar);
+        }
+        outfile << "  add r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
       }
       case 7:{
         sub_cmd* subc=(sub_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(subc->dst_val, regVar);
+        if(subc->is_val_1){
+          var_1_regNum=getReg(subc->src_val_1, regVar);
+        } else {
+          var_1_regNum=IntsetReg(subc->src_val_1, regVar);
+        }
+        if(subc->is_val_2){
+          var_2_regNum=getReg(subc->src_val_2, regVar);
+        } else {
+          var_2_regNum=IntsetReg(subc->src_val_2, regVar);
+        }
+        outfile << "  sub r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
       }
       case 8:{
         fsub_cmd* ac=(fsub_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(ac->dst_val, regVar);
+        if(ac->is_val_1){
+          var_1_regNum=getReg(get<0>(ac->src_val_1), regVar);
+        } else {
+          var_1_regNum=FloatsetReg(get<1>(ac->src_val_1), regVar);
+        }
+        if(ac->is_val_2){
+          var_2_regNum=getReg(get<0>(ac->src_val_2), regVar);
+        } else {
+          var_2_regNum=FloatsetReg(get<1>(ac->src_val_2), regVar);
+        }
+        outfile << "  sub r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
       }
       case 9:{
         div_cmd* ac=(div_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        if(ac->is_val_1){
+          int var_1_regNum=getReg(ac->src_val_1, regVar);
+          outfile << "  mov r" << var_1_regNum << ", r0";
+        } else {
+          IntsetSpiReg(ac->src_val_1, 0, regVar);
+        }
+        if(ac->is_val_2){
+          int var_2_regNum=getReg(ac->src_val_2, regVar);
+          outfile << "  mov r" << var_2_regNum << ", r1";
+        } else {
+          IntsetSpiReg(ac->src_val_2, 1, regVar);
+        }
+        outfile << "  bl      __aeabi_idiv" << endl;
+        VarSetSpiReg(ac->dst_val, 0, regVar);
       }
       case 10:{
         fdiv_cmd* ac=(fdiv_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        if(ac->is_val_1){
+          int var_1_regNum=getReg(get<0>(ac->src_val_1), regVar);
+          outfile << "  mov r" << var_1_regNum << ", r0";
+        } else {
+          FloatsetSpiReg(get<1>(ac->src_val_1), 0, regVar);
+        }
+        if(ac->is_val_2){
+          int var_2_regNum=getReg(get<0>(ac->src_val_2), regVar);
+          outfile << "  mov r" << var_2_regNum << ", r1";
+        } else {
+          FloatsetSpiReg(get<1>(ac->src_val_2), 1, regVar);
+        }
+        outfile << "  bl      __aeabi_idiv" << endl;
+        VarSetSpiReg(ac->dst_val, 0, regVar);
       }
       case 11:{
         mul_cmd* ac=(mul_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(ac->dst_val, regVar);
+        if(ac->is_val_1){
+          var_1_regNum=getReg(ac->src_val_1, regVar);
+        } else {
+          var_1_regNum=IntsetReg(ac->src_val_1, regVar);
+        }
+        if(ac->is_val_2){
+          var_2_regNum=getReg(ac->src_val_2, regVar);
+        } else {
+          var_2_regNum=IntsetReg(ac->src_val_2, regVar);
+        }
+        outfile << "  mul r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
       }
       case 12:{
         fmul_cmd* ac=(fmul_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
+        int var_1_regNum;
+        int var_2_regNum;
+        int dst_regNum=getReg(ac->dst_val, regVar);
+        if(ac->is_val_1){
+          var_1_regNum=getReg(get<0>(ac->src_val_1), regVar);
+        } else {
+          var_1_regNum=FloatsetReg(get<1>(ac->src_val_1), regVar);
+        }
+        if(ac->is_val_2){
+          var_2_regNum=getReg(get<0>(ac->src_val_2), regVar);
+        } else {
+          var_2_regNum=FloatsetReg(get<1>(ac->src_val_2), regVar);
+        }
+        outfile << "  mul r" << dst_regNum << ", r" << var_1_regNum << ", r" << var_2_regNum << endl;
       }
       case 13:{
         mod_cmd* ac=(mod_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
@@ -281,6 +379,32 @@ int VarSetNewReg(int varNum, map<int, int>* regVar){
     stackPos++;
   }
   return retTemp;
+}
+
+void VarSetSpiReg(int varNum, int regNum, map<int, int>* regVar){
+  (*regVar)[regNum]=varNum;
+  stackPos=regNum+1;
+  if(stackPos>7){
+    stackPos=0;
+  }
+}
+
+void IntsetSpiReg(int num, int regNum, map<int, int>* regVar){
+  outfile << "  mov r" << regNum << ", #" << num;
+  (*regVar)[regNum]=-2;
+  stackPos=regNum+1;
+  if(stackPos>7){
+    stackPos=0;
+  }
+}
+
+void FloatsetSpiReg(float num, int regNum, map<int, int>* regVar){
+  outfile << "  mov r" << regNum << ", #" << num;
+  (*regVar)[regNum]=-2;
+  stackPos=regNum+1;
+  if(stackPos>7){
+    stackPos=0;
+  }
 }
 
 /*
