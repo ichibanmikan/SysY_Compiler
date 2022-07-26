@@ -690,14 +690,13 @@ struct br_cmd{
 };
 
 struct ret_cmd{
-  type ret_type;
+  int ret_type;
 
-  value ret_value;
+  int ret_value;
   void printHelp(){
-    cout << "ret ";
-    ret_type.printHelp();
-    value_printHelp(ret_value);
-    cout << endl;
+    cout << "ret " << getTypeStr(ret_type) << " %" << ret_value << endl;
+    // ret_type.printHelp();
+    // value_printHelp(ret_value);
   }
 };
 

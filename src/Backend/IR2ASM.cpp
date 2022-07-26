@@ -442,28 +442,8 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
       }
       case 21:{
         ret_cmd* ac=(ret_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
-        // switch(ac->ret_type.val_type){
-        //   case 0:{
-        //     break;
-        //   }
-        //   case 4:{
-        //     if(ac->ret_type.dimension_size.size()==0){
-
-        //     } else {
-
-        //     }
-        //   }
-        //   case 9:{
-        //     if(ac->ret_type.dimension_size.size()==0){
-
-        //     } else {
-
-        //     }
-        //   }
-        //   default:
-        //     cerr << "IR2ASM ret type error" << endl;
-        // }
-        // outfile << "  ldr r0, " << endl;
+        int numReg=getReg(ac->ret_value, regVar);
+        outfile << "  mov r0, r" << numReg << endl;
         outfile << "  add sp, sp, #" << funcSize << endl;
         outfile << "  bx  lr" << endl;
       }
