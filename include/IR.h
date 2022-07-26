@@ -83,8 +83,8 @@ enum cmdTypes{
     br=20,
     ret=21,
     phi=22,
-    lor=23,
-    land=24,
+    // lor=23,
+    // land=24,
     un=25
 };
 
