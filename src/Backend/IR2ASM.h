@@ -20,8 +20,8 @@ std::ofstream outfile("out.s");
 
 void IR2ASM();
 void Function2ASM(Function* func, int funcNum);
-void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum);
-void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum);
+void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum, int funcSize);
+void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum, int funcSize);
 
 int getReg(int varNum, map<int, int>* regVar);
 int IntsetReg(int num, map<int, int>* regVar);

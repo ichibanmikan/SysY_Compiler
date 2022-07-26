@@ -73,23 +73,23 @@ void Function2ASM(Function* func, int funcNum){
       outfile << "  str r" << i << " [sp, #" << (sum-i-1)*4 << endl;
     }
   }
-  Blocks2ASM(func, varMM, funcNum);
+  Blocks2ASM(func, varMM, funcNum, sum);
 }
 
-void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum){
+void Blocks2ASM(Function* func, map<int, string>* varMM, int funcNum, int funcSize){
   map<int, int>* regVar=new map<int, int>;
   regVar->insert(pair<int, int>(0, -2));
   regVar->insert(pair<int, int>(1, -2));
   regVar->insert(pair<int, int>(2, -2));
   regVar->insert(pair<int, int>(3, -2));
-  cmds2ASM((*func->basic_blocks)[0], varMM, regVar, funcNum);
+  cmds2ASM((*func->basic_blocks)[0], varMM, regVar, funcNum, funcSize);
   for(int i=1; i<func->basic_blocks->size(); i++){
     outfile << "LBB" << funcNum << '_' << (*func->basic_blocks)[i]->block_label << ':' << endl;
-    cmds2ASM((*func->basic_blocks)[i], varMM, regVar, funcNum);
+    cmds2ASM((*func->basic_blocks)[i], varMM, regVar, funcNum, funcSize);
   }
 }
 
-void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum){
+void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar, int funcNum, int funcSize){
   int endCond=-1; //-1代表无条件, -2代表浮点数比较, 其他代表整数条件
   for(int i=0; i<thisBB->cmds->size(); i++){
     switch((*thisBB->cmds)[i]->cmd_type){
@@ -377,7 +377,23 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
       }
       case 19:{
         call_cmd* ac=(call_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
-
+        for(int i=0; i<ac->params.size(); i++){
+          if(ac->params[i].is_local_val){
+            int regNum=getReg(get<0>(ac->params[i].param_value), regVar);
+            VarSetSpiReg(regNum, i, regVar);
+            outfile << "  mov r" << i << ", r" << regNum << endl;
+          } else if(ac->params[i].is_global_val){
+            outfile << "  ldr, r" << i << ", " << get<2>(ac->params[i].param_value) << endl;
+          } else {
+            if(get_if<0>(&ac->params[i].param_value)){
+              IntsetSpiReg(get<0>(ac->params[i].param_value), i, regVar);
+            } else {
+              FloatsetSpiReg(get<1>(ac->params[i].param_value), i, regVar);
+            }
+          }
+        }
+        outfile << "  bl  " << ac->func_name << endl;
+        VarSetSpiReg(ac->ret_value, 0, regVar);
       }
       case 20:{
         br_cmd* ac=(br_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
@@ -426,11 +442,30 @@ void cmds2ASM(BasicBlock* thisBB, map<int, string>* varMM, map<int, int>* regVar
       }
       case 21:{
         ret_cmd* ac=(ret_cmd*)(*thisBB->cmds)[i]->cmd_ptr;
-        // if(ac->ret_type->val_type==0){
+        // switch(ac->ret_type.val_type){
+        //   case 0:{
+        //     break;
+        //   }
+        //   case 4:{
+        //     if(ac->ret_type.dimension_size.size()==0){
 
+        //     } else {
+
+        //     }
+        //   }
+        //   case 9:{
+        //     if(ac->ret_type.dimension_size.size()==0){
+
+        //     } else {
+
+        //     }
+        //   }
+        //   default:
+        //     cerr << "IR2ASM ret type error" << endl;
         // }
-        // ac->ret_type->val_type==4
-        // ac->ret_type->val_type==10
+        // outfile << "  ldr r0, " << endl;
+        outfile << "  add sp, sp, #" << funcSize << endl;
+        outfile << "  bx  lr" << endl;
       }
       default:
         cerr << "IR2ASM cmd Type error!!!" << endl;
