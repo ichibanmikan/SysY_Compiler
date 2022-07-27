@@ -259,6 +259,7 @@ struct getelementptr_cmd{
   value src_val;
 
   int offset_type;
+  bool is_val;
   int offset;
   getelementptr_cmd(){
     offset_type=i32;

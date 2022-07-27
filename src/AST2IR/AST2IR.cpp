@@ -1402,7 +1402,7 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
 
   // arr_type.dimension_size.erase(k);
   // cout<<"kkk";
-  exit(0);
+  // exit(0);
 
   getelementptr_cmd* gcmd=new getelementptr_cmd;
   local_var* gcmddst=new local_var;
@@ -1418,7 +1418,26 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
   gcmd->src_type=stype;
   char offset_str[30];
   strcpy(offset_str,node->children[i]->name);
-  gcmd->offset=atoi(offset_str);
+  
+  int key_;
+  if(strcmp(offset_str,"+")==0||strcmp(offset_str,"-")==0||strcmp(offset_str,"/")==0||strcmp(offset_str,"*")==0){//为算数表达式：+
+
+  int __imp_name__=0;
+  key_ = algo_expressions_gen(vcmd, func, node->children[i], __imp_name__);
+  gcmd->offset=key_;
+  gcmd->is_val=1;
+
+  }
+  
+  else{
+    if(){//为变量，需要load
+    gcmd->is_val=1;
+    }
+    else{
+    gcmd->is_val=0;
+    gcmd->offset=atoi(offset_str);
+    }
+  }
 
   command* cmd=new command;
   cmd->cmd_type=3;
@@ -1547,7 +1566,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
 
    
-    ty2.val_type=8;
+    cout<<ty2.val_type;
     //若为数组，load取出值
     if(ty2.val_type==i32_ptr){
 

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
     } //就是说如果没有传入参数的时候，也就是未指定测试文件路径，我们把 yyin 也就是yacc的输入方式改变为命令行
     tree = parse(); //建树的函数
     AST2IR(tree);
-    // print_syntax_tree(stdout, tree); //把这棵树打印出来 主要是用来测试的
+    print_syntax_tree(stdout, tree); //把这棵树打印出来 主要是用来测试的
     del_syntax_tree(tree);
     printHelp();
     // AST2IR(tree);

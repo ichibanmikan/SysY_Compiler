@@ -1,10 +1,4 @@
-
-l:a
-
-r:a
-1..
-r type:4
-====12..r1>--+ declarations
+4r1>--+ declarations
 |  >--+ func_declaration
 |  |  >--* int
 |  |  >--* main
@@ -22,6 +16,12 @@ r type:4
 |  |  |  |  |  >--+ =
 |  |  |  |  |  |  >--* b
 |  |  |  |  |  |  >--* 1
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--* 1
 |  |  |  >--+ return_stmt
 |  |  |  |  >--+ +
 |  |  |  |  |  >--+ a
@@ -29,11 +29,14 @@ r type:4
 |  |  |  |  |  |  |  >--* 0
 |  |  |  |  |  >--+ a
 |  |  |  |  |  |  >--+ array_size
-|  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--+ +
+|  |  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  |  >--* a
 define dso_local i32 @main() #0{
 0:
-%0 = alloca void
-%1 = alloca void
-%2 = add nsw i32 %0, %0
-retvoid
+  %0 = alloca void
+  %1 = alloca void
+  %2 = alloca void
+  %3 = add nsw i32 %0, %0
+  ret void
 }
