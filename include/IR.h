@@ -152,7 +152,7 @@ struct type{
     } else {
       for(int i=dimension_size.size()-1; i>=0; i--){
           string strTemp=typeStr;
-          typeStr = (dimension_size[i]+'0');
+          typeStr = std::to_string(dimension_size[i]);
           typeStr += " x ";
           bool b=(i!=dimension_size.size()-1);
           if(b){
@@ -201,6 +201,7 @@ struct store_cmd{
 
   bool is_glo_val; // 是全局变量吗
   value dst_val; // 变量名，由is_glo_val指示是否是全局变量
+
   void printHelp(){
     string src_type_str=getTypeStr(src_type);
     string dst_type_str=getTypeStr(dst_type);
