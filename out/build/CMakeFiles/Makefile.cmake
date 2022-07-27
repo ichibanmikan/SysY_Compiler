@@ -12,6 +12,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.16.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.16.3/CMakeSystem.cmake"
   "../../src/AST2IR/CMakeLists.txt"
+  "../../src/Backend/CMakeLists.txt"
   "../../src/CMakeLists.txt"
   "../../src/SysY_Lex/CMakeLists.txt"
   "../../src/SysY_Yacc/CMakeLists.txt"
@@ -52,6 +53,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "src/SysY_Lex/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/SysY_Yacc/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/AST2IR/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "src/Backend/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
 # Dependency information for all targets:
@@ -60,4 +62,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/SysY_Lex/CMakeFiles/SysY_Lex.dir/DependInfo.cmake"
   "src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/DependInfo.cmake"
   "src/AST2IR/CMakeFiles/AST2IR.dir/DependInfo.cmake"
+  "src/Backend/CMakeFiles/IR2ASM.dir/DependInfo.cmake"
   )

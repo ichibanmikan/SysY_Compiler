@@ -82,6 +82,7 @@ Test_EXTERNAL_OBJECTS =
 ../Test: ../lib/libSysY_Lex.a
 ../Test: ../lib/libSysY_Yacc.a
 ../Test: ../lib/libAST2IR.a
+../Test: ../lib/libIR2ASM.a
 ../Test: src/CMakeFiles/Test.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../../Test"
 	cd /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Test.dir/link.txt --verbose=$(VERBOSE)

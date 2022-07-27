@@ -12,3 +12,6 @@
 /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/rebuild_cache.dir
 /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/edit_cache.dir
 /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/CMakeFiles/AST2IR.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/Backend/CMakeFiles/rebuild_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/Backend/CMakeFiles/edit_cache.dir
+/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/Backend/CMakeFiles/IR2ASM.dir

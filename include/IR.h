@@ -260,7 +260,7 @@ struct getelementptr_cmd{
   value src_val;
 
   int offset_type;
-  bool is_val;
+  bool is_var;
   int offset;
   getelementptr_cmd(){
     offset_type=i32;
@@ -278,7 +278,7 @@ struct getelementptr_cmd{
     }
     
     string str=getTypeStr(offset_type);
-    if(!is_val)
+    if(!is_var)
       cout << ", " << str << " 0, " << str << ' ' << offset << endl;
     else cout << ", " << str << " 0, " << str << ' ' <<"%"<<offset << endl;
   }

@@ -848,7 +848,7 @@ void rtmt_stmt_gen(Function* func, BasicBlock* bb, syntax_tree_node* node)
     local_var* returnVar = (*func->local_var_table)[returnIDx];
     // cout<<"returnVar::"<<returnVar;
     ret_cmd* recmd = new ret_cmd;
-    recmd->ret_type=returnVar->local_var_type;
+    recmd->ret_type=returnVar->local_var_type.val_type;
     // int tttt=returnVar->local_var_type.val_type==func->ret_type;
     // cout<<"111:"<<returnVar->local_var_type.val_type;
     // exit(0);
@@ -1697,18 +1697,18 @@ int array_offset_gen(Function* func,vector<command*>* vcmd,syntax_tree_node* nod
   int __imp_name__=0;
   key_ = algo_expressions_gen(vcmd, func, node->children[i], __imp_name__);
   gcmd->offset=key_;
-  gcmd->is_val=1;
+  gcmd->is_var=1;
 
   }
   
   else{
     if(regex_match(offset_str,std::regex("[0-9]+"))){
-    gcmd->is_val=0;
+    gcmd->is_var=0;
     gcmd->offset=atoi(offset_str);
     
     }
     else{//为变量，需要load
-    gcmd->is_val=1;
+    gcmd->is_var=1;
     __local_var_value t2;
     type ty2;
     int key2;
@@ -1865,15 +1865,8 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   return algo_expressions_gen(vcmd, func, node, __imp_name__);
 }
 
-<<<<<<< HEAD
-int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f){
-  
-  
-=======
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f ){
 
-
->>>>>>> 2a64028019732207a96cefddcc9915736e1fcc59
   char arg_name[30],arg_name2[30],op_name[30];
   strcpy(arg_name,node->name);
   // cout<<arg_name<<endl;

@@ -42,6 +42,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Lex/cmake_install.cmake")
   include("/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/SysY_Yacc/cmake_install.cmake")
   include("/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/AST2IR/cmake_install.cmake")
+  include("/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/src/Backend/cmake_install.cmake")
 
 endif()
 

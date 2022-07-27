@@ -75,6 +75,7 @@ src/all: src/CMakeFiles/Test.dir/all
 src/all: src/SysY_Lex/all
 src/all: src/SysY_Yacc/all
 src/all: src/AST2IR/all
+src/all: src/Backend/all
 
 .PHONY : src/all
 
@@ -82,6 +83,7 @@ src/all: src/AST2IR/all
 src/preinstall: src/SysY_Lex/preinstall
 src/preinstall: src/SysY_Yacc/preinstall
 src/preinstall: src/AST2IR/preinstall
+src/preinstall: src/Backend/preinstall
 
 .PHONY : src/preinstall
 
@@ -90,6 +92,7 @@ src/clean: src/CMakeFiles/Test.dir/clean
 src/clean: src/SysY_Lex/clean
 src/clean: src/SysY_Yacc/clean
 src/clean: src/AST2IR/clean
+src/clean: src/Backend/clean
 
 .PHONY : src/clean
 
@@ -110,6 +113,24 @@ src/AST2IR/preinstall:
 src/AST2IR/clean: src/AST2IR/CMakeFiles/AST2IR.dir/clean
 
 .PHONY : src/AST2IR/clean
+
+#=============================================================================
+# Directory level rules for directory src/Backend
+
+# Recursive "all" directory target.
+src/Backend/all: src/Backend/CMakeFiles/IR2ASM.dir/all
+
+.PHONY : src/Backend/all
+
+# Recursive "preinstall" directory target.
+src/Backend/preinstall:
+
+.PHONY : src/Backend/preinstall
+
+# Recursive "clean" directory target.
+src/Backend/clean: src/Backend/CMakeFiles/IR2ASM.dir/clean
+
+.PHONY : src/Backend/clean
 
 #=============================================================================
 # Directory level rules for directory src/SysY_Lex
@@ -154,14 +175,15 @@ src/SysY_Yacc/clean: src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/clean
 src/CMakeFiles/Test.dir/all: src/SysY_Lex/CMakeFiles/SysY_Lex.dir/all
 src/CMakeFiles/Test.dir/all: src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/all
 src/CMakeFiles/Test.dir/all: src/AST2IR/CMakeFiles/AST2IR.dir/all
+src/CMakeFiles/Test.dir/all: src/Backend/CMakeFiles/IR2ASM.dir/all
 	$(MAKE) -f src/CMakeFiles/Test.dir/build.make src/CMakeFiles/Test.dir/depend
 	$(MAKE) -f src/CMakeFiles/Test.dir/build.make src/CMakeFiles/Test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=8,9 "Built target Test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=10,11 "Built target Test"
 .PHONY : src/CMakeFiles/Test.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/Test.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles 9
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles 11
 	$(MAKE) -f CMakeFiles/Makefile2 src/CMakeFiles/Test.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles 0
 .PHONY : src/CMakeFiles/Test.dir/rule
@@ -183,7 +205,7 @@ src/CMakeFiles/Test.dir/clean:
 src/SysY_Lex/CMakeFiles/SysY_Lex.dir/all:
 	$(MAKE) -f src/SysY_Lex/CMakeFiles/SysY_Lex.dir/build.make src/SysY_Lex/CMakeFiles/SysY_Lex.dir/depend
 	$(MAKE) -f src/SysY_Lex/CMakeFiles/SysY_Lex.dir/build.make src/SysY_Lex/CMakeFiles/SysY_Lex.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=3,4 "Built target SysY_Lex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=5,6 "Built target SysY_Lex"
 .PHONY : src/SysY_Lex/CMakeFiles/SysY_Lex.dir/all
 
 # Build rule for subdir invocation for target.
@@ -210,7 +232,7 @@ src/SysY_Lex/CMakeFiles/SysY_Lex.dir/clean:
 src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/all:
 	$(MAKE) -f src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/build.make src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/depend
 	$(MAKE) -f src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/build.make src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=5,6,7 "Built target SysY_Yacc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=7,8,9 "Built target SysY_Yacc"
 .PHONY : src/SysY_Yacc/CMakeFiles/SysY_Yacc.dir/all
 
 # Build rule for subdir invocation for target.
@@ -256,6 +278,33 @@ AST2IR: src/AST2IR/CMakeFiles/AST2IR.dir/rule
 src/AST2IR/CMakeFiles/AST2IR.dir/clean:
 	$(MAKE) -f src/AST2IR/CMakeFiles/AST2IR.dir/build.make src/AST2IR/CMakeFiles/AST2IR.dir/clean
 .PHONY : src/AST2IR/CMakeFiles/AST2IR.dir/clean
+
+#=============================================================================
+# Target rules for target src/Backend/CMakeFiles/IR2ASM.dir
+
+# All Build rule for target.
+src/Backend/CMakeFiles/IR2ASM.dir/all:
+	$(MAKE) -f src/Backend/CMakeFiles/IR2ASM.dir/build.make src/Backend/CMakeFiles/IR2ASM.dir/depend
+	$(MAKE) -f src/Backend/CMakeFiles/IR2ASM.dir/build.make src/Backend/CMakeFiles/IR2ASM.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles --progress-num=3,4 "Built target IR2ASM"
+.PHONY : src/Backend/CMakeFiles/IR2ASM.dir/all
+
+# Build rule for subdir invocation for target.
+src/Backend/CMakeFiles/IR2ASM.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 src/Backend/CMakeFiles/IR2ASM.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lxt/Desktop/sysy_compiler_tnameplz/out/build/CMakeFiles 0
+.PHONY : src/Backend/CMakeFiles/IR2ASM.dir/rule
+
+# Convenience name for target.
+IR2ASM: src/Backend/CMakeFiles/IR2ASM.dir/rule
+
+.PHONY : IR2ASM
+
+# clean rule for target.
+src/Backend/CMakeFiles/IR2ASM.dir/clean:
+	$(MAKE) -f src/Backend/CMakeFiles/IR2ASM.dir/build.make src/Backend/CMakeFiles/IR2ASM.dir/clean
+.PHONY : src/Backend/CMakeFiles/IR2ASM.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

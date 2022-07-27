@@ -162,6 +162,19 @@ AST2IR/fast:
 	$(MAKE) -f src/AST2IR/CMakeFiles/AST2IR.dir/build.make src/AST2IR/CMakeFiles/AST2IR.dir/build
 .PHONY : AST2IR/fast
 
+#=============================================================================
+# Target rules for targets named IR2ASM
+
+# Build rule for target.
+IR2ASM: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 IR2ASM
+.PHONY : IR2ASM
+
+# fast build rule for target.
+IR2ASM/fast:
+	$(MAKE) -f src/Backend/CMakeFiles/IR2ASM.dir/build.make src/Backend/CMakeFiles/IR2ASM.dir/build
+.PHONY : IR2ASM/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -174,6 +187,7 @@ help:
 	@echo "... SysY_Lex"
 	@echo "... SysY_Yacc"
 	@echo "... AST2IR"
+	@echo "... IR2ASM"
 .PHONY : help
 
 
