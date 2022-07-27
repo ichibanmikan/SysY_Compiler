@@ -83,8 +83,8 @@ enum cmdTypes{
     br=20,
     ret=21,
     phi=22,
-    lor=23,
-    land=24,
+    // lor=23,
+    // land=24,
     un=25
 };
 
@@ -694,15 +694,13 @@ struct br_cmd{
 };
 
 struct ret_cmd{
-  type ret_type;
+  int ret_type;
 
-  value ret_value;
+  int ret_value;
   void printHelp(){
-    cout << "ret ";
-    ret_type.printHelp();
-    cout<<" %";
-    value_printHelp(ret_value);
-    cout << endl;
+
+  cout << "ret " << getTypeStr(ret_type) << " %" << ret_value << endl;
+
   }
 };
 

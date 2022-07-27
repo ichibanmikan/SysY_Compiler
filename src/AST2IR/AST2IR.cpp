@@ -1865,9 +1865,15 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
   return algo_expressions_gen(vcmd, func, node, __imp_name__);
 }
 
+<<<<<<< HEAD
 int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f){
   
   
+=======
+int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_node* node,int &has_f ){
+
+
+>>>>>>> 2a64028019732207a96cefddcc9915736e1fcc59
   char arg_name[30],arg_name2[30],op_name[30];
   strcpy(arg_name,node->name);
   // cout<<arg_name<<endl;
@@ -1882,7 +1888,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     // cout<<endl<<"l:"<<node->children[0]->name<<endl;
 
     key1=algo_expressions_gen(vcmd, func, node->children[0],has_float);
-    
+
     strcpy(arg_name2,node->children[1]->name);
 
     // cout<<endl<<"r:"<<arg_name2<<endl;//b
@@ -2029,7 +2035,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
     }
 
     if(has_float==0&&has_float2==0){
-      
+
       local_var* loaddst=new local_var;
       type loaddst_type;
       loaddst_type.val_type=i32;
@@ -2037,7 +2043,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
       if(strcmp(op_name,"+")==0){
 
-        
+
   // %7      = fadd float    %5, %6
   //  dst_val       src_type  src_val_1 src_val_2
 
@@ -2066,7 +2072,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         addcmd->cmd_type=5;
         addcmd->cmd_ptr=add;
         vcmd->push_back(addcmd);
-        
+
         return add->dst_val;
     }
     else if(strcmp(op_name,"-")==0){
@@ -2084,13 +2090,13 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         sub->src_val_1=key1;
       }
       sub->src_type=4;
-      
+
       command* subcmd=new command;
         subcmd->cmd_type=7;
         subcmd->cmd_ptr=sub;
         vcmd->push_back(subcmd);
 
-        
+
 
         return sub->dst_val;
     }
@@ -2106,15 +2112,15 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         mul->src_val_1=key1;
       }
       mul->src_type=4;
-      
+
 
       command* mulcmd=new command;
         mulcmd->cmd_type=11;
         mulcmd->cmd_ptr=mul;
         vcmd->push_back(mulcmd);
-        
-        
-        
+
+
+
         return mul->dst_val;
     }
     else {
@@ -2129,15 +2135,15 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         div->src_val_1=key1;
       }
       div->src_type=4;
-      
+
 
       command* divcmd=new command;
         divcmd->cmd_type=9;
         divcmd->cmd_ptr=div;
         vcmd->push_back(divcmd);
-        
-        
-        
+
+
+
         return div->dst_val;
     }
     }
@@ -2194,7 +2200,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         fadd->src_val_1=key1;
       }
       fadd->src_type=9;
-      
+
 
       command* faddcmd=new command;
         faddcmd->cmd_type=6;
@@ -2216,7 +2222,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         fsub->src_val_1=key1;
       }
       fsub->src_type=9;
-      
+
 
       command* fsubcmd=new command;
         fsubcmd->cmd_type=8;
@@ -2260,7 +2266,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
         fdiv->src_val_1=key1;
       }
       fdiv->src_type=9;
-    
+
 
       command* fdivcmd=new command;
         fdivcmd->cmd_type=10;
@@ -2273,7 +2279,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
 
     }
 
-  
+
   }
   else{
 
@@ -2325,7 +2331,7 @@ int algo_expressions_gen(vector<command*>* vcmd, Function* func, syntax_tree_nod
           // exit(0);
     }
     //若为数组，load取出值
-    
+
     if(ty1.val_type==i32_ptr){
      int ptr1= array_offset_gen(func,vcmd,node->children[0],key_1,ty1);
     load_cmd* loadcmd=new load_cmd;
