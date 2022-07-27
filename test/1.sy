@@ -9,30 +9,14 @@ int main(){
 	return b;
 }
 
+%9 = add nsw i32 %7, %8
+  %10 = sext i32 %9 to i64
+  %11 = getelementptr inbounds [10 x i32], [10 x i32]* %2, i64 0, i64 %10
+  %12 = load i32, i32* %11, align 4
+  %13 = add nsw i32 %6, %12
 
->--+ declarations
-|  >--+ func_declaration
-|  |  >--* int
-|  |  >--* func
-|  |  >--+ params
-|  |  |  >--+ param
-|  |  |  |  >--* int
-|  |  |  |  >--* p
-|  |  >--+ stmts
-|  |  |  >--+ return_stmt
-|  |  |  |  >--* 0
-|  >--+ func_declaration
-|  |  >--* int
-|  |  >--* main
-|  |  >--* void
-|  |  >--+ stmts
-|  |  |  >--+ var_declaration
-|  |  |  |  >--* int
-|  |  |  |  >--+ idenfiers
-|  |  |  |  |  >--* b
-|  |  |  >--+ getint
-|  |  |  |  >--* epsilon
-|  |  |  >--+ getarray
-|  |  |  |  >--* b
-|  |  |  >--+ return_stmt
-|  |  |  |  >--* b
+%5 = load i32, i32* %3, align 4
+  %6 = sext i32 %5 to i64
+  %7 = getelementptr inbounds [10 x i32], [10 x i32]* %2, i64 0, i64 %6
+
+cd out;cd build;cmake ../../;make;cd ../;./Test ../test/2.sy >../test/test_out

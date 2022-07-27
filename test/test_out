@@ -1,4 +1,7 @@
-4r1>--+ declarations
+----run array_offset_gen----: node_name=array_size
+1当前数组规模：1
+当前变量号：4
+r1>--+ declarations
 |  >--+ func_declaration
 |  |  >--* int
 |  |  >--* main
@@ -20,23 +23,25 @@
 |  |  |  |  >--* int
 |  |  |  |  >--+ idenfiers
 |  |  |  |  |  >--+ =
-|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--* c
 |  |  |  |  |  |  >--* 1
 |  |  |  >--+ return_stmt
 |  |  |  |  >--+ +
 |  |  |  |  |  >--+ a
 |  |  |  |  |  |  >--+ array_size
-|  |  |  |  |  |  |  >--* 0
-|  |  |  |  |  >--+ a
-|  |  |  |  |  |  >--+ array_size
 |  |  |  |  |  |  |  >--+ +
 |  |  |  |  |  |  |  |  >--* b
-|  |  |  |  |  |  |  |  >--* a
+|  |  |  |  |  |  |  |  >--* c
+|  |  |  |  |  >--* b
 define dso_local i32 @main() #0{
 0:
-  %0 = alloca void
-  %1 = alloca void
-  %2 = alloca void
-  %3 = add nsw i32 %0, %0
-  ret void
+  %0 = alloca [10 x i32]
+  %1 = alloca i32
+  store i32 1, i32* %1
+  %2 = alloca i32
+  store i32 1, i32* %2
+  %3 = add nsw i32 %1, %2
+  %4 = getelementptr inbounds[10 x i32*], [10 x i32*]* %0, i32 0, i32 %3
+  %5 = load i32, i32* %4  %6 = add nsw i32 %5, %1
+  ret i32 %6
 }

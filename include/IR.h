@@ -276,8 +276,11 @@ struct getelementptr_cmd{
     } else{
       cout << '%' << get<0>(src_val);
     }
+    
     string str=getTypeStr(offset_type);
-    cout << ", " << str << " 0, " << str << ' ' << offset << endl;
+    if(!is_val)
+      cout << ", " << str << " 0, " << str << ' ' << offset << endl;
+    else cout << ", " << str << " 0, " << str << ' ' <<"%"<<offset << endl;
   }
 };
 
@@ -697,6 +700,7 @@ struct ret_cmd{
   void printHelp(){
     cout << "ret ";
     ret_type.printHelp();
+    cout<<" %";
     value_printHelp(ret_value);
     cout << endl;
   }
