@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../../lib/libSysY_Yacc.a  CMakeFiles/SysY_Yacc.dir/CreateTree.c.o CMakeFiles/SysY_Yacc.dir/SysY_Yacc.tab.c.o
+/usr/bin/ranlib ../../../lib/libSysY_Yacc.a

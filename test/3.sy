@@ -1,0 +1,17 @@
+int func(int p){	
+	return 0;
+}
+int main(){
+	int b;
+    int a;
+	func(a=b+2);
+	return b;
+}
+|  |  |  >--+ func
+|  |  |  |  >--+ args
+|  |  |  |  |  >--+ =
+|  |  |  |  |  |  >--* a
+|  |  |  |  |  |  >--+ +
+|  |  |  |  |  |  |  >--* b
+|  |  |  |  |  |  |  >--* 2
+

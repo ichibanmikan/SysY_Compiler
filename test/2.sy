@@ -1,0 +1,9 @@
+int fun(){
+  return 2;
+}
+int main(){
+  int a;
+  a=fun();
+	return 0;
+}
+

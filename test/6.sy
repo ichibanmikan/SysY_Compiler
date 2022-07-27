@@ -1,0 +1,31 @@
+int func(int a[5][],float b[3][4][],int c,float d){	
+	return 0;
+}
+
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* func
+|  |  >--+ params
+|  |  |  >--+ param_array
+|  |  |  |  >--* int
+|  |  |  |  >--* a
+|  |  |  |  >--+ array_size
+|  |  |  |  |  >--* 5
+|  |  |  |  |  >--* void
+|  |  |  >--+ param_array
+|  |  |  |  >--* float
+|  |  |  |  >--* b
+|  |  |  |  >--+ array_size
+|  |  |  |  |  >--* 3
+|  |  |  |  |  >--* 4
+|  |  |  |  |  >--* void
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* c
+|  |  |  >--+ param
+|  |  |  |  >--* float
+|  |  |  |  >--* d
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 0

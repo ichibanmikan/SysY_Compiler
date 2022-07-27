@@ -273,7 +273,7 @@ int OcttoDec(char* text){
 
 
 const char* InttoString(int num){
-  char *str;
+  char str[128];
 	int i = 0;
 	if(num<0){
 		num = -num;

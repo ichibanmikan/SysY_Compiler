@@ -5,3 +5,4 @@ out
 test
 !test/test.py
 !test/testAll.sh
+test.zip

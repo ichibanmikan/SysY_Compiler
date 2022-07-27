@@ -1,0 +1,27 @@
+int fun(){
+  return 2;
+}
+int main(){
+  fun();
+	return 0;
+}
+
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* fun
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 2
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* main
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ fun
+|  |  |  |  >--* epsilon
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 
+
+cd out;cd build;cmake ../../;make;cd ../;./Test ../test/2.sy >../test/test_out

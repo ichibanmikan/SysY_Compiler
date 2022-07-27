@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/IR.h
+map
+-
+utility
+-
+string
+-
+vector
+-
+variant
+-
+stack
+-
+bits/stdint-intn.h
+-
+iostream
+-
+string.h
+-
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/createTree.h
+stdio.h
+-
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/AST2IR/AST2IR.cpp
+AST2IR.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/AST2IR/AST2IR.h
+regex
+-
+
+/home/lxt/Desktop/sysy_compiler_tnameplz/src/AST2IR/AST2IR.h
+../../include/createTree.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/createTree.h
+../../include/IR.h
+/home/lxt/Desktop/sysy_compiler_tnameplz/include/IR.h
+regex
+-
+

@@ -1,0 +1,45 @@
+int func(int p){	
+	return 0;
+}
+int main(){
+	int b;
+    int a;
+	b=func(b);
+    putarray(b,a);
+    
+	return b;
+}
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* func
+|  |  >--+ params
+|  |  |  >--+ param
+|  |  |  |  >--* int
+|  |  |  |  >--* p
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 0
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* main
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--* b
+|  |  |  >--+ var_declaration
+|  |  |  |  >--* int
+|  |  |  |  >--+ idenfiers
+|  |  |  |  |  >--* a
+|  |  |  >--+ =
+|  |  |  |  >--* b
+|  |  |  |  >--+ func
+|  |  |  |  |  >--+ args
+|  |  |  |  |  |  >--* b
+|  |  |  >--+ putarray
+|  |  |  |  >--* b
+|  |  |  |  >--* a
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* b

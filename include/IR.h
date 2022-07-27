@@ -83,8 +83,8 @@ enum cmdTypes{
     br=20,
     ret=21,
     phi=22,
-    lor=23,
-    land=24,
+    // lor=23,
+    // land=24,
     un=25
 };
 
@@ -152,7 +152,7 @@ struct type{
     } else {
       for(int i=dimension_size.size()-1; i>=0; i--){
           string strTemp=typeStr;
-          typeStr = (dimension_size[i]+'0');
+          typeStr = std::to_string(dimension_size[i]);
           typeStr += " x ";
           bool b=(i!=dimension_size.size()-1);
           if(b){
@@ -201,6 +201,7 @@ struct store_cmd{
 
   bool is_glo_val; // 是全局变量吗
   value dst_val; // 变量名，由is_glo_val指示是否是全局变量
+
   void printHelp(){
     string src_type_str=getTypeStr(src_type);
     string dst_type_str=getTypeStr(dst_type);
@@ -259,6 +260,7 @@ struct getelementptr_cmd{
   value src_val;
 
   int offset_type;
+  bool is_var;
   int offset;
   getelementptr_cmd(){
     offset_type=i32;
@@ -274,8 +276,11 @@ struct getelementptr_cmd{
     } else{
       cout << '%' << get<0>(src_val);
     }
+    
     string str=getTypeStr(offset_type);
-    cout << ", " << str << " 0, " << str << ' ' << offset << endl;
+    if(!is_var)
+      cout << ", " << str << " 0, " << str << ' ' << offset << endl;
+    else cout << ", " << str << " 0, " << str << ' ' <<"%"<<offset << endl;
   }
 };
 
@@ -654,7 +659,7 @@ struct call_cmd{
 
   string func_name;
   vector<param> params;
-
+// %3 = call i32 @fun()
   void printHelp(){
     cout << '%' << ret_value << " = call ";
     ret_type.printHelp();
@@ -689,14 +694,13 @@ struct br_cmd{
 };
 
 struct ret_cmd{
-  type ret_type;
+  int ret_type;
 
-  value ret_value;
+  int ret_value;
   void printHelp(){
-    cout << "ret ";
-    ret_type.printHelp();
-    value_printHelp(ret_value);
-    cout << endl;
+
+  cout << "ret " << getTypeStr(ret_type) << " %" << ret_value << endl;
+
   }
 };
 
@@ -907,7 +911,7 @@ class Function{
 
     int add_new_var_load(local_var* lv){
       local_var_table->insert(pair<int, local_var*>(local_var_table->size()+local_const_var_table->size(), lv));
-      return local_var_table->size()+local_const_var_table->size();
+      return local_var_table->size()+local_const_var_table->size()-1;
     }
 
     Function(){
