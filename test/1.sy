@@ -1,22 +1,27 @@
-int func(int p){	
-	return 0;
+int fun(){
+  return 2;
 }
 int main(){
-	int b;
-	getint();
-    getarray(b);
-
-	return b;
+  fun();
+	return 0;
 }
 
-%9 = add nsw i32 %7, %8
-  %10 = sext i32 %9 to i64
-  %11 = getelementptr inbounds [10 x i32], [10 x i32]* %2, i64 0, i64 %10
-  %12 = load i32, i32* %11, align 4
-  %13 = add nsw i32 %6, %12
-
-%5 = load i32, i32* %3, align 4
-  %6 = sext i32 %5 to i64
-  %7 = getelementptr inbounds [10 x i32], [10 x i32]* %2, i64 0, i64 %6
+>--+ declarations
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* fun
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 2
+|  >--+ func_declaration
+|  |  >--* int
+|  |  >--* main
+|  |  >--* void
+|  |  >--+ stmts
+|  |  |  >--+ fun
+|  |  |  |  >--* epsilon
+|  |  |  >--+ return_stmt
+|  |  |  |  >--* 
 
 cd out;cd build;cmake ../../;make;cd ../;./Test ../test/2.sy >../test/test_out

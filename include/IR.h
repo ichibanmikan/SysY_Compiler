@@ -659,7 +659,7 @@ struct call_cmd{
 
   string func_name;
   vector<param> params;
-
+// %3 = call i32 @fun()
   void printHelp(){
     cout << '%' << ret_value << " = call ";
     ret_type.printHelp();
