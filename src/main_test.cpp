@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "../include/includeLex.h"
 #include "./AST2IR/AST2IR.h"
+#include "../Backend/IR2ASM.h"
 
 extern "C"{
   #include "../include/createTree.h"
@@ -77,13 +78,17 @@ syntax_tree *tree = NULL; //语法分析树的根节点 抽象的代指这棵树
 //   printHelp();
 // }
 
+std::ofstream outfile;
+
 int main(int argc, char *argv[]){
     const char *input_path = NULL; //输入路径
-    if (argc >= 3) {
+    string output_path;
+    if (argc >= 7) {
       printf("%s\n", "errorororor");
     } //如果输入对象数目大于3就报错errorororor(报错内容没有含义……)
-    if (argc == 2) {
-        input_path = argv[1];
+    if (argc == 6) {
+        input_path = argv[4];
+        output_path = argv[3];
     }//把input_path赋值为命令行传入的参数
     if (input_path != NULL) {
         if (!(yyin = fopen(input_path, "r"))) {
@@ -93,11 +98,13 @@ int main(int argc, char *argv[]){
     } else {
         yyin = stdin;
     } //就是说如果没有传入参数的时候，也就是未指定测试文件路径，我们把 yyin 也就是yacc的输入方式改变为命令行
+    outfile.open(output_path);
     tree = parse(); //建树的函数
     AST2IR(tree);
-    print_syntax_tree(stdout, tree); //把这棵树打印出来 主要是用来测试的
+    // print_syntax_tree(stdout, tree); //把这棵树打印出来 主要是用来测试的
     del_syntax_tree(tree);
-    printHelp();
+    IR2ASM();
+    // printHelp();
     // AST2IR(tree);
     // testPrint();
     // del_syntax_tree(tree); //删除这棵树 主要操作就是new之后delete了(不过我倒是觉得没啥必要了因为下一步就return 0了)

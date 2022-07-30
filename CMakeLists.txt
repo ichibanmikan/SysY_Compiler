@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-project ("Test")
+project ("compiler")
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/out)
 #设置库文件的输出目录
