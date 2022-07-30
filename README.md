@@ -1,5 +1,4 @@
 # SysY_Compiler_Tnameplz_CX
-
 ## 目前的工作
 
 目前我的代码是在cminus-f实验的基础上编写的(**指把每一部分都缝合到一起**)。下面介绍一下里面的一些内容
@@ -289,3 +288,6 @@ HextoDec(b);
 **中端部分.**
 
 IR设计在../src/AST2IR中有说明
+
+Copyright © 湖南大学 请问可以帮忙想个队名吗 SysY语言编译器项目
+>>>>>>> 5c42fb890465f0b177c04237a3ce7fcd491e9dda
