@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../lib/libSysY_Lex.a  CMakeFiles/SysY_Lex.dir/lex.yy.c.o
-/usr/bin/ranlib ../../../lib/libSysY_Lex.a

@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../lib/libAST2IR.a  CMakeFiles/AST2IR.dir/AST2IR.cpp.o
-/usr/bin/ranlib ../../../lib/libAST2IR.a
