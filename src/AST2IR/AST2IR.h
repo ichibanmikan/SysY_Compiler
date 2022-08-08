@@ -112,4 +112,8 @@ void if_else_cut_tree_node(syntax_tree_node* node);
 void while_set_sc_node(syntax_tree_node* node, int pos);
 void cut_tree_node(syntax_tree_node* node, vector<syntax_tree_node*>& vec);
 
+extern syntax_tree_node* new_syntax_tree_node(const char * name);
+extern int syntax_tree_add_child(syntax_tree_node* parent, syntax_tree_node* child);
+extern void del_syntax_tree_node(syntax_tree_node * node, int recursive);
+
 #endif
