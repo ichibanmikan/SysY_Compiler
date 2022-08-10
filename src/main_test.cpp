@@ -5,40 +5,15 @@
 #include "./AST2IR/AST2IR.h"
 #include "../Backend/IR2ASM.h"
 
-#ifdef __cplusplus
+#include "../include/createTree.h"
 
-extern "C"{
-
-#endif
-
-
-  #include "../include/createTree.h"
-
-
-#ifdef __cplusplus
-
-}
-
-#endif
 // struct Token_Node;
 
 // extern是全局的意思 以extern int a为例，就是说这个变量a是全局变量并且在其他地方被声明过了
 extern FILE* yyin; //声明yyin yyin就是yacc的输入方式 它默认是从文件读入的所以我们声明为*FILE类型
 extern FILE* yyout; //同上
 
-#ifdef __cplusplus
-
-extern "C"{
-
-#endif
-
-  extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
-
-#ifdef __cplusplus
-
-}
-
-#endif
+extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
 
 map<string, global_var*> global_var_table;//全局变量表
 map<string, const_var*> const_var_table;//全局常量表

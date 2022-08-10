@@ -1,19 +1,7 @@
 #ifndef __AST_TO_IR_
 #define __AST_TO_IR_
 
-#ifdef __cplusplus
-
-extern "C"{
-
-#endif
-
-  #include "../../include/createTree.h"
-
-#ifdef __cplusplus
-
-}
-
-#endif
+#include "../../include/createTree.h"
 
 #include "../../include/IR.h"
 
