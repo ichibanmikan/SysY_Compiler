@@ -79,10 +79,10 @@ std::ofstream outfile;
 int main(int argc, char *argv[]){
     const char *input_path = NULL; //输入路径
     string output_path;
-    if (argc >= 7) {
+    if (argc >= 6) {
       printf("%s\n", "errorororor");
     } //如果输入对象数目大于3就报错errorororor(报错内容没有含义……)
-    if (argc == 6) {
+    if (argc == 5) {
         input_path = argv[4];
         output_path = argv[3];
     }//把input_path赋值为命令行传入的参数
