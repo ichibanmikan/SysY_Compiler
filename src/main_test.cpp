@@ -5,9 +5,19 @@
 #include "./AST2IR/AST2IR.h"
 #include "../Backend/IR2ASM.h"
 
+#ifndef __cplusplus
+
 extern "C"{
+
+#endif
+
   #include "../include/createTree.h"
+
+#ifndef __cplusplus
+
 }
+
+#endif
 
 // struct Token_Node;
 
