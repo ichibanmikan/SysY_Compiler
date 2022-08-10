@@ -6,8 +6,15 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef  __cplusplus  
+extern "C" {  
+#endif  
+
 #include "../../include/createTree.h"
 
 
+#ifdef  __cplusplus  
+}
+#endif  
 
 #endif

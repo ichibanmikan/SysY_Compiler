@@ -36,6 +36,11 @@
 
 #ifndef YY_YY_SYSY_YACC_TAB_H_INCLUDED
 # define YY_YY_SYSY_YACC_TAB_H_INCLUDED
+
+#ifdef  __cplusplus  
+extern "C" {  
+#endif  
+
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -128,5 +133,8 @@ typedef union YYSTYPE YYSTYPE;
 extern YYSTYPE yylval;
 
 int yyparse (void);
+#ifdef  __cplusplus  
+}
+#endif  
 
 #endif /* !YY_YY_SYSY_YACC_TAB_H_INCLUDED  */

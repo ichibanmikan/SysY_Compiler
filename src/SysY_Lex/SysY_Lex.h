@@ -1,6 +1,11 @@
 #ifndef __SYSY_LEX_H_
 #define __SYSY_LEX_H_
 
+#ifdef  __cplusplus  
+extern "C" {  
+#endif  
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -18,5 +23,9 @@ int HextoDec(char *str);
 int OcttoDec(char* text);
 const char* InttoString(int num);
 void setNewChar(char* ch, char* p);
+
+#ifdef  __cplusplus  
+}  
+#endif  
 
 #endif

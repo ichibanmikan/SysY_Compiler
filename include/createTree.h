@@ -5,6 +5,9 @@
 
 #define SYNTAX_TREE_NODE_NAME_MAX 30
 #define SYNTAX_TREE_NODE_CHILDREN_NUM_MAX 100005
+#ifdef  __cplusplus  
+extern "C" {  
+#endif  
 
 typedef struct __syntax_tree_node_ {
 	struct __syntax_tree_node_* parent;
@@ -25,5 +28,11 @@ syntax_tree* new_syntax_tree();
 void del_syntax_tree(syntax_tree * tree);
 void print_syntax_tree(FILE * fout, syntax_tree * tree);
 void add_children_by_pos(syntax_tree_node* parent, syntax_tree_node* children, int pos);
+extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
+
+
+#ifdef  __cplusplus  
+}
+#endif  
 
 #endif
