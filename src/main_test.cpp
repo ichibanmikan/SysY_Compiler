@@ -25,10 +25,19 @@ extern "C"{
 extern FILE* yyin; //声明yyin yyin就是yacc的输入方式 它默认是从文件读入的所以我们声明为*FILE类型
 extern FILE* yyout; //同上
 
+#ifndef __cplusplus
+
 extern "C"{
+
+#endif
+
   extern syntax_tree *parse(); //这个函数就是执行语法分析的函数 它不仅调用了yyparse() 还完成了一些提前声明 具体细节后面会提到
+
+#ifndef __cplusplus
+
 }
 
+#endif
 map<string, global_var*> global_var_table;//全局变量表
 map<string, const_var*> const_var_table;//全局常量表
 map<string, Function*> functions_table; //函数表，这里实在想不出来表示方法了
