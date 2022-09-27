@@ -1,7 +1,7 @@
 # SysY_Compiler_Tnameplz_CX
 ## 目前的工作
 
-目前我的代码是在cminus-f实验的基础上编写的(**指把每一部分都缝合到一起**)。下面介绍一下里面的一些内容
+前端代码是在cminus-f实验的基础上编写的，中端参考LLVM IR的格式，后端生成Arm v7汇编代码
 
 ### 目录树
 
@@ -11,6 +11,7 @@
 ├── CMakePresets.json //CMake自动生成的
 ├── README.md // 本文件
 ├── include //include头文件地址 我们尽量保证.h文件用以声明/定义 .c/.cpp文件用以实现
+│   ├── IR.h
 │   ├── createTree.h
 │   └── includeLex.h
 ├── out //out是输出文件的目录，下面的内容中会提到out目录具体怎么使用，这个目录不放到git里
@@ -19,6 +20,8 @@
 │   └── lib //库文件输出的目录
 │       ├── libSysY_Lex.a
 │       └── libSysY_Yacc.a
+│       ├── libAST2IR.a
+│       ├── libIR2ASM.a
 ├── src //源文件目录
 │   ├── CMakeLists.txt
 │   ├── SysY_Lex //词法分析模块目录 在 Bison和Lex 一栏中会提到词法分析和语法分析怎样拼接到一起
@@ -33,7 +36,28 @@
 │   │   ├── SysY_Yacc.tab.c
 │   │   ├── SysY_Yacc.tab.h
 │   │   └── SysY_Yacc.y
-│   └── main_test.c //main函数 现阶段main函数主要用来测试
+│   ├── AST2IR //将AST转换为IR以便于优化
+│   │   ├── AST2IR.cpp
+│   │   ├── AST2IR.h
+│   │   ├── CMakeLists.txt
+│   │   └── README.md
+│   ├── Backend //后端Arm v7代码生成
+│   │   ├── CMakeLists.txt
+│   │   ├── IR2ASM.cpp
+│   │   └── IR2ASM.h
+│   ├── CMakeLists.txt
+│   ├── Optimizer //优化
+│   │   ├── RDF
+│   │   │   ├── RDF.cpp
+│   │   │   └── RDF.h
+│   │   ├── README.md
+│   │   ├── RMLoad
+│   │   │   ├── RMLoad.cpp
+│   │   │   └── RMLoad.h
+│   │   └── SSA
+│   │       ├── SSA.cpp
+│   │       └── SSA.h
+│   └── main_test.cpp //main函数 现阶段main函数主要用来测试
 └── test //测试文件和输出结果所在目录
     ├── test1.sy
     ├── test1_out1
@@ -235,59 +259,15 @@ target_include_directories(SysY_Lex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 CMake是很常见的工具，网上相关教程特别多，我一般都是用到啥就去搜啥。**另外，我觉得CMake太好用辣！！！**
 
-### 有关整数的处理部分
+## 参考文献
 
-要求实现识别和处理八进制 十进制 十六进制
-
-我的处理方法是：在词法分析部分把八进制 十六进制数全部转为十进制整数
-
-**因此我们中后端的处理中，所有数据都是十进制的.**
-
-C的整数处理部分在这里 <http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1124.pdf> 54页
-
-本项目只考虑前缀，因此对应的正则表达式就是
-
-```sh
-(\-|\+)?0[0-7]*              #八进制
-(\-|\+)?[1-9][0-9]*          #十进制
-(\-|\+)?0(x|X)[0-9a-fA-F]+   #十六进制
-```
-
-然后下面这几个函数完成了从对应进制转到十进制 (0放到了8进制里面，反正不管怎么转它都是0)
-
-```c
-int HextoDec(char *str)    //16进制字符串转为10进制数
-int OcttoDec(char* text)   //16进制字符串转为10进制数
-const char* InttoString(int num)  //把10进制数转为字符串常量
-void setNewChar(char* ch, char* p) //深拷贝字符
-```
-
-对于整数的符号问题
-
-<img src="https://s2.loli.net/2022/05/20/lUFdyE367Te1Pit.png">
-
-负数保留了符号，正数直接把加号去了当正数
-
-\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*下面是一个有趣的情况\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*
-
-setNewChar函数的由来挺曲折的, 本来我的写法是这样的
-
-```c
-char * b = yytext;
-HextoDec(b);
-```
-
-但是这样的结果就是b和yytext指向同一个地址,HextoDec函数运行时处理b的时候对同样的地址中的值进行了改变, 就相当于yytext改变了,Lex在处理完这个16进制数的时候又把改变过的的yytext处理了一遍
-
-代码简单的时候这个错误很容易发现,但是项目大起来这种不会报错甚至警告的小问题就是致命的...所以大家写代码的时候一定要小心点.
+1. Matthias Braun, Sebastian Buchwald and Andreas Zwinkau: [Simple and Efficient Construction of Static Single Assignment Form](https://pp.info.uni-karlsruhe.de/uploads/publikationen/braun13cc.pdf); Karlsruhe Institute of Technology, Saarland University
+2. RON CYTRON, JEANNE FERRANTE, BARRY K. ROSEN, and MARK N. WEGMAN: [Efficiently Computing Static Single Assignment Form and the Control Dependence Graph](https://www.cs.utexas.edu/~pingali/CS380C/2010/papers/ssaCytron.pdf); IBM Research Division
 
 ## 现在进度
 
-我们有抽象语法树了！！！
+后端完成，还在实现IR和优化的同志们要加油啦
 
-**中端部分.**
 
-IR设计在../src/AST2IR中有说明
 
-Copyright © 湖南大学 请问可以帮忙想个队名吗 SysY语言编译器项目
->>>>>>> 5c42fb890465f0b177c04237a3ce7fcd491e9dda
+Copyright © 湖南大学 SysY语言编译器项目
